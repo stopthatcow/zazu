@@ -22,14 +22,17 @@ import urllib
 import credential_helper
 import github
 
+
 class Config:
+
     def __init__(self):
-        self.address=''
+        self.address = ''
         self.repo_root = None
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
 PROJECT_FILE_NAME = 'zazu.yaml'
+
 
 @click.group()
 @pass_config
@@ -54,7 +57,6 @@ def tool():
 def install(spec, force_reinstall):
     """Install tools that zazu is familiar with"""
     tool_helper.install_spec(spec, force_reinstall, click.echo)
-
 
 
 @tool.command()
@@ -137,7 +139,7 @@ def pr(config):
     url = config.repo.remotes.origin.url
     start = 'github.com'
     if start in url:
-        project = url[url.find(start):].replace('.git','')
+        project = url[url.find(start):].replace('.git', '')
         webbrowser.open_new('https://{}/compare/{}?expand=1'.format(project, encoded_branch))
     else:
         click.echo("Can't open a PR for a non-github repo")
@@ -203,6 +205,7 @@ def setup(ctx, config):
 
 
 class ComponentConfiguration:
+
     def __init__(self, component):
         self._name = component['name']
         self._description = component.get('description', '')
@@ -231,6 +234,7 @@ class ComponentConfiguration:
 
 
 class BuildGoal:
+
     def __init__(self, goal):
         self._name = goal.get('name', '')
         self._description = goal.get('description', '')
@@ -262,6 +266,7 @@ class BuildGoal:
 
 
 class BuildSpec:
+
     def __init__(self, type='release', vars={}, requires={}, description='', arch=''):
         self._build_type = type
         self._build_vars = vars

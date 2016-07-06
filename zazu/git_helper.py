@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """core functions for zazu"""
 
-__author__      = "Nicholas Wiles"
-__copyright__   = "Copyright 2016, Lily Robotics"
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016, Lily Robotics"
 
 import os
 import filecmp

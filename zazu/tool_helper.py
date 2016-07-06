@@ -10,7 +10,9 @@ import sys
 import os
 import shutil
 
+
 class ToolEnforcer:
+
     def __init__(self, check, install, uninstall):
         self.check_fn = check
         self.install_fn = install
@@ -61,7 +63,7 @@ def download_with_progress_bar(name, url):
 def install_linaro_4_9_2014_05(name, version):
     """Installs Linaro gcc 4.9 2014-05"""
     toolchains = {
-        'Linux' : {
+        'Linux': {
             'x86_64': 'https://github.com/LilyRobotics/toolchains/blob/master/gcc-linaro-4.9-2014.05-arm-linux-gnueabihf-x86_32-linux-gnu.tar.gz?raw=true'
         },
         'Darwin': {

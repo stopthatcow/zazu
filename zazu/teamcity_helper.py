@@ -10,6 +10,7 @@ import git
 
 class TeamCityHelper(pyteamcity.TeamCity, object):
     """Extends the pyteamcity.Teamcity object to expose interfaces to create projects and build configurations"""
+
     def __init__(self, username=None, password=None, server=None, port=None, session=None):
         super(TeamCityHelper, self).__init__(
             username, password, server, port, session)
@@ -190,7 +191,7 @@ def setup_project(tc, git_url, repo_name, component):
     vcs_root_id = tc.setup_vcs_root(project_name, parent_project_id, git_url)['id']
     for g in component.goals().values():
         subproject_id = tc.setup_project(
-                g.name(), g.description(), parent_project_id)['id']
+            g.name(), g.description(), parent_project_id)['id']
         for a in g.builds().values():
             template_id = 'BobGitHubLilyRoboticsDefault'
             parameters = {
