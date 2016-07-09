@@ -69,7 +69,7 @@ def parse_describe(repo_root):
     return semantic_version.Version('{}+{}.{}.{}'.format(last_version, commits_past, sha, build_num))
 
 
-def configure(repo_root, build_dir, arch, build_type, build_variables):
+def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lambda x: x):
     """Configures a cmake based project to be built and caches args used to bypass configuration in future"""
     os.chdir(build_dir)
     ver = parse_describe(repo_root)
@@ -88,7 +88,7 @@ def configure(repo_root, build_dir, arch, build_type, build_variables):
         configure_args.append('-DCMAKE_TOOLCHAIN_FILE=' + toolchain_file)
 
     configure_arg_str = ' '.join(configure_args)
-    print('CMake Configuration: {}'.format('\n    '.join(configure_args)))
+    echo('CMake Configuration: {}'.format('\n    '.join(configure_args)))
     cache_file = os.path.join(build_dir, 'cmake_command.txt')
     previous_args = ''
     try:

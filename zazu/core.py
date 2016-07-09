@@ -26,23 +26,38 @@ import github
 class Config:
 
     def __init__(self):
-        self.address = ''
         self.repo_root = None
+        self.repo = None
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
 PROJECT_FILE_NAME = 'zazu.yaml'
 
 
+def null_printer(x):
+    """disregards input"""
+    pass
+
+
+def check_repo(config):
+    """Checks that the config has a valid repo set"""
+    if config.repo_root is None or config.repo is None:
+        raise click.UsageError('The current working directory is not in a git repo')
+
+
+class ZazuException(Exception):
+    def __init___(self, error):
+        Exception.__init__("Error: {}".format(error))
+
+
 @click.group()
 @pass_config
-@click.pass_context
-def cli(ctx, config):
+def cli(config):
     try:
         config.repo_root = git_helper.get_root_path()
         config.repo = git.Repo(config.repo_root)
     except subprocess.CalledProcessError:
-        ctx.fail("Current directory is not a git repo")
+        pass
 
 
 @cli.group()
@@ -67,10 +82,10 @@ def uninstall(spec):
 
 
 @cli.group()
-def feature():
+@pass_config
+def feature(config):
     """Create or update work items"""
-    pass
-
+    check_repo(config)
 
 @feature.command()
 @click.argument('name')
@@ -116,19 +131,32 @@ def make_gh():
     return gh
 
 
+def parse_github_url(url):
+    """Parses github url into organization and repo name"""
+    tokens = url.replace('.git', '').split('/')
+    repo = tokens.pop()
+    organization = tokens.pop()
+    return organization, repo
+
+
 @feature.command()
 @pass_config
 def status(config):
     """Get status of this feature branch"""
     gh = make_gh()
-    pulls = gh.get_user('LilyRobotics').get_repo('calibration').get_pulls()
-    for p in pulls:
-        if p.head.ref == config.repo.active_branch.name:
+    org, repo = parse_github_url(config.repo.remotes.origin.url)
+    pulls = gh.get_user(org).get_repo(repo).get_pulls()
+    matches = [p for p in pulls if p.head.ref == config.repo.active_branch.name]
+    click.echo('{} matching PRs'.format(len(matches)))
+    if matches:
+        for p in matches:
             click.echo(click.style('Name:  ', fg='green', bold=True) + p.title)
             click.echo(click.style('State: ', fg='green', bold=True) + p.state)
             click.echo(click.style('Body:\n', fg='green', bold=True) + p.body)
             click.echo(click.style('URL: ', fg='green', bold=True) + p.html_url)
-            break
+
+    # TODO: build status from TC
+    # TODO: JIRA ticket status
 
 
 @feature.command()
@@ -142,14 +170,14 @@ def pr(config):
         project = url[url.find(start):].replace('.git', '')
         webbrowser.open_new('https://{}/compare/{}?expand=1'.format(project, encoded_branch))
     else:
-        click.echo("Can't open a PR for a non-github repo")
+        raise click.UsageError("Can't open a PR for a non-github repo")
 
 
 @cli.group()
 @pass_config
 def repo(config):
     """Configure repos"""
-    pass
+    check_repo(config)
 
 
 @cli.command()
@@ -173,14 +201,13 @@ def setup(config):
 
 
 @cli.group()
-@click.option('-a', '--address', default='teamcity')
+@click.option('-a', '--address', default='teamcity.lily.technology')
 @click.option('-p', '--port', default=8111)
 @pass_config
 def tc(config, address, port):
     """Manage/setup TeamCity"""
+    check_repo(config)
     config.tc = teamcity_helper.make_tc(address, port)
-
-    pass
 
 
 def load_project_file(path):
@@ -191,8 +218,7 @@ def load_project_file(path):
 
 @tc.command()
 @pass_config
-@click.pass_context
-def setup(ctx, config):
+def setup(config):
     """Create project TeamCity configurations based on a config file"""
     try:
         project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
@@ -201,7 +227,7 @@ def setup(ctx, config):
             component = ComponentConfiguration(c)
             teamcity_helper.setup(config.tc, component, config.repo_root)
     except IOError:
-        ctx.fail("No {} file found in {}".format(project_file_name, config.repo_root))
+        raise ZazuException("No {} file found in {}".format(project_file_name, config.repo_root))
 
 
 class ComponentConfiguration:
@@ -250,7 +276,8 @@ class BuildGoal:
             requires.update(self._requires)
             description = b.get('description', '')
             arch = b['arch']
-            self._builds[arch] = BuildSpec(type, vars, requires, description, arch)
+            script = b.get('script', None)
+            self._builds[arch] = BuildSpec(type, vars, requires, description, arch, script=script)
 
     def description(self):
         return self._description
@@ -267,12 +294,13 @@ class BuildGoal:
 
 class BuildSpec:
 
-    def __init__(self, type='release', vars={}, requires={}, description='', arch=''):
+    def __init__(self, type='release', vars={}, requires={}, description='', arch='', script=None):
         self._build_type = type
         self._build_vars = vars
         self._build_requires = requires
         self._build_description = description
         self._build_arch = arch
+        self._build_script=script
 
     def build_type(self):
         return self._build_type
@@ -289,21 +317,13 @@ class BuildSpec:
     def build_arch(self):
         return self._build_arch
 
+    def build_script(self):
+        return self._build_script
 
-@cli.command()
-@pass_config
-@click.option('-a', '--arch', default='local', help='the desired architecture to build for')
-@click.option('-t', '--type', type=click.Choice(cmake_helper.build_types), help='defaults to what is specified in the zazu.yaml file, or release if unspecified there')
-@click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
-@click.argument('goal')
-@click.pass_context
-def build(ctx, config, arch, type, verbose, goal):
-    """CI entry point to build project targets, the GOAL argument is the desired make target,
-     use distclean to clean whole build folder"""
-    # TODO Run the supplied build command
-    # For now assume cmake
-    r = 0
-    build_dir = os.path.join(config.repo_root, 'build', '{}-{}'.format(arch, type))
+
+def cmake_build(repo_root, arch, type, goal, verbose, vars):
+    build_dir = os.path.join(repo_root, 'build', '{}-{}'.format(arch, type))
+    ret = 0
     try:
         os.makedirs(build_dir)
     except OSError:
@@ -311,19 +331,47 @@ def build(ctx, config, arch, type, verbose, goal):
     if 'distclean' in goal:
         shutil.rmtree(build_dir)
     else:
-        # Parse file to find requirements then check that they exist, then build
-        project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
-        component = ComponentConfiguration(project_config['components'][0])
-        spec = component.get_spec(goal, arch, type)
-        requirements = spec.build_requires().get('zazu', [])
-        for r in requirements:
-            tool_helper.install_spec(r)
-        r = cmake_helper.configure(config.repo_root, build_dir, arch, spec.build_type(), spec.build_vars())
-        if r:
-            click.echo("Error configuring with cmake")
-            ctx.exit(r)
-        r = cmake_helper.build(build_dir, type, goal, verbose)
-        if r:
-            click.echo("Error building with cmake")
-            ctx.exit(r)
-    return r
+        echo = null_printer
+        if verbose:
+            echo = click.echo
+        ret = cmake_helper.configure(repo_root, build_dir, arch, type, vars, echo=echo)
+        if ret:
+            raise ZazuException("Error configuring with cmake")
+        ret = cmake_helper.build(build_dir, type, goal, verbose)
+        if ret:
+            raise ZazuException("Error building with cmake")
+    return ret
+
+
+@cli.command()
+@pass_config
+@click.option('-a', '--arch', default='local', help='the desired architecture to build for')
+@click.option('-t', '--type', type=click.Choice(cmake_helper.build_types), help='defaults to what is specified in the zazu.yaml file, or release if unspecified there')
+@click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
+@click.argument('goal')
+def build(config, arch, type, verbose, goal):
+    """CI entry point to build project targets, the GOAL argument is the desired make target,
+     use distclean to clean whole build folder"""
+    # Run the supplied build command if there is one, otherwise assume cmake
+    # Parse file to find requirements then check that they exist, then build
+    project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
+    component = ComponentConfiguration(project_config['components'][0])
+    spec = component.get_spec(goal, arch, type)
+    requirements = spec.build_requires().get('zazu', [])
+    for req in requirements:
+        if verbose:
+            tool_helper.install_spec(req, echo=click.echo)
+        else:
+            tool_helper.install_spec(req)
+    ret = 0
+    if spec.build_script() is None:
+        ret = cmake_build(config.repo_root, arch, spec.build_type(), goal, verbose, spec.build_vars())
+    else:
+        for s in spec.build_script():
+            if verbose:
+                click.echo(str(s))
+            ret = subprocess.call(str(s), shell=True)
+            if ret:
+                click.echo("Error {} exited with code {}".format(str(s), ret))
+                break
+    return ret
