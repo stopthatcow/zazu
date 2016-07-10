@@ -24,5 +24,4 @@ def get_browse_url(issue_id):
 
 # Some ideas for APIs
 # list work assigned to me in this sprint
-# create new ticket and then start a feature branch based on the created ID
 # update ticket progress (transition states)

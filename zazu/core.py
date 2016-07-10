@@ -97,21 +97,36 @@ def feature(config):
     """Create or update work items"""
     check_repo(config)
 
+
+def populate_jira_fields():
+    click.echo("Making a new ticket...")
+    issue_dict = {
+        'project': {'key': 'LC'},
+        'summary': click.prompt('Please enter a title'),
+        'description': click.prompt('Please enter a description'),
+        'issuetype': {'name': click.prompt('Please enter a type', default='Task')},
+    }
+    # TODO set assignee to me, fill in repo default component
+    return issue_dict
+
+
 @feature.command()
-@click.argument('name')
+@click.argument('name', required=False)
 @pass_config
 def start(config, name):
     """Start a new feature, much like git-flow but with more sugar"""
-    if name is None:
-        # TODO: interactively make new issue
-        click.echo('FIXME here we should interactively make new issue, until then supply a ticket number'.format(spec))
-        sys.exit(-1)
-        return
     diff = config.repo.index.diff(None)
-    if len(diff):
-        click.echo(config.repo.git.status('-s', '-uno'))
+    status = config.repo.git.status('-s', '-uno')
+    if len(diff) and len(status):
+        click.echo(status)
         if click.confirm('Local changes detected, stash first?', default=True):
             config.repo.git.stash()
+    if name is None:
+        fields = populate_jira_fields()
+        name = str(config.jira().create_issue(fields))
+    else:
+        # TODO verify issue with JIRA
+        pass
     branch_name = 'feature/' + name
     try:
         # Check if the target branch already exists
