@@ -23,7 +23,7 @@ setup(
                       'jira', 'GitPython', 'pyteamcity',
                       'pyyaml', 'keyring', 'autopep8',
                       'semantic_version', 'gcovr',
-                      'teamcity-messages'],
+                      'teamcity-messages', 'futures'],
     entry_points='''
         [console_scripts]
         zazu=zazu.core:cli

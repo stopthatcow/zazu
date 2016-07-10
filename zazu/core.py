@@ -21,13 +21,23 @@ import webbrowser
 import urllib
 import credential_helper
 import github
-
+import re
+import jira
+import concurrent.futures
 
 class Config:
 
     def __init__(self):
         self.repo_root = None
         self.repo = None
+        self._jira = None
+        self._tc = None
+
+    def jira(self):
+        if self._jira is None:
+            self._jira = jira_helper.make_jira()
+        return self._jira
+
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
@@ -133,30 +143,60 @@ def make_gh():
 
 def parse_github_url(url):
     """Parses github url into organization and repo name"""
-    tokens = url.replace('.git', '').split('/')
+    tokens = re.split('/|:', url.replace('.git', ''))
     repo = tokens.pop()
     organization = tokens.pop()
     return organization, repo
+
+
+def branch_to_issue(branch):
+    """converts 'feature/LC-936_tc_support' to 'LC-936'"""
+    return branch.split('/').pop().split('_')[0]
+
 
 
 @feature.command()
 @pass_config
 def status(config):
     """Get status of this feature branch"""
+    issue_id = branch_to_issue(config.repo.active_branch.name)
     gh = make_gh()
-    org, repo = parse_github_url(config.repo.remotes.origin.url)
-    pulls = gh.get_user(org).get_repo(repo).get_pulls()
-    matches = [p for p in pulls if p.head.ref == config.repo.active_branch.name]
-    click.echo('{} matching PRs'.format(len(matches)))
-    if matches:
-        for p in matches:
-            click.echo(click.style('Name:  ', fg='green', bold=True) + p.title)
-            click.echo(click.style('State: ', fg='green', bold=True) + p.state)
-            click.echo(click.style('Body:\n', fg='green', bold=True) + p.body)
-            click.echo(click.style('URL: ', fg='green', bold=True) + p.html_url)
 
-    # TODO: build status from TC
-    # TODO: JIRA ticket status
+    def get_issue(id):
+        return config.jira().issue(id)
+
+    def get_pulls_for_branch(branch):
+        pulls = gh.get_user(org).get_repo(repo).get_pulls()
+        return [p for p in pulls if p.head.ref == branch]
+
+    # Dispatch REST calls asynchronously
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        issue_future = executor.submit(get_issue, issue_id)
+        org, repo = parse_github_url(config.repo.remotes.origin.url)
+        pulls_future = executor.submit(get_pulls_for_branch, config.repo.active_branch.name)
+
+        concurrent.futures.wait([issue_future, pulls_future])
+
+        try:
+            issue = issue_future.result()
+            type = issue.fields.issuetype.name
+            click.echo(click.style('Ticket info:', bg='white', fg='black'))
+            click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
+            click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
+        except jira.exceptions.JIRAError:
+            click.echo("    No JIRA ticket found")
+
+        matches = pulls_future.result()
+        click.secho('Pull request info:', bg='white', fg='black')
+        click.echo('    {} matching PRs'.format(len(matches)))
+        if matches:
+            for p in matches:
+                click.echo(click.style('    PR Name:  ', fg='green', bold=True) + p.title)
+                click.echo(click.style('    PR State: ', fg='green', bold=True) + p.state)
+                click.echo(click.style('    PR Body:  ', fg='green', bold=True) + p.body)
+                click.echo(click.style('    PR URL:   ', fg='green', bold=True) + p.html_url)
+
+        # TODO: build status from TC
 
 
 @feature.command()
@@ -171,6 +211,14 @@ def pr(config):
         webbrowser.open_new('https://{}/compare/{}?expand=1'.format(project, encoded_branch))
     else:
         raise click.UsageError("Can't open a PR for a non-github repo")
+
+
+@feature.command()
+@pass_config
+def ticket(config):
+    """Open the JIRA ticket for this feature"""
+    issue_id = branch_to_issue(config.repo.active_branch.name)
+    webbrowser.open_new(jira_helper.get_browse_url(issue_id))
 
 
 @cli.group()
@@ -322,6 +370,7 @@ class BuildSpec:
 
 
 def cmake_build(repo_root, arch, type, goal, verbose, vars):
+    """Build using cmake"""
     build_dir = os.path.join(repo_root, 'build', '{}-{}'.format(arch, type))
     ret = 0
     try:
@@ -375,3 +424,9 @@ def build(config, arch, type, verbose, goal):
                 click.echo("Error {} exited with code {}".format(str(s), ret))
                 break
     return ret
+
+
+from click.testing import CliRunner
+if __name__ == "__main__":
+    runner = CliRunner()
+    result = runner.invoke(cli, ['feature', 'status'])
