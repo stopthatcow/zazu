@@ -102,18 +102,23 @@ def populate_jira_fields():
     click.echo("Making a new ticket...")
     issue_dict = {
         'project': {'key': 'LC'},
-        'summary': click.prompt('Please enter a title'),
-        'description': click.prompt('Please enter a description'),
-        'issuetype': {'name': click.prompt('Please enter a type', default='Task')},
+        'summary': click.prompt('Enter a title'),
+        'description': click.prompt('Enter a description'),
+        'issuetype': {'name': click.prompt('Enter an issue type', default='Task')},
     }
-    # TODO set assignee to me, fill in repo default component
+    # TODO fill in repo default component
     return issue_dict
+
+
+def description_to_branch(description):
+    return description.replace(' ', '_')
 
 
 @feature.command()
 @click.argument('name', required=False)
+@click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
 @pass_config
-def start(config, name):
+def start(config, name, no_verify):
     """Start a new feature, much like git-flow but with more sugar"""
     diff = config.repo.index.diff(None)
     status = config.repo.git.status('-s', '-uno')
@@ -123,11 +128,18 @@ def start(config, name):
             config.repo.git.stash()
     if name is None:
         fields = populate_jira_fields()
-        name = str(config.jira().create_issue(fields))
-    else:
-        # TODO verify issue with JIRA
-        pass
-    branch_name = 'feature/' + name
+        issue = config.jira().create_issue(fields)
+        # Self assign the new ticket
+        config.jira().assign_issue(issue, issue.fields.reporter.name)
+        name = str(issue)
+        click.echo('Created ticket "{}"'.format(name))
+        short_description = description_to_branch(click.prompt('Enter a short description for the branch'))
+    branch_name = 'feature/{}_{}'.format(name, short_description)
+    if not no_verify:
+        issue_id = branch_to_issue(branch_name)
+        issue = jira_helper.get_issue(config.jira(), issue_id)
+        if issue is None:
+            raise click.BadParameter('no ticket named "{}"'.format(issue_id))
     try:
         # Check if the target branch already exists
         config.repo.git.checkout(branch_name)
@@ -136,7 +148,10 @@ def start(config, name):
         click.echo('Checking out develop...')
         config.repo.heads.develop.checkout()
         click.echo('Pulling from origin...')
-        config.repo.remotes.origin.pull()
+        try:
+            config.repo.remotes.origin.pull()
+        except git.exc.GitCommandError:
+            click.secho('WARNING: unable to pull from origin!', fg='red')
         click.echo('Creating new branch named "{}"...'.format(branch_name))
         config.repo.git.checkout('HEAD', b=branch_name)
 
@@ -146,6 +161,7 @@ def make_gh():
     while True:
         user, password = credential_helper.get_user_pass_credentials('GitHub', use_saved_credentials)
         gh = github.Github(user, password)
+        # TODO handle GitHub two factor auth
         try:
             # TODO find a fast way to check credentials
             # gh.get_user().name
@@ -181,21 +197,19 @@ def status(config):
         return config.jira().issue(id)
 
     def get_pulls_for_branch(branch):
+        org, repo = parse_github_url(config.repo.remotes.origin.url)
         pulls = gh.get_user(org).get_repo(repo).get_pulls()
         return [p for p in pulls if p.head.ref == branch]
 
     # Dispatch REST calls asynchronously
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         issue_future = executor.submit(get_issue, issue_id)
-        org, repo = parse_github_url(config.repo.remotes.origin.url)
         pulls_future = executor.submit(get_pulls_for_branch, config.repo.active_branch.name)
 
-        concurrent.futures.wait([issue_future, pulls_future])
-
+        click.echo(click.style('Ticket info:', bg='white', fg='black'))
         try:
             issue = issue_future.result()
             type = issue.fields.issuetype.name
-            click.echo(click.style('Ticket info:', bg='white', fg='black'))
             click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
             click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
         except jira.exceptions.JIRAError:
@@ -211,7 +225,7 @@ def status(config):
                 click.echo(click.style('    PR Body:  ', fg='green', bold=True) + p.body)
                 click.echo(click.style('    PR URL:   ', fg='green', bold=True) + p.html_url)
 
-        # TODO: build status from TC
+                # TODO: build status from TC
 
 
 @feature.command()
@@ -261,6 +275,45 @@ def setup():
 def setup(config):
     """Setup default git hooks"""
     git_helper.install_git_hooks(config.repo_root)
+
+
+def get_merged_branches(repo, target_branch, remote=False):
+    args = ['--merged', target_branch]
+    if remote:
+        args.insert(0, '-r')
+    return [b.strip() for b in repo.git.branch(args).split('\n')]
+
+
+@repo.command()
+@click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
+@pass_config
+def cleanup(config, remote):
+    """Clean up branches that have been merged to origin/master"""
+    def filter_undeletable(branches):
+        """Filters out branches that we don't want to delete"""
+        return filter(lambda s: not ('master' in s or 'develop' in s or '*' in s), branches)
+
+    config.repo.git.checkout('develop')
+    if remote:
+        merged_remote_branches = filter_undeletable(get_merged_branches(config.repo, 'origin/master', remote=True))
+        if merged_remote_branches:
+            click.echo('The following remote branches will be deleted:')
+            for b in merged_remote_branches:
+                click.echo('    - {}'.format(b))
+            if click.confirm('Proceed?'):
+                for b in merged_remote_branches:
+                    click.echo('Deleting {}'.format(b))
+                    config.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
+        config.repo.git.fetch(['--prune'])
+    merged_branches = filter_undeletable(get_merged_branches(config.repo, 'origin/master'))
+    if merged_branches:
+        click.echo('The following local branches will be deleted:')
+        for b in merged_branches:
+            click.echo('    - {}'.format(b))
+        if click.confirm('Proceed?'):
+            for b in merged_branches:
+                click.echo('Deleting {}'.format(b))
+                config.repo.git.branch('-d', b)
 
 
 @cli.group()
