@@ -12,7 +12,7 @@ import shutil
 
 
 class ToolEnforcer:
-
+    """Holds a checker fn, installer fn, and uninstaller fn"""
     def __init__(self, check, install, uninstall):
         self.check_fn = check
         self.install_fn = install
@@ -36,19 +36,38 @@ def get_install_path(name, version):
 
 
 def make_install_path(name, version):
+    """Creates installation directory"""
     path = get_install_path(name, version)
+    ensure_directory_exists(path)
+    return path
+
+
+def ensure_directory_exists(path):
+    """Ensures that a directory exists"""
     try:
         os.makedirs(path)
     except OSError:
         pass
-    return path
 
 
-def check_exists(name, version):
-    return os.path.exists(get_install_path(name, version))
+def check_token_file_exists(name, version):
+    """check if the token file exists"""
+    return os.path.exists(token_file(name, version))
+
+
+def token_file(name, version):
+    """Returns the path to the token file"""
+    return os.path.join(get_install_path(name, version), 'ZAZU_INSTALLED')
+
+
+def touch_token_file(name, version):
+    """Creates a token file in the installation folder"""
+    with open(token_file(name, version), 'a'):
+        pass
 
 
 def download_with_progress_bar(name, url):
+    """Download a URL with a progress bar"""
     ret = b''
     r = requests.get(url, stream=True)
     if r.status_code == 200:
@@ -58,6 +77,32 @@ def download_with_progress_bar(name, url):
                 ret += chunk
                 bar.update(len(chunk))
     return ret
+
+
+def download_extract_tar_to_folder(name, url, path):
+    """Download and extracts a (optionally zipped) tarfile and extracts it to a folder"""
+    r = download_with_progress_bar(name, url)
+    ensure_directory_exists(path)
+    shutil.rmtree(path)
+    ensure_directory_exists(path)
+    click.echo('Extracting to "{}"...'.format(path))
+    file_like_object = io.BytesIO(r)
+    with tarfile.open(fileobj=file_like_object) as f:
+        f.extractall(path)
+
+
+def install_tar_file_from_url(name, version, url_map):
+    """Download and install a (optionally zipped) tar file from a URL and
+    extracts it to the proper instalation folder"""
+    try:
+        url = url_map[platform.system()][platform.machine()]
+        path = make_install_path(name, version)
+        download_extract_tar_to_folder(name, url, path)
+        touch_token_file(name, version)
+        return True
+    except KeyError:
+        click.echo('Unsupported platform {} or arch {}'.format(platform.system(), platform.machine()))
+        sys.exit(-1)
 
 
 def install_linaro_4_9_2014_05(name, version):
@@ -70,21 +115,33 @@ def install_linaro_4_9_2014_05(name, version):
             'x86_64': 'https://github.com/LilyRobotics/toolchains/blob/master/gcc-linaro-4.9-2014.05-arm-linux-gnueabihf-x86_64-darwin.tar.gz?raw=true'
         }
     }
-    try:
-        url = toolchains[platform.system()][platform.machine()]
-        r = download_with_progress_bar(name, url)
+    return install_tar_file_from_url(name, version, toolchains)
 
-        path = make_install_path(name, version)
-        shutil.rmtree(path)
-        make_install_path(name, version)
-        click.echo('Extracting to "{}"...'.format(path))
-        file_like_object = io.BytesIO(r)
-        with tarfile.open(fileobj=file_like_object) as f:
-            f.extractall(path)
-            return True
-    except KeyError:
-        click.echo('Unsupported platform {} or arch {}'.format(platform.system(), platform.machine()))
-        sys.exit(-1)
+
+def install_gcc_arm_none_eabi_4_9_2015_q1(name, version):
+    """Installs gcc-arm-none-eabi-4.9 2015-q1"""
+    toolchains = {
+        'Linux': {
+            'x86_64': 'https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q1-update/+download/gcc-arm-none-eabi-4_9-2015q1-20150306-linux.tar.bz2'
+        },
+        'Darwin': {
+            'x86_64': 'https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q1-update/+download/gcc-arm-none-eabi-4_9-2015q1-20150306-mac.tar.bz2'
+        }
+    }
+    return install_tar_file_from_url(name, version, toolchains)
+
+
+def install_gcc_arm_none_eabi_4_7_2014_q2(name, version):
+    """Installs gcc-arm-none-eabi-4.7 2014-q2"""
+    toolchains = {
+        'Linux': {
+            'x86_64': 'https://launchpad.net/gcc-arm-embedded/4.7/4.7-2014-q2-update/+download/gcc-arm-none-eabi-4_7-2014q2-20140408-linux.tar.bz2'
+        },
+        'Darwin': {
+            'x86_64': 'https://launchpad.net/gcc-arm-embedded/4.7/4.7-2014-q2-update/+download/gcc-arm-none-eabi-4_7-2014q2-20140408-mac.tar.bz2'
+        }
+    }
+    return install_tar_file_from_url(name, version, toolchains)
 
 
 def uninstall_folder(name, version):
@@ -104,7 +161,12 @@ def get_tool_registry():
     tools = {
         'gcc-linaro-arm-linux-gnueabihf':
             {
-                '4.9': ToolEnforcer(check_exists, install_linaro_4_9_2014_05, uninstall_folder)
+                '4.9': ToolEnforcer(check_token_file_exists, install_linaro_4_9_2014_05, uninstall_folder)
+            },
+        'gcc-arm-none-eabi':
+            {
+                '4.7': ToolEnforcer(check_token_file_exists, install_gcc_arm_none_eabi_4_7_2014_q2, uninstall_folder),
+                '4.9': ToolEnforcer(check_token_file_exists, install_gcc_arm_none_eabi_4_9_2015_q1, uninstall_folder)
             }
     }
     return tools
@@ -133,6 +195,7 @@ def get_enforcer(name, version):
 
 
 def parse_install_spec(spec):
+    """Splits version spec into name and version number"""
     components = spec.split('==')
     name = components[0]
     version = None
@@ -142,6 +205,7 @@ def parse_install_spec(spec):
 
 
 def install_spec(spec, force=False, echo=lambda x: x):
+    """Installs a known spec"""
     ret = 0
     name, version = parse_install_spec(spec)
     enforcer = get_enforcer(name, version)
@@ -160,6 +224,7 @@ def install_spec(spec, force=False, echo=lambda x: x):
 
 
 def uninstall_spec(spec, echo=lambda x: x):
+    """Uninstalls a known spec"""
     name, version = parse_install_spec(spec)
     enforcer = get_enforcer(name, version)
     if enforcer.check():

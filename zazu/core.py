@@ -16,7 +16,6 @@ import yaml
 import shutil
 import cmake_helper
 import tool_helper
-import sys
 import webbrowser
 import urllib
 import credential_helper
