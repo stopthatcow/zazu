@@ -266,6 +266,8 @@ def review(config):
     if start in url:
         project = url[url.find(start):].replace('.git', '')
         webbrowser.open_new('https://{}/compare/{}?expand=1'.format(project, encoded_branch))
+        # TODO: add link to jira ticket in the PR, zazu logo
+        # <img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=50"/>
     else:
         raise click.UsageError("Can't open a PR for a non-github repo")
 

@@ -1,18 +1,51 @@
-#Zazu (at your service)
+#Zazu (at your service) 
+
+<img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=150"/>
 
 Zazu is a CLI development workflow management tool that combines elements of git flow with CI and issue tracking.
 
-[//]: # (http://graphviz.herokuapp.com/?token=4be881f64a929c1799830c1432830f30)
-![alt text](http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png/revision/latest?cb=20120429182840 "Zazu") ![alt text](http://graphviz.herokuapp.com/?file=4be881f64a929c1799830c1432830f30.dot.png)
+<!---
+digraph G {
+  "Zazu" -> "TeamCity"
+  "Zazu" -> "GitHub"
+  "Zazu" -> "Jira"
+}
+-->
+![alt text](doc/services.png)
 
-Zazu is a [Click](http://click.pocoo.org/5/) based CLI and is implemented in Python. If you're wondering why Click, this is a well [answered](http://click.pocoo.org/5/why/) question.
+Zazu is implemented in Python and is a [Click](http://click.pocoo.org/5/) based CLI. If you're wondering why Click, this is a well [answered](http://click.pocoo.org/5/why/) question.
 
 ##Install
 `pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple zazu`
 
 ##Command overview
-[//]: # (http://graphviz.herokuapp.com/?token=52f183defd40d8186202b2027291e59b)
-![alt text](http://graphviz.herokuapp.com/?file=52f183defd40d8186202b2027291e59b.dot.png)
+The following diagram shows the available subcommands of zazu.
+
+<!---
+digraph G {
+  "zazu" -> "build"
+  "zazu" -> "tool"
+  "tool" -> "install"
+  "tool" -> "uninstall"
+  "zazu" -> "repo"
+  "repo" -> "setup"
+  "setup" -> "all"  
+  "setup" -> "hooks"  
+  "setup" -> "ci"
+  "repo" -> "cleanup"
+  "repo" -> "repo_init"
+  repo_init [label=init, style=dashed]
+  "repo" -> "repo_clone"
+  repo_clone [label=clone, style=dashed]
+  "zazu" -> "dev"
+  "dev" -> "start"
+  "dev" -> "status"
+  "dev" -> "builds"
+  "dev" -> "review"
+  "dev" -> "ticket"
+}
+-->
+![alt text](doc/cmds.png)
 
 Note: dashed lines are not yet implemented
 
@@ -48,7 +81,7 @@ Zazu will automatically try to obtain required build tools needed for each targe
 - `zazu tool install <tool==version>`
 - `zazu tool uninstall <tool==version>`
 
-These tools will be installed to the `~/.bob/tools/` folder.
+These tools will be installed to the `~/.zazu/tools/` folder.
 
 
 ##zazu.yaml file
@@ -70,7 +103,7 @@ The zazu.yaml file lives at the base of the repo and describes the CI goals and 
 	        builds:
 	          - arch: arm32-linux-gnueabihf
 	            requires:
-	              bob:
+	              zazu:
 	                - gcc-linaro-arm-linux-gnueabihf==4.9
 	          - arch: x86_64-linux-gcc
 
