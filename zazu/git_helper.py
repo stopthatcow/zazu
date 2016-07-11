@@ -62,3 +62,11 @@ def install_git_hook(hooks_folder, hook_name, hook_resource_path):
             pass
         hook_path = os.path.join(hooks_folder, hook_name)
         shutil.copy(hook_resource_path, hook_path)
+
+
+def get_merged_branches(repo, target_branch, remote=False):
+    """Returns list of branches that have been merged with the target_branch"""
+    args = ['--merged', target_branch]
+    if remote:
+        args.insert(0, '-r')
+    return [b.strip() for b in repo.git.branch(args).split('\n')]

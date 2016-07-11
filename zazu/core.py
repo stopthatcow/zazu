@@ -24,6 +24,7 @@ import github
 import re
 import jira
 import concurrent.futures
+import pip
 
 class Config:
 
@@ -70,6 +71,16 @@ def cli(config):
         pass
 
 
+@cli.command()
+@click.option('--version', default='', help='version to upgrade to or empty for latest')
+def upgrade(version):
+    """Upgrade Zazu using pip"""
+    # TODO for now hard code lily URLs, in future lean on pip.conf for this
+    return pip.main(['install', '--upgrade',
+                     '--trusted-host', 'pypi.lily.technology',
+                     '--index-url', 'http://pypi.lily.technology:8080/simple', 'zazu{}'.format(version)])
+
+
 @cli.group()
 def tool():
     """Manage tools that zazu is familiar with"""
@@ -93,15 +104,31 @@ def uninstall(spec):
 
 @cli.group()
 @pass_config
-def feature(config):
+def dev(config):
     """Create or update work items"""
     check_repo(config)
 
 
+@cli.group()
+@pass_config
+def repo(config):
+    """Manage repository"""
+    check_repo(config)
+
+
+@repo.group()
+@pass_config
+def setup(config):
+    """Setup repository with services"""
+    pass
+
+
 def populate_jira_fields():
+    """Prompt the user for ticket info"""
     click.echo("Making a new ticket...")
     issue_dict = {
-        'project': {'key': 'LC'},
+        # TODO load project key from config
+        'project': {'key': click.prompt('Enter prokect key', default='LC')},
         'summary': click.prompt('Enter a title'),
         'description': click.prompt('Enter a description'),
         'issuetype': {'name': click.prompt('Enter an issue type', default='Task')},
@@ -114,11 +141,13 @@ def description_to_branch(description):
     return description.replace(' ', '_')
 
 
-@feature.command()
+@dev.command()
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
+@click.option('-t', '--type', type=click.Choice(['feature', 'release', 'hotfix']), help='the ticket type to make',
+              default='feature')
 @pass_config
-def start(config, name, no_verify):
+def start(config, name, no_verify, type):
     """Start a new feature, much like git-flow but with more sugar"""
     diff = config.repo.index.diff(None)
     status = config.repo.git.status('-s', '-uno')
@@ -134,7 +163,7 @@ def start(config, name, no_verify):
         name = str(issue)
         click.echo('Created ticket "{}"'.format(name))
         short_description = description_to_branch(click.prompt('Enter a short description for the branch'))
-    branch_name = 'feature/{}_{}'.format(name, short_description)
+    branch_name = '{}/{}_{}'.format(type, name, short_description)
     if not no_verify:
         issue_id = branch_to_issue(branch_name)
         issue = jira_helper.get_issue(config.jira(), issue_id)
@@ -186,10 +215,10 @@ def branch_to_issue(branch):
 
 
 
-@feature.command()
+@dev.command()
 @pass_config
 def status(config):
-    """Get status of this feature branch"""
+    """Get status of this branch"""
     issue_id = branch_to_issue(config.repo.active_branch.name)
     gh = make_gh()
 
@@ -228,10 +257,10 @@ def status(config):
                 # TODO: build status from TC
 
 
-@feature.command()
+@dev.command()
 @pass_config
-def pr(config):
-    """Create a pull request for this feature branch"""
+def review(config):
+    """Create or display pull request"""
     encoded_branch = urllib.quote_plus(config.repo.active_branch.name)
     url = config.repo.remotes.origin.url
     start = 'github.com'
@@ -242,7 +271,7 @@ def pr(config):
         raise click.UsageError("Can't open a PR for a non-github repo")
 
 
-@feature.command()
+@dev.command()
 @pass_config
 def ticket(config):
     """Open the JIRA ticket for this feature"""
@@ -250,52 +279,60 @@ def ticket(config):
     webbrowser.open_new(jira_helper.get_browse_url(issue_id))
 
 
-@cli.group()
+# @cli.command()
+# def setup():
+#     """Setup pip configuration to pull packages from local pypi server"""
+#     installed = False
+#     try:
+#         installed = pypi_helper.check_pypi_config()
+#     except IOError:
+#         if not click.confirm("Warning, existing pip configuration detected! Continue?", default=False):
+#             return
+#     if not installed:
+#         pypi_helper.enforce_pypi_config()
+
+
+@setup.command()
 @pass_config
-def repo(config):
-    """Configure repos"""
-    check_repo(config)
+@click.pass_context
+def all(ctx, config):
+    """Setup all services"""
+    ctx.forward(hooks)
+    ctx.forward(ci)
 
-
-@cli.command()
-def setup():
-    """Setup pip configuration to pull packages from local pypi server"""
-    installed = False
-    try:
-        installed = pypi_helper.check_pypi_config()
-    except IOError:
-        if not click.confirm("Warning, existing pip configuration detected! Continue?", default=False):
-            return
-    if not installed:
-        pypi_helper.enforce_pypi_config()
-
-
-@repo.command()
+@setup.command()
 @pass_config
-def setup(config):
+def hooks(config):
     """Setup default git hooks"""
     git_helper.install_git_hooks(config.repo_root)
 
 
-def get_merged_branches(repo, target_branch, remote=False):
-    args = ['--merged', target_branch]
-    if remote:
-        args.insert(0, '-r')
-    return [b.strip() for b in repo.git.branch(args).split('\n')]
+@repo.command()
+@pass_config
+def clone(config):
+    """Clone and initialize a repo"""
+    raise NotImplementedError
+
+
+@repo.command()
+@pass_config
+def init(config):
+    """Initialize repo directory structure"""
+    raise NotImplementedError
 
 
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
 @pass_config
 def cleanup(config, remote):
-    """Clean up branches that have been merged to origin/master"""
+    """Clean up merged branches"""
     def filter_undeletable(branches):
         """Filters out branches that we don't want to delete"""
         return filter(lambda s: not ('master' in s or 'develop' in s or '*' in s), branches)
 
     config.repo.git.checkout('develop')
     if remote:
-        merged_remote_branches = filter_undeletable(get_merged_branches(config.repo, 'origin/master', remote=True))
+        merged_remote_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master', remote=True))
         if merged_remote_branches:
             click.echo('The following remote branches will be deleted:')
             for b in merged_remote_branches:
@@ -305,7 +342,7 @@ def cleanup(config, remote):
                     click.echo('Deleting {}'.format(b))
                     config.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
         config.repo.git.fetch(['--prune'])
-    merged_branches = filter_undeletable(get_merged_branches(config.repo, 'origin/master'))
+    merged_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master'))
     if merged_branches:
         click.echo('The following local branches will be deleted:')
         for b in merged_branches:
@@ -316,32 +353,27 @@ def cleanup(config, remote):
                 config.repo.git.branch('-d', b)
 
 
-@cli.group()
-@click.option('-a', '--address', default='teamcity.lily.technology')
-@click.option('-p', '--port', default=8111)
-@pass_config
-def tc(config, address, port):
-    """Manage/setup TeamCity"""
-    check_repo(config)
-    config.tc = teamcity_helper.make_tc(address, port)
-
-
 def load_project_file(path):
     """Load a project yaml file"""
     with open(path) as f:
         return yaml.load(f)
 
 
-@tc.command()
+@setup.command()
 @pass_config
-def setup(config):
-    """Create project TeamCity configurations based on a config file"""
+def ci(config):
+    """Setup TeamCity configurations based on a zazu.yaml file"""
+    address = 'teamcity.lily.technology'
+    port = 8111
+    check_repo(config)
+    config.tc = teamcity_helper.make_tc(address, port)
     try:
         project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
-        components = project_config['components']
-        for c in components:
-            component = ComponentConfiguration(c)
-            teamcity_helper.setup(config.tc, component, config.repo_root)
+        if click.confirm("Post build configuration to TeamCity?"):
+            components = project_config['components']
+            for c in components:
+                component = ComponentConfiguration(c)
+                teamcity_helper.setup(config.tc, component, config.repo_root)
     except IOError:
         raise ZazuException("No {} file found in {}".format(project_file_name, config.repo_root))
 
@@ -467,7 +499,7 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
 def build(config, arch, type, verbose, goal):
-    """CI entry point to build project targets, the GOAL argument is the desired make target,
+    """Build project targets, the GOAL argument is the desired make target,
      use distclean to clean whole build folder"""
     # Run the supplied build command if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
