@@ -120,4 +120,4 @@ Architechures are defined as tupple in the folowing form:
 - x86\_32-win-msvc_2013
 - x86\_32-win-msvc_2015
 - arm32-linux-gnueabihf
-- arm32-none-eabihf
+- arm32-none-eabi

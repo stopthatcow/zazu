@@ -137,7 +137,62 @@ def populate_jira_fields():
 
 
 def description_to_branch(description):
+    """Sanitizes a string for inclusion into branch name"""
     return description.replace(' ', '_')
+
+
+def make_issue_descriptor(name):
+    """Splits input into type, id and description"""
+    type = None
+    description = None
+    if '-' not in name:
+        raise Error("Name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
+    components = name.split('/')
+    if len(components) == 2:
+        type = components[0]
+    components = components.pop().split('_', 1)
+    if len(components) == 2:
+        description = components[1]
+    id = components[0]
+    return IssueDescriptor(type, id, description)
+
+
+class IssueDescriptor:
+    """Info holder of type, ticket ID, and description"""
+    def __init__(self, type, id, description=''):
+        self.type = type
+        self.id = id
+        self.description = description
+
+    def get_branch_name(self):
+        sanitized_description = self.description.replace(' ', '_')
+        return '{}/{}_{}'.format(self.type, self.id, sanitized_description)
+
+
+def make_ticket(jira):
+    """Creates a new jira ticket interactively"""
+    fields = populate_jira_fields()
+    issue = jira.create_issue(fields)
+    # Self assign the new ticket
+    jira.assign_issue(issue, issue.fields.reporter.name)
+    return issue
+
+
+def offer_to_stash_changes(repo):
+    """Offers to stash local changes if there are any"""
+    diff = repo.index.diff(None)
+    status = repo.git.status('-s', '-uno')
+    if len(diff) and len(status):
+        click.echo(status)
+        if click.confirm('Local changes detected, stash first?', default=True):
+            repo.git.stash()
+
+
+def verify_ticket_exists(jira, ticket_id):
+    """Verify that a given ticket exists"""
+    issue = jira_helper.get_issue(jira, ticket_id)
+    if issue is None:
+        raise click.BadParameter('no ticket named "{}"'.format(ticket_id))
 
 
 @dev.command()
@@ -148,26 +203,17 @@ def description_to_branch(description):
 @pass_config
 def start(config, name, no_verify, type):
     """Start a new feature, much like git-flow but with more sugar"""
-    diff = config.repo.index.diff(None)
-    status = config.repo.git.status('-s', '-uno')
-    if len(diff) and len(status):
-        click.echo(status)
-        if click.confirm('Local changes detected, stash first?', default=True):
-            config.repo.git.stash()
+    offer_to_stash_changes(config.repo)
     if name is None:
-        fields = populate_jira_fields()
-        issue = config.jira().create_issue(fields)
-        # Self assign the new ticket
-        config.jira().assign_issue(issue, issue.fields.reporter.name)
-        name = str(issue)
+        name = make_ticket(config.jira())
         click.echo('Created ticket "{}"'.format(name))
-        short_description = description_to_branch(click.prompt('Enter a short description for the branch'))
-    branch_name = '{}/{}_{}'.format(type, name, short_description)
+    issue = make_issue_descriptor(name)
     if not no_verify:
-        issue_id = branch_to_issue(branch_name)
-        issue = jira_helper.get_issue(config.jira(), issue_id)
-        if issue is None:
-            raise click.BadParameter('no ticket named "{}"'.format(issue_id))
+        verify_ticket_exists(config.jira(), issue.id)
+    if issue.description is None:
+        issue.description = click.prompt('Enter a short description for the branch')
+    issue.type = type
+    branch_name = issue.get_branch_name()
     try:
         # Check if the target branch already exists
         config.repo.git.checkout(branch_name)
@@ -211,7 +257,6 @@ def parse_github_url(url):
 def branch_to_issue(branch):
     """converts 'feature/LC-936_tc_support' to 'LC-936'"""
     return branch.split('/').pop().split('_')[0]
-
 
 
 @dev.command()
