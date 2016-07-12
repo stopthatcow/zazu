@@ -24,6 +24,10 @@ import re
 import jira
 import concurrent.futures
 import pip
+import requests
+import socket
+import keyring
+import getpass
 
 class Config:
 
@@ -230,19 +234,45 @@ def start(config, name, no_verify, type):
         config.repo.git.checkout('HEAD', b=branch_name)
 
 
+def get_gh_token():
+    """Make new GitHub token"""
+    api_url = 'https://api.github.com'
+    add_auth={
+        "scopes": [
+            "repo"
+        ],
+        "note": "zazu for {}@{}".format(getpass.getuser(), socket.gethostname())
+    }
+    token = None
+    while token is None:
+        user = click.prompt("GitHub username", type=str)
+        password = click.prompt("GitHub password", type=str, hide_input=True)
+        r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
+        if r.status_code == 401:
+            if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
+                headers = {'X-GitHub-OTP': click.prompt('GitHub two-factor code (6 digits)', type=str)}
+                r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
+            else:
+                click.echo("Invalid username or password!")
+                continue
+        if r.status_code == 201:
+            token = r.json()['token']
+        elif r.status_code == 422:
+            click.echo('You already have a GitHub token for zazu in GitHub but it is not saved in the keychain! '
+                       'Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
+            token = click.prompt('Enter new token manually')
+        else:
+            raise Exception("Error authenticating with GitHub, status:{} content:{}".format(r.status_code, r.json()))
+    return token
+
+
 def make_gh():
-    use_saved_credentials = True
-    while True:
-        user, password = credential_helper.get_user_pass_credentials('GitHub', use_saved_credentials)
-        gh = github.Github(user, password)
-        # TODO handle GitHub two factor auth
-        try:
-            # TODO find a fast way to check credentials
-            # gh.get_user().name
-            break
-        except github.GithubException:
-            click.echo("incorrect username or password!")
-            use_saved_credentials = False
+    token = keyring.get_password('https://api.github.com', 'token')
+    if token is None:
+        click.echo("No saved GitHub token found in keychain, lets add one...")
+        token = get_gh_token()
+        keyring.set_password('https://api.github.com', 'token', token)
+    gh = github.Github(token)
     return gh
 
 
