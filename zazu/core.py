@@ -126,6 +126,11 @@ def setup(config):
     pass
 
 
+ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
+ZAZU_REPO_URL = 'https://github.com/LilyRobotics/zazu'
+JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
+
+
 def populate_jira_fields():
     """Prompt the user for ticket info"""
     click.echo("Making a new ticket...")
@@ -133,7 +138,7 @@ def populate_jira_fields():
         # TODO load project key from config
         'project': {'key': click.prompt('Enter prokect key', default='LC')},
         'summary': click.prompt('Enter a title'),
-        'description': click.prompt('Enter a description'),
+        'description': '{}\n\n{}'.format(click.prompt('Enter a description'), JIRA_CREATED_BY_ZAZU),
         'issuetype': {'name': click.prompt('Enter an issue type', default='Task')},
     }
     # TODO fill in repo default component
@@ -209,7 +214,7 @@ def start(config, name, no_verify, type):
     """Start a new feature, much like git-flow but with more sugar"""
     offer_to_stash_changes(config.repo)
     if name is None:
-        name = make_ticket(config.jira())
+        name = str(make_ticket(config.jira()))
         click.echo('Created ticket "{}"'.format(name))
     issue = make_issue_descriptor(name)
     if not no_verify:
