@@ -137,9 +137,9 @@ def populate_jira_fields():
     issue_dict = {
         # TODO load project key from config
         'project': {'key': click.prompt('Enter project key', default='LC')},
-        'summary': click.prompt('Enter a title'),
-        'description': '{}\n\n{}'.format(click.prompt('Enter a description'), JIRA_CREATED_BY_ZAZU),
         'issuetype': {'name': click.prompt('Enter an issue type', default='Task')},
+        'summary': click.prompt('Enter a title'),
+        'description': '{}\n\n{}'.format(click.prompt('Enter a description'), JIRA_CREATED_BY_ZAZU)
     }
     # TODO fill in repo default component
     return issue_dict
