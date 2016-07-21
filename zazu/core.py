@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """core functions for zazu"""
-
+from zazu import __version__
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"
 
 import click
 import jira_helper
-import pypi_helper
 import git_helper
 import git
 import teamcity_helper
@@ -65,6 +64,7 @@ class ZazuException(Exception):
 
 
 @click.group()
+@click.version_option(version=__version__)
 @pass_config
 def cli(config):
     try:
@@ -409,10 +409,11 @@ def cleanup(config, remote):
     """Clean up merged branches"""
     def filter_undeletable(branches):
         """Filters out branches that we don't want to delete"""
-        return filter(lambda s: not ('master' in s or 'develop' in s or '*' in s), branches)
+        return filter(lambda s: not ('master' == s or 'develop' == s or '*' in s or '-' == s), branches)
 
     config.repo.git.checkout('develop')
     if remote:
+        config.repo.git.fetch('--prune')
         merged_remote_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master', remote=True))
         if merged_remote_branches:
             click.echo('The following remote branches will be deleted:')
@@ -422,7 +423,6 @@ def cleanup(config, remote):
                 for b in merged_remote_branches:
                     click.echo('Deleting {}'.format(b))
                     config.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
-        config.repo.git.fetch(['--prune'])
     merged_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master'))
     if merged_branches:
         click.echo('The following local branches will be deleted:')
@@ -605,9 +605,3 @@ def build(config, arch, type, verbose, goal):
                 click.echo("Error {} exited with code {}".format(str(s), ret))
                 break
     return ret
-
-
-from click.testing import CliRunner
-if __name__ == "__main__":
-    runner = CliRunner()
-    result = runner.invoke(cli, ['feature', 'status'])
