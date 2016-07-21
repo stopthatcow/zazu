@@ -290,7 +290,7 @@ def parse_github_url(url):
 
 
 def branch_to_issue(branch):
-    """converts 'feature/LC-936_tc_support' to 'LC-936'"""
+    """converts 'feature/LC-XXX_blah' to 'LC-XXX'"""
     return branch.split('/').pop().split('_')[0]
 
 
@@ -333,7 +333,7 @@ def status(config):
                 click.echo(click.style('    PR Body:  ', fg='green', bold=True) + p.body)
                 click.echo(click.style('    PR URL:   ', fg='green', bold=True) + p.html_url)
 
-                # TODO: build status from TC
+        # TODO: build status from TC
 
 
 @dev.command()
