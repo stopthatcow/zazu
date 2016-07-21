@@ -345,7 +345,9 @@ def review(config):
     start = 'github.com'
     if start in url:
         project = url[url.find(start):].replace('.git', '')
-        webbrowser.open_new('https://{}/compare/{}?expand=1'.format(project, encoded_branch))
+        url = 'https://{}/compare/{}?expand=1'.format(project, encoded_branch)
+        click.echo('Opening "{}"'.format(url))
+        webbrowser.open_new(url)
         # TODO: add link to jira ticket in the PR, zazu logo
         # <img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=50"/>
     else:
@@ -357,7 +359,15 @@ def review(config):
 def ticket(config):
     """Open the JIRA ticket for this feature"""
     issue_id = branch_to_issue(config.repo.active_branch.name)
-    webbrowser.open_new(jira_helper.get_browse_url(issue_id))
+    url = jira_helper.get_browse_url(issue_id)
+    click.echo('Opening "{}"'.format(url))
+    webbrowser.open_new(url)
+
+@dev.command()
+@pass_config
+def builds(config):
+    """Open the JIRA ticket for this feature"""
+    raise NotImplementedError
 
 
 # @cli.command()
