@@ -155,7 +155,7 @@ def make_issue_descriptor(name):
     type = None
     description = None
     if '-' not in name:
-        raise Error("Name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
+        raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
     if len(components) == 2:
         type = components[0]
@@ -289,51 +289,52 @@ def parse_github_url(url):
     return organization, repo
 
 
-def branch_to_issue(branch):
-    """converts 'feature/LC-XXX_blah' to 'LC-XXX'"""
-    return branch.split('/').pop().split('_')[0]
-
-
 @dev.command()
 @pass_config
 def status(config):
     """Get status of this branch"""
-    issue_id = branch_to_issue(config.repo.active_branch.name)
-    gh = make_gh()
+    descriptor = make_issue_descriptor(config.repo.active_branch.name)
+    issue_id = descriptor.id
+    if not issue_id:
+        click.echo('The current branch does not contain a ticket ID')
+        exit(-1)
+    else:
+        gh = make_gh()
 
-    def get_issue(id):
-        return config.jira().issue(id)
+        def get_issue(id):
+            return config.jira().issue(id)
 
-    def get_pulls_for_branch(branch):
-        org, repo = parse_github_url(config.repo.remotes.origin.url)
-        pulls = gh.get_user(org).get_repo(repo).get_pulls()
-        return [p for p in pulls if p.head.ref == branch]
+        def get_pulls_for_branch(branch):
+            org, repo = parse_github_url(config.repo.remotes.origin.url)
+            pulls = gh.get_user(org).get_repo(repo).get_pulls()
+            return [p for p in pulls if p.head.ref == branch]
 
-    # Dispatch REST calls asynchronously
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        issue_future = executor.submit(get_issue, issue_id)
-        pulls_future = executor.submit(get_pulls_for_branch, config.repo.active_branch.name)
+        # Dispatch REST calls asynchronously
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            issue_future = executor.submit(get_issue, issue_id)
+            pulls_future = executor.submit(get_pulls_for_branch, config.repo.active_branch.name)
 
-        click.echo(click.style('Ticket info:', bg='white', fg='black'))
-        try:
-            issue = issue_future.result()
-            type = issue.fields.issuetype.name
-            click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
-            click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
-        except jira.exceptions.JIRAError:
-            click.echo("    No JIRA ticket found")
+            click.echo(click.style('Ticket info:', bg='white', fg='black'))
+            try:
+                issue = issue_future.result()
+                type = issue.fields.issuetype.name
+                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
+                click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
+            except jira.exceptions.JIRAError:
+                click.echo("    No JIRA ticket found")
 
-        matches = pulls_future.result()
-        click.secho('Pull request info:', bg='white', fg='black')
-        click.echo('    {} matching PRs'.format(len(matches)))
-        if matches:
-            for p in matches:
-                click.echo(click.style('    PR Name:  ', fg='green', bold=True) + p.title)
-                click.echo(click.style('    PR State: ', fg='green', bold=True) + p.state)
-                click.echo(click.style('    PR Body:  ', fg='green', bold=True) + p.body)
-                click.echo(click.style('    PR URL:   ', fg='green', bold=True) + p.html_url)
+            matches = pulls_future.result()
+            click.secho('Pull request info:', bg='white', fg='black')
+            click.echo('    {} matching PRs'.format(len(matches)))
+            if matches:
+                for p in matches:
+                    click.echo(click.style('    PR Name:  ', fg='green', bold=True) + p.title)
+                    click.echo(click.style('    PR State: ', fg='green', bold=True) + p.state)
+                    click.echo(click.style('    PR Body:  ', fg='green', bold=True) + p.body)
+                    click.echo(click.style('    PR URL:   ', fg='green', bold=True) + p.html_url)
 
-        # TODO: build status from TC
+            # TODO: build status from TC
+
 
 
 @dev.command()
