@@ -322,7 +322,7 @@ def status(config):
                 issue = issue_future.result()
                 type = issue.fields.issuetype.name
                 click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
-                click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
+                click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description.replace(JIRA_CREATED_BY_ZAZU, ''))
             except jira.exceptions.JIRAError:
                 click.echo("    No JIRA ticket found")
 
