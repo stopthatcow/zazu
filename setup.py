@@ -24,7 +24,7 @@ setup(
     url='https://github.com/LilyRobotics/zazu',
     license='BSD',
     packages=find_packages(exclude=('tests', 'docs')),
-    package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'pypi/pip.conf', 'version.txt']},
+    package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'version.txt']},
     install_requires=['click==6.6',
                       'requests==2.10.0',
                       'PyGithub==1.26.0',
