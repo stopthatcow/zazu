@@ -345,8 +345,8 @@ def review(config):
     url = config.repo.remotes.origin.url
     start = 'github.com'
     if start in url:
-        project = url[url.find(start):].replace('.git', '')
-        url = 'https://{}/compare/{}?expand=1'.format(project, encoded_branch)
+        base_url = url[url.find(start):].replace('.git', '').replace(':', '/')
+        url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
         click.echo('Opening "{}"'.format(url))
         webbrowser.open_new(url)
         # TODO: add link to jira ticket in the PR, zazu logo
