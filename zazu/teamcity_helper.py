@@ -8,12 +8,11 @@ import json
 import git
 
 
-class TeamCityHelper(pyteamcity.TeamCity, object):
+class TeamCityHelper(pyteamcity.TeamCity):
     """Extends the pyteamcity.Teamcity object to expose interfaces to create projects and build configurations"""
 
     def __init__(self, username=None, password=None, server=None, port=None, session=None):
-        super(TeamCityHelper, self).__init__(
-            username, password, server, port, session)
+        pyteamcity.TeamCity.__init__(self, username, password, server, port, session)
 
     def setup_vcs_root(self, name, parent_project_id, git_url):
         vcs_root = {
