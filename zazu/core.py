@@ -56,8 +56,7 @@ def null_printer(x):
 def check_repo(config):
     """Checks that the config has a valid repo set"""
     if config.repo_root is None or config.repo is None:
-        raise click.UsageError(
-            'The current working directory is not in a git repo')
+        raise click.UsageError('The current working directory is not in a git repo')
 
 
 class ZazuException(Exception):
@@ -131,8 +130,7 @@ def setup(config):
 
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/LilyRobotics/zazu'
-JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(
-    ZAZU_IMAGE_URL, ZAZU_REPO_URL)
+JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
 
 
 def populate_jira_fields():
@@ -159,8 +157,7 @@ def make_issue_descriptor(name):
     type = None
     description = None
     if '-' not in name:
-        raise click.ClickException(
-            "Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
+        raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
     if len(components) == 2:
         type = components[0]
@@ -226,8 +223,7 @@ def start(config, name, no_verify, type):
     if not no_verify:
         verify_ticket_exists(config.jira(), issue.id)
     if issue.description is None:
-        issue.description = click.prompt(
-            'Enter a short description for the branch')
+        issue.description = click.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()
     try:
@@ -259,14 +255,11 @@ def get_gh_token():
     while token is None:
         user = click.prompt("GitHub username", type=str)
         password = click.prompt("GitHub password", type=str, hide_input=True)
-        r = requests.post('{}/authorizations'.format(api_url),
-                          json=add_auth, auth=(user, password))
+        r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
-                headers = {
-                    'X-GitHub-OTP': click.prompt('GitHub two-factor code (6 digits)', type=str)}
-                r = requests.post('{}/authorizations'.format(api_url),
-                                  headers=headers, json=add_auth, auth=(user, password))
+                headers = {'X-GitHub-OTP': click.prompt('GitHub two-factor code (6 digits)', type=str)}
+                r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
             else:
                 click.echo("Invalid username or password!")
                 continue
@@ -277,8 +270,7 @@ def get_gh_token():
                        'Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
             token = click.prompt('Enter new token manually')
         else:
-            raise Exception("Error authenticating with GitHub, status:{} content:{}".format(
-                r.status_code, r.json()))
+            raise Exception("Error authenticating with GitHub, status:{} content:{}".format(r.status_code, r.json()))
     return token
 
 
@@ -323,17 +315,14 @@ def status(config):
         # Dispatch REST calls asynchronously
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             issue_future = executor.submit(get_issue, issue_id)
-            pulls_future = executor.submit(
-                get_pulls_for_branch, config.repo.active_branch.name)
+            pulls_future = executor.submit(get_pulls_for_branch, config.repo.active_branch.name)
 
             click.echo(click.style('Ticket info:', bg='white', fg='black'))
             try:
                 issue = issue_future.result()
                 type = issue.fields.issuetype.name
-                click.echo(click.style('    {} ({}): '.format(
-                    type, issue.fields.status.name), fg='green') + issue.fields.summary)
-                click.echo(click.style('    Description: '.format(
-                    type), fg='green') + issue.fields.description)
+                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
+                click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
             except jira.exceptions.JIRAError:
                 click.echo("    No JIRA ticket found")
 
@@ -342,14 +331,10 @@ def status(config):
             click.echo('    {} matching PRs'.format(len(matches)))
             if matches:
                 for p in matches:
-                    click.echo(click.style('    PR Name:  ',
-                                           fg='green', bold=True) + p.title)
-                    click.echo(click.style('    PR State: ',
-                                           fg='green', bold=True) + p.state)
-                    click.echo(click.style('    PR Body:  ',
-                                           fg='green', bold=True) + p.body)
-                    click.echo(click.style('    PR URL:   ',
-                                           fg='green', bold=True) + p.html_url)
+                    click.echo(click.style('    PR Name:  ', fg='green', bold=True) + p.title)
+                    click.echo(click.style('    PR State: ', fg='green', bold=True) + p.state)
+                    click.echo(click.style('    PR Body:  ', fg='green', bold=True) + p.body)
+                    click.echo(click.style('    PR URL:   ', fg='green', bold=True) + p.html_url)
 
             # TODO: build status from TC
 
@@ -376,10 +361,15 @@ def review(config):
 @pass_config
 def ticket(config):
     """Open the JIRA ticket for this feature"""
-    issue_id = branch_to_issue(config.repo.active_branch.name)
-    url = jira_helper.get_browse_url(issue_id)
-    click.echo('Opening "{}"'.format(url))
-    webbrowser.open_new(url)
+    descriptor = make_issue_descriptor(config.repo.active_branch.name)
+    issue_id = descriptor.id
+    if not issue_id:
+        click.echo('The current branch does not contain a ticket ID')
+        exit(-1)
+    else:
+        url = jira_helper.get_browse_url(issue_id)
+        click.echo('Opening "{}"'.format(url))
+        webbrowser.open_new(url)
 
 
 @dev.command()
@@ -387,6 +377,19 @@ def ticket(config):
 def builds(config):
     """Open the JIRA ticket for this feature"""
     raise NotImplementedError
+
+
+# @cli.command()
+# def setup():
+#     """Setup pip configuration to pull packages from local pypi server"""
+#     installed = False
+#     try:
+#         installed = pypi_helper.check_pypi_config()
+#     except IOError:
+#         if not click.confirm("Warning, existing pip configuration detected! Continue?", default=False):
+#             return
+#     if not installed:
+#         pypi_helper.enforce_pypi_config()
 
 
 @setup.command()
@@ -431,8 +434,7 @@ def cleanup(config, remote):
     config.repo.git.checkout('develop')
     if remote:
         config.repo.git.fetch('--prune')
-        merged_remote_branches = filter_undeletable(
-            git_helper.get_merged_branches(config.repo, 'origin/master', remote=True))
+        merged_remote_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master', remote=True))
         if merged_remote_branches:
             click.echo('The following remote branches will be deleted:')
             for b in merged_remote_branches:
@@ -440,10 +442,8 @@ def cleanup(config, remote):
             if click.confirm('Proceed?'):
                 for b in merged_remote_branches:
                     click.echo('Deleting {}'.format(b))
-                    config.repo.git.push(
-                        '--delete', 'origin', b.replace('origin/', ''))
-    merged_branches = filter_undeletable(
-        git_helper.get_merged_branches(config.repo, 'origin/master'))
+                    config.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
+    merged_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master'))
     if merged_branches:
         click.echo('The following local branches will be deleted:')
         for b in merged_branches:
@@ -469,16 +469,14 @@ def ci(config):
     check_repo(config)
     config.tc = teamcity_helper.make_tc(address, port)
     try:
-        project_config = load_project_file(
-            os.path.join(config.repo_root, PROJECT_FILE_NAME))
+        project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
         if click.confirm("Post build configuration to TeamCity?"):
             components = project_config['components']
             for c in components:
                 component = ComponentConfiguration(c)
                 teamcity_helper.setup(config.tc, component, config.repo_root)
     except IOError:
-        raise ZazuException("No {} file found in {}".format(
-            project_file_name, config.repo_root))
+        raise ZazuException("No {} file found in {}".format(project_file_name, config.repo_root))
 
 
 class ComponentConfiguration:
@@ -519,8 +517,7 @@ class BuildGoal:
         self._build_vars = goal.get('buildVars', {})
         self._requires = goal.get('requires', {})
         self._builds = {}
-        self._default_spec = BuildSpec(
-            self._build_type, self._build_vars, self._requires, self._description)
+        self._default_spec = BuildSpec(self._build_type, self._build_vars, self._requires, self._description)
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
@@ -529,8 +526,7 @@ class BuildGoal:
             description = b.get('description', '')
             arch = b['arch']
             script = b.get('script', None)
-            self._builds[arch] = BuildSpec(
-                type, vars, requires, description, arch, script=script)
+            self._builds[arch] = BuildSpec(type, vars, requires, description, arch, script=script)
 
     def description(self):
         return self._description
@@ -588,8 +584,7 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
         echo = null_printer
         if verbose:
             echo = click.echo
-        ret = cmake_helper.configure(
-            repo_root, build_dir, arch, type, vars, echo=echo)
+        ret = cmake_helper.configure(repo_root, build_dir, arch, type, vars, echo=echo)
         if ret:
             raise ZazuException("Error configuring with cmake")
         ret = cmake_helper.build(build_dir, type, goal, verbose)
@@ -609,8 +604,7 @@ def build(config, arch, type, verbose, goal):
      use distclean to clean whole build folder"""
     # Run the supplied build command if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
-    project_config = load_project_file(
-        os.path.join(config.repo_root, PROJECT_FILE_NAME))
+    project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
     component = ComponentConfiguration(project_config['components'][0])
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
@@ -621,8 +615,7 @@ def build(config, arch, type, verbose, goal):
             tool_helper.install_spec(req)
     ret = 0
     if spec.build_script() is None:
-        ret = cmake_build(config.repo_root, arch,
-                          spec.build_type(), goal, verbose, spec.build_vars())
+        ret = cmake_build(config.repo_root, arch, spec.build_type(), goal, verbose, spec.build_vars())
     else:
         for s in spec.build_script():
             if verbose:

@@ -11,8 +11,8 @@ if [ -z $AUTO_ASTYLE_DISABLE ]; then
             echo "[!] astyle not installed. Please install it via apt-get install astyle or brew install astyle" >&2
             exit 1
         fi
-        C_FILES=$touched_files | egrep '\.(c|cpp|h)$'
-        $C_FILES | xargs -I % sh -c '$ASTYLE --in-place --jobs=0 --max-line-length=150 % && git add % && echo astyle %'
+        C_FILES=$(echo $touched_files | egrep '\.(c|cpp|h)$')
+        echo $C_FILES | xargs -I % sh -c "$ASTYLE --in-place --jobs=0 --max-line-length=150 % && git add % && echo astyle %"
     fi
 fi
 
@@ -23,6 +23,6 @@ if [ -z $AUTOPEP8_DISABLE]; then
         echo "[!] autopep8 not installed. Please install it via pip install autopep8" >&2
         exit 1
     fi
-    PY_FILES=$touched_files | egrep '\.py$'
-    $PY_FILES | xargs -I % sh -c '$autopep8 --in-place --jobs=0 --max-line-length=150 % && git add % && echo autopep8 %'
+    PY_FILES=$(echo $touched_files | egrep '\.py$')
+    echo $PY_FILES | xargs -I % sh -c "$autopep8 --in-place --jobs=0 --max-line-length=150 % && git add % && echo autopep8 %"
 fi
