@@ -27,6 +27,7 @@ import requests
 import socket
 import keyring
 import getpass
+import textwrap
 
 
 class Config:
@@ -42,8 +43,6 @@ class Config:
             self._jira = jira_helper.make_jira()
         return self._jira
 
-
-pass_config = click.make_pass_decorator(Config, ensure=True)
 
 PROJECT_FILE_NAME = 'zazu.yaml'
 
@@ -67,11 +66,12 @@ class ZazuException(Exception):
 
 @click.group()
 @click.version_option(version=__version__)
-@pass_config
-def cli(config):
+@click.pass_context
+def cli(ctx):
     try:
-        config.repo_root = git_helper.get_root_path()
-        config.repo = git.Repo(config.repo_root)
+        ctx.obj = Config()
+        ctx.obj.repo_root = git_helper.get_root_path()
+        ctx.obj.repo = git.Repo(ctx.obj.repo_root)
     except subprocess.CalledProcessError:
         pass
 
@@ -108,22 +108,22 @@ def uninstall(spec):
 
 
 @cli.group()
-@pass_config
-def dev(config):
+@click.pass_context
+def dev(ctx):
     """Create or update work items"""
-    check_repo(config)
+    check_repo(ctx.obj)
 
 
 @cli.group()
-@pass_config
-def repo(config):
+@click.pass_context
+def repo(ctx):
     """Manage repository"""
-    check_repo(config)
+    check_repo(ctx.obj)
 
 
 @repo.group()
-@pass_config
-def setup(config):
+@click.pass_context
+def setup(ctx):
     """Setup repository with services"""
     pass
 
@@ -212,34 +212,34 @@ def verify_ticket_exists(jira, ticket_id):
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
 @click.option('-t', '--type', type=click.Choice(['feature', 'release', 'hotfix']), help='the ticket type to make',
               default='feature')
-@pass_config
-def start(config, name, no_verify, type):
+@click.pass_context
+def start(ctx, name, no_verify, type):
     """Start a new feature, much like git-flow but with more sugar"""
-    offer_to_stash_changes(config.repo)
+    offer_to_stash_changes(ctx.obj.repo)
     if name is None:
-        name = str(make_ticket(config.jira()))
+        name = str(make_ticket(ctx.obj.jira()))
         click.echo('Created ticket "{}"'.format(name))
     issue = make_issue_descriptor(name)
     if not no_verify:
-        verify_ticket_exists(config.jira(), issue.id)
+        verify_ticket_exists(ctx.obj.jira(), issue.id)
     if issue.description is None:
         issue.description = click.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()
     try:
         # Check if the target branch already exists
-        config.repo.git.checkout(branch_name)
+        ctx.obj.repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))
     except git.exc.GitCommandError:
         click.echo('Checking out develop...')
-        config.repo.heads.develop.checkout()
+        ctx.obj.repo.heads.develop.checkout()
         click.echo('Pulling from origin...')
         try:
-            config.repo.remotes.origin.pull()
+            ctx.obj.repo.remotes.origin.pull()
         except git.exc.GitCommandError:
             click.secho('WARNING: unable to pull from origin!', fg='red')
         click.echo('Creating new branch named "{}"...'.format(branch_name))
-        config.repo.git.checkout('HEAD', b=branch_name)
+        ctx.obj.repo.git.checkout('HEAD', b=branch_name)
 
 
 def get_gh_token():
@@ -293,10 +293,10 @@ def parse_github_url(url):
 
 
 @dev.command()
-@pass_config
-def status(config):
+@click.pass_context
+def status(ctx):
     """Get status of this branch"""
-    descriptor = make_issue_descriptor(config.repo.active_branch.name)
+    descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
     issue_id = descriptor.id
     if not issue_id:
         click.echo('The current branch does not contain a ticket ID')
@@ -305,17 +305,17 @@ def status(config):
         gh = make_gh()
 
         def get_issue(id):
-            return config.jira().issue(id)
+            return ctx.obj.jira().issue(id)
 
         def get_pulls_for_branch(branch):
-            org, repo = parse_github_url(config.repo.remotes.origin.url)
+            org, repo = parse_github_url(ctx.obj.repo.remotes.origin.url)
             pulls = gh.get_user(org).get_repo(repo).get_pulls()
             return [p for p in pulls if p.head.ref == branch]
 
         # Dispatch REST calls asynchronously
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             issue_future = executor.submit(get_issue, issue_id)
-            pulls_future = executor.submit(get_pulls_for_branch, config.repo.active_branch.name)
+            pulls_future = executor.submit(get_pulls_for_branch, ctx.obj.repo.active_branch.name)
 
             click.echo(click.style('Ticket info:', bg='white', fg='black'))
             try:
@@ -331,20 +331,21 @@ def status(config):
             click.echo('    {} matching PRs'.format(len(matches)))
             if matches:
                 for p in matches:
-                    click.echo(click.style('    PR Name:  ', fg='green', bold=True) + p.title)
-                    click.echo(click.style('    PR State: ', fg='green', bold=True) + p.state)
-                    click.echo(click.style('    PR Body:  ', fg='green', bold=True) + p.body)
-                    click.echo(click.style('    PR URL:   ', fg='green', bold=True) + p.html_url)
+                    click.echo(click.style('    PR Name:  ', fg='green') + p.title)
+                    click.echo(click.style('    PR State: ', fg='green') + p.state)
+                    body = '\n'.join(['\n'.join(textwrap.wrap(line, 90, break_long_words=False, initial_indent='    ',
+                                                              subsequent_indent='    ')) for line in p.body.splitlines()])
+                    click.echo(click.style('    PR Body:  \n', fg='green') + body)
 
             # TODO: build status from TC
 
 
 @dev.command()
-@pass_config
-def review(config):
+@click.pass_context
+def review(ctx):
     """Create or display pull request"""
-    encoded_branch = urllib.quote_plus(config.repo.active_branch.name)
-    url = config.repo.remotes.origin.url
+    encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
+    url = ctx.obj.repo.remotes.origin.url
     start = 'github.com'
     if start in url:
         base_url = url[url.find(start):].replace('.git', '').replace(':', '/')
@@ -358,10 +359,10 @@ def review(config):
 
 
 @dev.command()
-@pass_config
-def ticket(config):
+@click.pass_context
+def ticket(ctx):
     """Open the JIRA ticket for this feature"""
-    descriptor = make_issue_descriptor(config.repo.active_branch.name)
+    descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
     issue_id = descriptor.id
     if not issue_id:
         click.echo('The current branch does not contain a ticket ID')
@@ -373,68 +374,54 @@ def ticket(config):
 
 
 @dev.command()
-@pass_config
-def builds(config):
+@click.pass_context
+def builds(ctx):
     """Open the JIRA ticket for this feature"""
     raise NotImplementedError
 
 
-# @cli.command()
-# def setup():
-#     """Setup pip configuration to pull packages from local pypi server"""
-#     installed = False
-#     try:
-#         installed = pypi_helper.check_pypi_config()
-#     except IOError:
-#         if not click.confirm("Warning, existing pip configuration detected! Continue?", default=False):
-#             return
-#     if not installed:
-#         pypi_helper.enforce_pypi_config()
-
-
 @setup.command()
-@pass_config
 @click.pass_context
-def all(ctx, config):
+def all(ctx):
     """Setup all services"""
     ctx.forward(hooks)
     ctx.forward(ci)
 
 
 @setup.command()
-@pass_config
-def hooks(config):
+@click.pass_context
+def hooks(ctx):
     """Setup default git hooks"""
-    git_helper.install_git_hooks(config.repo_root)
+    git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
 @repo.command()
-@pass_config
-def clone(config):
+@click.pass_context
+def clone(ctx):
     """Clone and initialize a repo"""
     raise NotImplementedError
 
 
 @repo.command()
-@pass_config
-def init(config):
+@click.pass_context
+def init(ctx):
     """Initialize repo directory structure"""
     raise NotImplementedError
 
 
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
-@pass_config
-def cleanup(config, remote):
+@click.pass_context
+def cleanup(ctx, remote):
     """Clean up merged branches"""
     def filter_undeletable(branches):
         """Filters out branches that we don't want to delete"""
         return filter(lambda s: not ('master' == s or 'develop' == s or '*' in s or '-' == s), branches)
 
-    config.repo.git.checkout('develop')
+    ctx.obj.repo.git.checkout('develop')
     if remote:
-        config.repo.git.fetch('--prune')
-        merged_remote_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master', remote=True))
+        ctx.obj.repo.git.fetch('--prune')
+        merged_remote_branches = filter_undeletable(git_helper.get_merged_branches(ctx.obj.repo, 'origin/master', remote=True))
         if merged_remote_branches:
             click.echo('The following remote branches will be deleted:')
             for b in merged_remote_branches:
@@ -442,8 +429,8 @@ def cleanup(config, remote):
             if click.confirm('Proceed?'):
                 for b in merged_remote_branches:
                     click.echo('Deleting {}'.format(b))
-                    config.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
-    merged_branches = filter_undeletable(git_helper.get_merged_branches(config.repo, 'origin/master'))
+                    ctx.obj.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
+    merged_branches = filter_undeletable(git_helper.get_merged_branches(ctx.obj.repo, 'origin/master'))
     if merged_branches:
         click.echo('The following local branches will be deleted:')
         for b in merged_branches:
@@ -451,7 +438,7 @@ def cleanup(config, remote):
         if click.confirm('Proceed?'):
             for b in merged_branches:
                 click.echo('Deleting {}'.format(b))
-                config.repo.git.branch('-d', b)
+                ctx.obj.repo.git.branch('-d', b)
 
 
 def load_project_file(path):
@@ -461,22 +448,22 @@ def load_project_file(path):
 
 
 @setup.command()
-@pass_config
-def ci(config):
+@click.pass_context
+def ci(ctx):
     """Setup TeamCity configurations based on a zazu.yaml file"""
     address = 'teamcity.lily.technology'
     port = 8111
-    check_repo(config)
-    config.tc = teamcity_helper.make_tc(address, port)
+    check_repo(ctx.obj)
+    ctx.obj.tc = teamcity_helper.make_tc(address, port)
     try:
-        project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
+        project_config = load_project_file(os.path.join(ctx.obj.repo_root, PROJECT_FILE_NAME))
         if click.confirm("Post build configuration to TeamCity?"):
             components = project_config['components']
             for c in components:
                 component = ComponentConfiguration(c)
-                teamcity_helper.setup(config.tc, component, config.repo_root)
+                teamcity_helper.setup(ctx.obj.tc, component, ctx.obj.repo_root)
     except IOError:
-        raise ZazuException("No {} file found in {}".format(project_file_name, config.repo_root))
+        raise ZazuException("No {} file found in {}".format(project_file_name, ctx.obj.repo_root))
 
 
 class ComponentConfiguration:
@@ -594,17 +581,17 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
 
 
 @cli.command()
-@pass_config
+@click.pass_context
 @click.option('-a', '--arch', default='local', help='the desired architecture to build for')
 @click.option('-t', '--type', type=click.Choice(cmake_helper.build_types), help='defaults to what is specified in the zazu.yaml file, or release if unspecified there')
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
-def build(config, arch, type, verbose, goal):
+def build(ctx, arch, type, verbose, goal):
     """Build project targets, the GOAL argument is the desired make target,
      use distclean to clean whole build folder"""
     # Run the supplied build command if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
-    project_config = load_project_file(os.path.join(config.repo_root, PROJECT_FILE_NAME))
+    project_config = load_project_file(os.path.join(ctx.obj.repo_root, PROJECT_FILE_NAME))
     component = ComponentConfiguration(project_config['components'][0])
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
@@ -615,7 +602,7 @@ def build(config, arch, type, verbose, goal):
             tool_helper.install_spec(req)
     ret = 0
     if spec.build_script() is None:
-        ret = cmake_build(config.repo_root, arch, spec.build_type(), goal, verbose, spec.build_vars())
+        ret = cmake_build(ctx.obj.repo_root, arch, spec.build_type(), goal, verbose, spec.build_vars())
     else:
         for s in spec.build_script():
             if verbose:
