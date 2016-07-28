@@ -16,7 +16,7 @@ def get_root_path():
 
 
 def get_hooks_path(repo_base):
-    return os.path.join(subprocess.check_output(['git', 'rev-parse', '--git-dir'], cwd=repo_base).rstrip(), 'hooks')
+    return os.path.join(repo_base, subprocess.check_output(['git', 'rev-parse', '--git-dir'], cwd=repo_base).rstrip(), 'hooks')
 
 
 def get_default_git_hooks():
