@@ -69,6 +69,19 @@ def parse_describe(repo_root):
     return semantic_version.Version('{}+{}.{}.{}'.format(last_version, commits_past, sha, build_num))
 
 
+def known_arches():
+    """Lists arches that zazu is familiar with"""
+    return ['local',
+            'arm32-linux-gnueabihf',
+            'arm32-none-eabi',
+            'x86_64-linux-gcc',
+            'x86_32-linux-gcc',
+            'x86_64-win-msvc_2013',
+            'x86_64-win-msvc_2015',
+            'x86_32-win-msvc_2013',
+            'x86_32-win-msvc_2015']
+
+
 def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lambda x: x):
     """Configures a cmake based project to be built and caches args used to bypass configuration in future"""
     os.chdir(build_dir)
