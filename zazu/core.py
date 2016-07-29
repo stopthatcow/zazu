@@ -205,6 +205,8 @@ def verify_ticket_exists(jira, ticket_id):
     issue = jira_helper.get_issue(jira, ticket_id)
     if issue is None:
         raise click.BadParameter('no ticket named "{}"'.format(ticket_id))
+    else:
+        click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
 
 
 @dev.command()
@@ -559,6 +561,9 @@ class BuildSpec:
 
 def cmake_build(repo_root, arch, type, goal, verbose, vars):
     """Build using cmake"""
+    if arch not in cmake_helper.known_arches():
+        raise click.BadParameter("Arch not recognized, choose from:\n    - {}".format('\n    - '.join(cmake_helper.known_arches())))
+
     build_dir = os.path.join(repo_root, 'build', '{}-{}'.format(arch, type))
     ret = 0
     try:
