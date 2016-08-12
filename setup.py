@@ -37,10 +37,10 @@ setup(
                       'semantic_version==2.5.0',
                       'gcovr==3.2',
                       'teamcity-messages==1.19',
-                      'futures==3.0.5'],
+                      'futures==3.0.5',
+                      'glob2==0.4.1'],
     entry_points='''
         [console_scripts]
         zazu=zazu.core:cli
         '''
 )
-

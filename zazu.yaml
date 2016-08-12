@@ -1,0 +1,8 @@
+style:
+  exclude:
+    - dependency/
+    - build/
+    - dist/
+  autopep8:
+    options:
+      - "--max-line-length=150"

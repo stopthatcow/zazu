@@ -13,6 +13,7 @@ import shutil
 
 class ToolEnforcer:
     """Holds a checker fn, installer fn, and uninstaller fn"""
+
     def __init__(self, check, install, uninstall):
         self.check_fn = check
         self.install_fn = install

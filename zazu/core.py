@@ -28,6 +28,8 @@ import socket
 import keyring
 import getpass
 import textwrap
+import glob2 as glob
+import multiprocessing
 
 
 class Config:
@@ -43,6 +45,14 @@ class Config:
             self._jira = jira_helper.make_jira()
         return self._jira
 
+    def pep8_config(self):
+        return {}
+
+    def astyle_config(self):
+        return {}
+
+    def project_config(self):
+        return load_project_file(os.path.join(self.repo_root, PROJECT_FILE_NAME))
 
 PROJECT_FILE_NAME = 'zazu.yaml'
 
@@ -384,14 +394,6 @@ def builds(ctx):
 
 @setup.command()
 @click.pass_context
-def all(ctx):
-    """Setup all services"""
-    ctx.forward(hooks)
-    ctx.forward(ci)
-
-
-@setup.command()
-@click.pass_context
 def hooks(ctx):
     """Setup default git hooks"""
     git_helper.install_git_hooks(ctx.obj.repo_root)
@@ -445,8 +447,11 @@ def cleanup(ctx, remote):
 
 def load_project_file(path):
     """Load a project yaml file"""
-    with open(path) as f:
-        return yaml.load(f)
+    try:
+        with open(path) as f:
+            return yaml.load(f)
+    except IOError:
+        raise click.ClickException('no {} file found in this repo'.format(PROJECT_FILE_NAME))
 
 
 @setup.command()
@@ -578,17 +583,18 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
             echo = click.echo
         ret = cmake_helper.configure(repo_root, build_dir, arch, type, vars, echo=echo)
         if ret:
-            raise ZazuException("Error configuring with cmake")
+            raise ClickException("Error configuring with cmake")
         ret = cmake_helper.build(build_dir, type, goal, verbose)
         if ret:
-            raise ZazuException("Error building with cmake")
+            raise ClickException("Error building with cmake")
     return ret
 
 
 @cli.command()
 @click.pass_context
 @click.option('-a', '--arch', default='local', help='the desired architecture to build for')
-@click.option('-t', '--type', type=click.Choice(cmake_helper.build_types), help='defaults to what is specified in the zazu.yaml file, or release if unspecified there')
+@click.option('-t', '--type', type=click.Choice(cmake_helper.build_types),
+              help='defaults to what is specified in the {} file, or release if unspecified there'.format(PROJECT_FILE_NAME))
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
 def build(ctx, arch, type, verbose, goal):
@@ -596,7 +602,7 @@ def build(ctx, arch, type, verbose, goal):
      use distclean to clean whole build folder"""
     # Run the supplied build command if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
-    project_config = load_project_file(os.path.join(ctx.obj.repo_root, PROJECT_FILE_NAME))
+    project_config = ctx.obj.project_config()
     component = ComponentConfiguration(project_config['components'][0])
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
@@ -617,3 +623,124 @@ def build(ctx, arch, type, verbose, goal):
                 click.echo("Error {} exited with code {}".format(str(s), ret))
                 break
     return ret
+
+
+def autopep8_file(file, config, check):
+    """checks a single file to see if it is within style guidelines and optionally fixes it"""
+    ret = []
+    args = ['autopep8']
+    args += config.get('options', [])
+
+    check_args = args + ['--diff', file]
+    fix_args = args + ['--in-place', file]
+
+    output = subprocess.check_output(check_args)
+    if len(output):
+        if not check:
+            subprocess.check_output(fix_args)
+        ret.append(file)
+    return ret
+
+
+def autopep8(files, config, check):
+    """Concurrently dispatches multiple workers to perform autopep8"""
+    ret = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        futures = {executor.submit(autopep8_file, f, config, check): f for f in files}
+        for future in concurrent.futures.as_completed(futures):
+            ret += future.result()
+    return ret
+
+
+def astyle(files, config, check):
+    """Run astyle on a set of files"""
+    ret = []
+    if len(files):
+        args = ['astyle', '-v']
+        args += config.get('options', [])
+        if check:
+            args.append('--dry-run')
+        args += files
+        output = subprocess.check_output(args)
+        needle = 'Formatted  '
+        for l in output.split('\n'):
+            if l.startswith(needle):
+                ret.append(l[len(needle):])
+    return ret
+
+
+def recursive_glob(pattern):
+    """an os optimized recursive glob"""
+    if 'nt' == os.name:
+        return glob.glob(pattern)
+    else:
+        try:
+            # Expand a glob using sh and ls. This  won't fly on Windows, but it is MUCH faster ~100x than glob2
+            ret = subprocess.check_output(['sh -c \"ls -1 {} 2>/dev/null\"'.format(pattern)], shell=True).split('\n')
+            ret = [x for x in ret if x]
+        except subprocess.CalledProcessError:
+            ret = []
+        return ret
+
+
+def glob_with_excludes(pattern, exclude):
+    """globs and then excludes certain paths"""
+    files = recursive_glob(pattern)
+
+    for e in exclude:
+        files = [x for x in files if not x.startswith(e)]
+    return files
+
+
+default_astyle_paths = [os.path.join('**', '*.cpp'),
+                        os.path.join('**', '*.hpp'),
+                        os.path.join('**', '*.c'),
+                        os.path.join('**', '*.h')]
+default_py_paths = [os.path.join('**', '*.py')]
+default_exclude_paths = [os.path.join('dependency'),
+                         os.path.join('dependencies')]
+
+
+@cli.command()
+@click.pass_context
+@click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them (exit with the number of violations)')
+@click.option('--dirty', is_flag=True, help='only examine files that are staged for CI commit')
+def style(ctx, check, dirty):
+    """Style repo files or check that they are valid style"""
+    # options are specified with respect to the repo root
+    check_repo(ctx.obj)
+    os.chdir(ctx.obj.repo_root)
+    violations = []
+    try:
+        style_config = ctx.obj.project_config()['style']
+    except KeyError:
+        raise click.ClickException('no "style" settings found in {}'.format(PROJECT_FILE_NAME))
+    if dirty:
+        dirty_files = git_helper.get_touched_files(ctx.obj.repo)
+    exclude_paths = style_config.get('exclude', default_exclude_paths)
+    # astyle
+    astyle_config = style_config.get('astyle', None)
+    if astyle_config is not None:
+        for f in astyle_config.get('include', default_astyle_paths):
+            files = glob_with_excludes(f, exclude_paths)
+            if dirty:
+                files = set(files).intersection(dirty_files)
+            violations += astyle(files, astyle_config, check)
+
+    # autopep8
+    autopep8_config = style_config.get('autopep8', None)
+    if autopep8_config is not None:
+        for f in autopep8_config.get('include', default_py_paths):
+            files = glob_with_excludes(f, exclude_paths)
+            if dirty:
+                files = set(files).intersection(dirty_files)
+            violations += autopep8(files, autopep8_config, check)
+    if check:
+        for v in violations:
+            click.echo("Violation in: {}".format(v))
+        click.echo('{} violations detected'.format(len(violations)))
+        ctx.exit(len(violations))
+    else:
+        for v in violations:
+            click.echo("Formatted: {}".format(v))
+        click.echo('{} violations fixed'.format(len(violations)))

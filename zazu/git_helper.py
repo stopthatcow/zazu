@@ -29,6 +29,11 @@ def get_default_git_hooks():
     }
 
 
+def get_touched_files(repo):
+    """Gets list of files that are scheduled to be committed (Added, created, modified, or renamed)"""
+    return repo.git.diff('--cached', '--name-only', '--diff-filter=ACMR').split('\n')
+
+
 def check_git_hooks(repo_base):
     """Checks that the default git hooks are in place"""
     have_hooks = True
