@@ -583,10 +583,10 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
             echo = click.echo
         ret = cmake_helper.configure(repo_root, build_dir, arch, type, vars, echo=echo)
         if ret:
-            raise ClickException("Error configuring with cmake")
+            raise click.ClickException("Error configuring with cmake")
         ret = cmake_helper.build(build_dir, type, goal, verbose)
         if ret:
-            raise ClickException("Error building with cmake")
+            raise click.ClickException("Error building with cmake")
     return ret
 
 
