@@ -32,18 +32,119 @@ import glob2 as glob
 import multiprocessing
 
 
+class IssueTracker:
+    pass
+
+
+class IssueTrackerError(Exception):
+
+    def __init___(self, error):
+        Exception.__init__(error)
+
+
+PROJECT_FILE_NAME = 'zazu.yaml'
+ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
+ZAZU_REPO_URL = 'https://github.com/LilyRobotics/zazu'
+JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
+
+
+class JiraIssueTracker(IssueTracker):
+    """Implements zazu issue tracker interface for JIRA"""
+
+    def __init__(self, base_url, default_project, default_component):
+        self._base_url = base_url
+        self._default_project = default_project
+        self._default_component = default_component
+        username, password = credential_helper.get_user_pass_credentials('Jira')
+        self._jira_handle = jira.JIRA(self._base_url,
+                                      basic_auth=(username, password),
+                                      options={'check_update': False}, max_retries=0)
+
+    def browse_url(self, issue_id):
+        return '{}/browse/{}'.format(self._base_url, issue_id)
+
+    def get_issue(self, issue_id):
+        try:
+            ret = self._jira_handle.issue(issue_id)
+        except jira.exceptions.JIRAError:
+            raise IssueTrackerError
+        return ret
+
+    def create_issue(self, project, issue_type, summary, description, component):
+        try:
+            issue_dict = {
+                'project': {'key': project},
+                'issuetype': {'name': issue_type},
+                'summary': summary,
+                'components': [{'name': component}],
+                'description': '{}\n\n{}'.format(description, JIRA_CREATED_BY_ZAZU)
+            }
+            return self._jira_handle.create_issue(issue_dict)
+        except jira.exceptions.JIRAError as e:
+            raise IssueTrackerError(str(e))
+
+    def assign_issue(self, issue, assignee):
+        try:
+            self._jira_handle.assign_issue(issue, assignee)
+        except jira.exceptions.JIRAError as e:
+            raise IssueTrackerError(str(e))
+
+    def default_project(self):
+        return self._default_project
+
+    def default_issue_type(self):
+        return 'Task'
+
+    def default_component(self):
+        return self._default_component
+
+
+def make_jira(config):
+    """Makes a IssueTrackerJira from a config"""
+    try:
+        url = config['url']
+    except KeyError:
+        raise ZazuException('Jira config requires a "url" field')
+    try:
+        project = config['project']
+    except KeyError:
+        raise ZazuException('Jira config requires a "project" field')
+    component = config.get('component', '')
+    return JiraIssueTracker(url, project, component)
+
+
+def issue_tracker_factory(config):
+    """A factory function that makes and initializes a IssueTracker object from a config"""
+    known_issue_trackers = {'jira': make_jira}
+    if 'type' in config:
+        type = config['type']
+        type = type.lower()
+        if type in known_issue_trackers:
+            return known_issue_trackers[type](config)
+        else:
+            raise ZazuException('{} is not a known issueTracker, please choose from {}'.format(type,
+                                                                                               known_issue_trackers.keys()))
+    else:
+        raise ZazuException('IssueTracker config requires a "type" field')
+
+
 class Config:
+    """Holds all zazu configuration info"""
 
-    def __init__(self):
-        self.repo_root = None
-        self.repo = None
-        self._jira = None
+    def __init__(self, repo_root):
+        self.repo_root = repo_root
+        self.repo = git.Repo(self.repo_root)
+        self._issue_tracker = None
         self._tc = None
+        self._project_config = None
 
-    def jira(self):
-        if self._jira is None:
-            self._jira = jira_helper.make_jira()
-        return self._jira
+    def issue_tracker(self):
+        if self._issue_tracker is None:
+            try:
+                self._issue_tracker = issue_tracker_factory(self.issue_tracker_config())
+            except ZazuException as e:
+                raise click.ClickException(str(e))
+        return self._issue_tracker
 
     def pep8_config(self):
         return {}
@@ -51,10 +152,19 @@ class Config:
     def astyle_config(self):
         return {}
 
-    def project_config(self):
-        return load_project_file(os.path.join(self.repo_root, PROJECT_FILE_NAME))
+    def issue_tracker_config(self):
+        try:
+            return self.project_config()['issueTracker']
+        except KeyError:
+            raise ZazuException("no issueTracker config found")
 
-PROJECT_FILE_NAME = 'zazu.yaml'
+    def ci_config(self):
+        return self.project_config().get('ci', {})
+
+    def project_config(self):
+        if self._project_config is None:
+            self._project_config = load_project_file(os.path.join(self.repo_root, PROJECT_FILE_NAME))
+        return self._project_config
 
 
 def null_printer(x):
@@ -79,9 +189,7 @@ class ZazuException(Exception):
 @click.pass_context
 def cli(ctx):
     try:
-        ctx.obj = Config()
-        ctx.obj.repo_root = git_helper.get_root_path()
-        ctx.obj.repo = git.Repo(ctx.obj.repo_root)
+        ctx.obj = Config(git_helper.get_root_path())
     except subprocess.CalledProcessError:
         pass
 
@@ -138,25 +246,6 @@ def setup(ctx):
     pass
 
 
-ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
-ZAZU_REPO_URL = 'https://github.com/LilyRobotics/zazu'
-JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
-
-
-def populate_jira_fields():
-    """Prompt the user for ticket info"""
-    click.echo("Making a new ticket...")
-    issue_dict = {
-        # TODO load project key from config
-        'project': {'key': click.prompt('Enter project key', default='LC')},
-        'issuetype': {'name': click.prompt('Enter an issue type', default='Task')},
-        'summary': click.prompt('Enter a title'),
-        'description': '{}\n\n{}'.format(click.prompt('Enter a description'), JIRA_CREATED_BY_ZAZU)
-    }
-    # TODO fill in repo default component
-    return issue_dict
-
-
 def description_to_branch(description):
     """Sanitizes a string for inclusion into branch name"""
     return description.replace(' ', '_')
@@ -191,13 +280,28 @@ class IssueDescriptor:
         return '{}/{}_{}'.format(self.type, self.id, sanitized_description)
 
 
-def make_ticket(jira):
-    """Creates a new jira ticket interactively"""
-    fields = populate_jira_fields()
-    issue = jira.create_issue(fields)
+def make_ticket(issue_tracker):
+    """Creates a new ticket interactively"""
+    project = issue_tracker.default_project()
+    click.echo("Making a new ticket in the {} project...".format(project))
+    project = issue_tracker.default_project()
+    issue_type = click.prompt('Enter an issue type', default=issue_tracker.default_issue_type())
+    summary = click.prompt('Enter a title')
+    description = click.prompt('Enter a description')
+    component = issue_tracker.default_component()
+    issue = issue_tracker.create_issue(project, issue_type, summary, description, component)
     # Self assign the new ticket
-    jira.assign_issue(issue, issue.fields.reporter.name)
+    issue_tracker.assign_issue(issue, issue.fields.reporter.name)
     return issue
+
+
+def verify_ticket_exists(issue_tracker, ticket_id):
+    """Verify that a given ticket exists"""
+    try:
+        issue = issue_tracker.get_issue(ticket_id)
+        click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
+    except IssueTrackerError:
+        raise click.ClickException('no ticket named "{}"'.format(ticket_id))
 
 
 def offer_to_stash_changes(repo):
@@ -210,15 +314,6 @@ def offer_to_stash_changes(repo):
             repo.git.stash()
 
 
-def verify_ticket_exists(jira, ticket_id):
-    """Verify that a given ticket exists"""
-    issue = jira_helper.get_issue(jira, ticket_id)
-    if issue is None:
-        raise click.BadParameter('no ticket named "{}"'.format(ticket_id))
-    else:
-        click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
-
-
 @dev.command()
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
@@ -229,11 +324,14 @@ def start(ctx, name, no_verify, type):
     """Start a new feature, much like git-flow but with more sugar"""
     offer_to_stash_changes(ctx.obj.repo)
     if name is None:
-        name = str(make_ticket(ctx.obj.jira()))
+        try:
+            name = str(make_ticket(ctx.obj.issue_tracker()))
+        except IssueTrackerError as e:
+            raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
     issue = make_issue_descriptor(name)
     if not no_verify:
-        verify_ticket_exists(ctx.obj.jira(), issue.id)
+        verify_ticket_exists(ctx.obj.issue_tracker(), issue.id)
     if issue.description is None:
         issue.description = click.prompt('Enter a short description for the branch')
     issue.type = type
@@ -317,7 +415,7 @@ def status(ctx):
         gh = make_gh()
 
         def get_issue(id):
-            return ctx.obj.jira().issue(id)
+            return ctx.obj.issue_tracker().issue(id)
 
         def get_pulls_for_branch(branch):
             org, repo = parse_github_url(ctx.obj.repo.remotes.origin.url)
@@ -336,7 +434,7 @@ def status(ctx):
                 click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
                 click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description.replace(JIRA_CREATED_BY_ZAZU, ''))
             except jira.exceptions.JIRAError:
-                click.echo("    No JIRA ticket found")
+                click.echo("    No ticket found")
 
             matches = pulls_future.result()
             click.secho('Pull request info:', bg='white', fg='black')
@@ -380,7 +478,7 @@ def ticket(ctx):
         click.echo('The current branch does not contain a ticket ID')
         exit(-1)
     else:
-        url = jira_helper.get_browse_url(issue_id)
+        url = ctx.obj.issue_tracker().browse_url(issue_id)
         click.echo('Opening "{}"'.format(url))
         webbrowser.open_new(url)
 

@@ -8,17 +8,14 @@ __copyright__ = "Copyright 2016, Lily Robotics"
 import jira
 import credential_helper
 
-# TODO: config this
-jira_base_url = 'https://lily-robotics.atlassian.net'
 
-
-def make_jira():
+def make_jira(base_url):
     username, password = credential_helper.get_user_pass_credentials('Jira')
-    ret = jira.JIRA(jira_base_url, basic_auth=(username, password), options={'check_update': False}, max_retries=0)
+    ret = jira.JIRA(base_url, basic_auth=(username, password), options={'check_update': False}, max_retries=0)
     return ret
 
 
-def get_browse_url(issue_id):
+def get_browse_url(base_url, issue_id):
     return '{}/browse/{}'.format(jira_base_url, issue_id)
 
 
