@@ -37,6 +37,7 @@ class IssueTracker:
 
 
 class IssueTrackerError(Exception):
+    """Parent of all IssueTracker errors"""
 
     def __init___(self, error):
         Exception.__init__(error)
@@ -63,7 +64,7 @@ class JiraIssueTracker(IssueTracker):
     def browse_url(self, issue_id):
         return '{}/browse/{}'.format(self._base_url, issue_id)
 
-    def get_issue(self, issue_id):
+    def issue(self, issue_id):
         try:
             ret = self._jira_handle.issue(issue_id)
         except jira.exceptions.JIRAError:
@@ -76,9 +77,10 @@ class JiraIssueTracker(IssueTracker):
                 'project': {'key': project},
                 'issuetype': {'name': issue_type},
                 'summary': summary,
-                'components': [{'name': component}],
                 'description': '{}\n\n{}'.format(description, JIRA_CREATED_BY_ZAZU)
             }
+            if component is not None:
+                issue_dict['components'] = [{'name': component}]
             return self._jira_handle.create_issue(issue_dict)
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
@@ -109,7 +111,7 @@ def make_jira(config):
         project = config['project']
     except KeyError:
         raise ZazuException('Jira config requires a "project" field')
-    component = config.get('component', '')
+    component = config.get('component', None)
     return JiraIssueTracker(url, project, component)
 
 
@@ -298,7 +300,7 @@ def make_ticket(issue_tracker):
 def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists"""
     try:
-        issue = issue_tracker.get_issue(ticket_id)
+        issue = issue_tracker.issue(ticket_id)
         click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
     except IssueTrackerError:
         raise click.ClickException('no ticket named "{}"'.format(ticket_id))
@@ -414,9 +416,6 @@ def status(ctx):
     else:
         gh = make_gh()
 
-        def get_issue(id):
-            return ctx.obj.issue_tracker().issue(id)
-
         def get_pulls_for_branch(branch):
             org, repo = parse_github_url(ctx.obj.repo.remotes.origin.url)
             pulls = gh.get_user(org).get_repo(repo).get_pulls()
@@ -424,7 +423,7 @@ def status(ctx):
 
         # Dispatch REST calls asynchronously
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            issue_future = executor.submit(get_issue, issue_id)
+            issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
             pulls_future = executor.submit(get_pulls_for_branch, ctx.obj.repo.active_branch.name)
 
             click.echo(click.style('Ticket info:', bg='white', fg='black'))
