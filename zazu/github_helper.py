@@ -1,4 +1,5 @@
-
+# -*- coding: utf-8 -*-
+"""github functions for zazu"""
 import click
 import requests
 import keyring

@@ -1,4 +1,5 @@
-
+# -*- coding: utf-8 -*-
+"""update command for zazu"""
 import click
 import credential_helper
 import git

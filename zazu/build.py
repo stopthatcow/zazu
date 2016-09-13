@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+"""build command for zazu"""
 import click
 import shutil
 import subprocess

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""core functions for zazu"""
+"""git functions for zazu"""
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"

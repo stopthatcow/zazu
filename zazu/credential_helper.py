@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""credential functions for zazu"""
 import keyring
 import click
 
