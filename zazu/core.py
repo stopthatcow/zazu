@@ -512,8 +512,9 @@ def init(ctx):
 
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
+@click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
 @click.pass_context
-def cleanup(ctx, remote):
+def cleanup(ctx, remote, target_branch):
     """Clean up merged branches"""
     def filter_undeletable(branches):
         """Filters out branches that we don't want to delete"""
@@ -531,7 +532,7 @@ def cleanup(ctx, remote):
                 for b in merged_remote_branches:
                     click.echo('Deleting {}'.format(b))
                     ctx.obj.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
-    merged_branches = filter_undeletable(git_helper.get_merged_branches(ctx.obj.repo, 'origin/master'))
+    merged_branches = filter_undeletable(git_helper.get_merged_branches(ctx.obj.repo, target_branch))
     if merged_branches:
         click.echo('The following local branches will be deleted:')
         for b in merged_branches:
@@ -758,7 +759,10 @@ def astyle(files, config, check):
         if check:
             args.append('--dry-run')
         args += files
-        output = subprocess.check_output(args)
+        try:
+            output = subprocess.check_output(args)
+        except OSError:
+            raise click.ClickException('astyle not found, please install it with brew or apt-get and ensure it is on your path')
         needle = 'Formatted  '
         for l in output.split('\n'):
             if l.startswith(needle):
