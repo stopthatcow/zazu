@@ -5,6 +5,7 @@ import jira
 import webbrowser
 import urllib
 import textwrap
+import git
 from .. import github_helper
 from .. import config
 
