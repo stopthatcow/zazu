@@ -118,7 +118,7 @@ def load_project_file(path):
         with open(path) as f:
             return yaml.load(f)
     except IOError:
-        raise click.ClickException('no {} file found in this repo'.format(config.PROJECT_FILE_NAME))
+        raise click.ClickException('no {} file found in this repo'.format(PROJECT_FILE_NAME))
 
 
 class Config:

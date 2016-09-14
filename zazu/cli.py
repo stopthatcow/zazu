@@ -10,6 +10,7 @@ import git_helper
 import build
 import style
 import upgrade
+import subprocess
 from .dev import commands as dev
 from .repo import commands as repo
 
