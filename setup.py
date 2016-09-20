@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
+import setuptools
 import os.path
 root_path = os.path.dirname(os.path.abspath(__file__))
 version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
@@ -14,7 +14,7 @@ except (IOError, ImportError):
 with open(version_file_path, 'r') as version_file:
     version = version_file.read()
 
-setup(
+setuptools.setup(
     name='zazu',
     version=version,
     description='At your service for development workflow management',
@@ -23,7 +23,7 @@ setup(
     author_email='nic@lily.camera',
     url='https://github.com/LilyRobotics/zazu',
     license='BSD',
-    packages=find_packages(exclude=('tests', 'docs')),
+    packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'version.txt']},
     install_requires=['click==6.6',
                       'requests==2.10.0',
@@ -41,6 +41,6 @@ setup(
                       'glob2==0.4.1'],
     entry_points='''
         [console_scripts]
-        zazu=zazu.core:cli
+        zazu=zazu.cli:cli
         '''
 )

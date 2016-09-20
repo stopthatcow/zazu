@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for cmake interaction"""
 import subprocess
-import pkg_resources
 import multiprocessing
 import os
+import pkg_resources
 import semantic_version
 
 

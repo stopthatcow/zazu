@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""core functions for zazu"""
+"""git functions for zazu"""
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"
 
 import os
 import filecmp
+import pkg_resources
 import shutil
 import subprocess
-import pkg_resources
 
 
 def get_root_path():
