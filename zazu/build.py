@@ -3,10 +3,10 @@
 import click
 import shutil
 import subprocess
-import config
 import cmake_helper
 import os
 import tool_helper
+import zazu.config
 
 
 class ComponentConfiguration(object):
@@ -127,7 +127,7 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
 @click.pass_context
 @click.option('-a', '--arch', default='local', help='the desired architecture to build for')
 @click.option('-t', '--type', type=click.Choice(cmake_helper.build_types),
-              help='defaults to what is specified in the {} file, or release if unspecified there'.format(config.PROJECT_FILE_NAME))
+              help='defaults to what is specified in the {} file, or release if unspecified there'.format(zazu.config.PROJECT_FILE_NAME))
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
 def build(ctx, arch, type, verbose, goal):

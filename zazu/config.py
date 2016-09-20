@@ -74,8 +74,8 @@ class JiraIssueTracker(IssueTracker):
     def default_project(self):
         return self._default_project
 
-    def default_issue_type(self):
-        return 'Task'
+    def issue_types(self):
+        return ['Task', 'Bug', 'Story']
 
     def default_component(self):
         return self._default_component

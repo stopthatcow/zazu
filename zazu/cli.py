@@ -4,10 +4,10 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"
 
 import click
-import zazu.config
 import git_helper
 import subprocess
 import zazu.build
+import zazu.config
 import zazu.dev.commands
 import zazu.repo.commands
 import zazu.style

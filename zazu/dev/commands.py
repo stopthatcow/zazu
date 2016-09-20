@@ -33,7 +33,7 @@ class IssueDescriptor(object):
 def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
     project = issue_tracker.default_project()
-    issue_type, idx = pick(issue_tracker.issue_types(), 'Pick issue type')
+    issue_type, idx = pick.pick(issue_tracker.issue_types(), 'Pick issue type')
     click.echo("Making a new {} in the {} project...".format(issue_type.lower(), project))
     summary = zazu.util.prompt('Enter a title')
     description = zazu.util.prompt('Enter a description')

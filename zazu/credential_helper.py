@@ -2,7 +2,7 @@
 """credential functions for zazu"""
 import keyring
 import click
-import util
+import zazu.util
 
 
 def get_user_pass_credentials(component, use_saved=True):
@@ -14,7 +14,7 @@ def get_user_pass_credentials(component, use_saved=True):
         user = keyring.get_password(component, keyring_user)
         password = keyring.get_password(component, keyring_password)
     if user is None or password is None:
-        user = util.prompt('{} username'.format(component), type=str)
+        user = zazu.util.prompt('{} username'.format(component), type=str)
         password = click.prompt('{} password'.format(
             component), type=str, hide_input=True)
         if click.confirm('Do you want to save these credentials?', default=True):
