@@ -1,6 +1,7 @@
 import click
 import tool_helper
 
+
 @click.group()
 def tool():
     """Manage tools that zazu is familiar with"""
@@ -20,4 +21,3 @@ def install(spec, force_reinstall):
 def uninstall(spec):
     """Uninstall tools that zazu is familiar with"""
     tool_helper.uninstall_spec(spec, click.echo)
-

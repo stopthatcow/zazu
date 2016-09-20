@@ -4,14 +4,13 @@
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"
 
+import click
+import concurrent.futures
 import glob2 as glob
 import multiprocessing
-import subprocess
-import concurrent.futures
 import os
-import click
-import config
-import git_helper
+import subprocess
+import zazu.git_helper
 
 
 def autopep8_file(file, config, check):
@@ -61,23 +60,22 @@ def astyle(files, config, check):
     return ret
 
 
-def recursive_glob(pattern):
-    """an os optimized recursive glob"""
-    if 'nt' == os.name:
-        return glob.glob(pattern)
-    else:
-        try:
-            # Expand a glob using sh and ls. This  won't fly on Windows, but it is MUCH faster ~100x than glob2
-            ret = subprocess.check_output(['sh -c \"ls -1 {} 2>/dev/null\"'.format(pattern)], shell=True).split('\n')
-            ret = [x for x in ret if x]
-        except subprocess.CalledProcessError:
-            ret = []
-        return ret
+def find_files(directory, pattern='*'):
+    if not os.path.exists(directory):
+        raise ValueError("Directory not found {}".format(directory))
+
+    matches = []
+    for root, dirnames, filenames in os.walk(directory):
+        for filename in filenames:
+            full_path = os.path.join(root, filename)
+            if fnmatch.filter([full_path], pattern):
+                matches.append(os.path.join(root, filename))
+    return matches
 
 
 def glob_with_excludes(pattern, exclude):
     """globs and then excludes certain paths"""
-    files = recursive_glob(pattern)
+    files = glob.glob(pattern)
 
     for e in exclude:
         files = [x for x in files if not x.startswith(e)]
@@ -109,7 +107,7 @@ def style(ctx, check, dirty):
     except KeyError:
         raise click.ClickException('no "style" settings found in {}'.format(PROJECT_FILE_NAME))
     if dirty:
-        dirty_files = git_helper.get_touched_files(ctx.obj.repo)
+        dirty_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
     exclude_paths = style_config.get('exclude', default_exclude_paths)
     # astyle
     astyle_config = style_config.get('astyle', None)

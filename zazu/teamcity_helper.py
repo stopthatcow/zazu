@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for teamcity interaction"""
-import pyteamcity
-from credential_helper import get_user_pass_credentials
 import click
-import requests
 import json
 import git
+import pyteamcity
+import requests
+import zazu.credential_helper
 
 
 class TeamCityHelper(pyteamcity.TeamCity):
@@ -224,7 +224,7 @@ def setup_project(tc, git_url, repo_name, component):
 def make_tc(address, port=8111):
     use_saved_credentials = True
     while True:
-        tc_user, tc_pass = get_user_pass_credentials('TeamCity', use_saved_credentials)
+        tc_user, tc_pass = zazu.credential_helper.get_user_pass_credentials('TeamCity', use_saved_credentials)
         tc = TeamCityHelper(tc_user, tc_pass, address, port)
         try:
             tc.get_user_by_username(tc_user)

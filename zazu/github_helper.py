@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
 import click
-import requests
+import getpass
+import github
 import keyring
 import re
-import github
+import requests
 import socket
-import getpass
-import util
+import zazu.util
 
 
 def get_gh_token():
@@ -21,12 +21,12 @@ def get_gh_token():
     }
     token = None
     while token is None:
-        user = util.prompt("GitHub username", type=str)
+        user = zazu.util.prompt("GitHub username", type=str)
         password = click.prompt("GitHub password", type=str, hide_input=True)
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
-                headers = {'X-GitHub-OTP': util.prompt('GitHub two-factor code (6 digits)', type=str)}
+                headers = {'X-GitHub-OTP': click.prompt('GitHub two-factor code (6 digits)', type=str)}
                 r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
             else:
                 click.echo("Invalid username or password!")
@@ -36,7 +36,7 @@ def get_gh_token():
         elif r.status_code == 422:
             click.echo('You already have a GitHub token for zazu in GitHub but it is not saved in the keychain! '
                        'Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
-            token = util.prompt('Enter new token manually')
+            token = click.prompt('Enter new token manually')
         else:
             raise Exception("Error authenticating with GitHub, status:{} content:{}".format(r.status_code, r.json()))
     return token

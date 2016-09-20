@@ -6,9 +6,9 @@ __copyright__ = "Copyright 2016, Lily Robotics"
 
 import os
 import filecmp
+import pkg_resources
 import shutil
 import subprocess
-import pkg_resources
 
 
 def get_root_path():

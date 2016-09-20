@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-"""update command for zazu"""
+"""config classes and methods for zazu"""
 import click
-import credential_helper
+import zazu.credential_helper
 import git
 import os
 import yaml
 import jira
 
 
-class IssueTracker:
+class IssueTracker(object):
     pass
 
 
 class IssueTrackerError(Exception):
     """Parent of all IssueTracker errors"""
 
-    def __init___(self, error):
-        Exception.__init__(error)
-
 
 class ZazuException(Exception):
+    """Parent of all Zazu errors"""
 
     def __init___(self, error):
         Exception.__init__("Error: {}".format(error))
@@ -38,7 +36,7 @@ class JiraIssueTracker(IssueTracker):
         self._base_url = base_url
         self._default_project = default_project
         self._default_component = default_component
-        username, password = credential_helper.get_user_pass_credentials('Jira')
+        username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
         self._jira_handle = jira.JIRA(self._base_url,
                                       basic_auth=(username, password),
                                       options={'check_update': False}, max_retries=0)
@@ -49,8 +47,8 @@ class JiraIssueTracker(IssueTracker):
     def issue(self, issue_id):
         try:
             ret = self._jira_handle.issue(issue_id)
-        except jira.exceptions.JIRAError:
-            raise IssueTrackerError
+        except jira.exceptions.JIRAError as e:
+            raise IssueTrackerError(str(e))
         return ret
 
     def create_issue(self, project, issue_type, summary, description, component):
@@ -76,30 +74,30 @@ class JiraIssueTracker(IssueTracker):
     def default_project(self):
         return self._default_project
 
-    def issue_types(self):
-        return ['Task', 'Bug', 'Story']
+    def default_issue_type(self):
+        return 'Task'
 
     def default_component(self):
         return self._default_component
 
-
-def make_jira(config):
-    """Makes a IssueTrackerJira from a config"""
-    try:
-        url = config['url']
-    except KeyError:
-        raise ZazuException('Jira config requires a "url" field')
-    try:
-        project = config['project']
-    except KeyError:
-        raise ZazuException('Jira config requires a "project" field')
-    component = config.get('component', None)
-    return JiraIssueTracker(url, project, component)
+    @staticmethod
+    def from_config(config):
+        """Makes a IssueTrackerJira from a config"""
+        try:
+            url = config['url']
+        except KeyError:
+            raise ZazuException('Jira config requires a "url" field')
+        try:
+            project = config['project']
+        except KeyError:
+            raise ZazuException('Jira config requires a "project" field')
+        component = config.get('component', None)
+        return JiraIssueTracker(url, project, component)
 
 
 def issue_tracker_factory(config):
     """A factory function that makes and initializes a IssueTracker object from a config"""
-    known_issue_trackers = {'jira': make_jira}
+    known_issue_trackers = {'jira': JiraIssueTracker.from_config}
     if 'type' in config:
         type = config['type']
         type = type.lower()
@@ -121,7 +119,7 @@ def load_project_file(path):
         raise click.ClickException('no {} file found in this repo'.format(PROJECT_FILE_NAME))
 
 
-class Config:
+class Config(object):
 
     """Holds all zazu configuration info"""
 

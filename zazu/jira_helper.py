@@ -6,11 +6,11 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"
 
 import jira
-import credential_helper
+import zazu.credential_helper
 
 
 def make_jira(base_url):
-    username, password = credential_helper.get_user_pass_credentials('Jira')
+    username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
     ret = jira.JIRA(base_url, basic_auth=(username, password), options={'check_update': False}, max_retries=0)
     return ret
 

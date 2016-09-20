@@ -6,16 +6,18 @@ import webbrowser
 import urllib
 import textwrap
 import git
-from zazu import util
-from zazu import github_helper
-from zazu import config
-from pick import pick
+import pick
+import zazu.github_helper
+import zazu.config
+import zazu.util
+
 
 def description_to_branch(description):
     """Sanitizes a string for inclusion into branch name"""
     return description.replace(' ', '_')
 
-class IssueDescriptor:
+
+class IssueDescriptor(object):
     """Info holder of type, ticket ID, and description"""
 
     def __init__(self, type, id, description=''):
@@ -31,11 +33,10 @@ class IssueDescriptor:
 def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
     project = issue_tracker.default_project()
-    project = issue_tracker.default_project()
     issue_type, idx = pick(issue_tracker.issue_types(), 'Pick issue type')
     click.echo("Making a new {} in the {} project...".format(issue_type.lower(), project))
-    summary = util.prompt('Enter a title')
-    description = util.prompt('Enter a description')
+    summary = zazu.util.prompt('Enter a title')
+    description = zazu.util.prompt('Enter a description')
     component = issue_tracker.default_component()
     issue = issue_tracker.create_issue(project, issue_type, summary, description, component)
     # Self assign the new ticket
@@ -48,7 +49,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     try:
         issue = issue_tracker.issue(ticket_id)
         click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
-    except config.IssueTrackerError:
+    except zazu.config.IssueTrackerError:
         raise click.ClickException('no ticket named "{}"'.format(ticket_id))
 
 
@@ -84,6 +85,7 @@ def dev(ctx):
     """Create or update work items"""
     ctx.obj.check_repo()
 
+
 @dev.command()
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
@@ -95,14 +97,14 @@ def start(ctx, name, no_verify, type):
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
-        except config.IssueTrackerError as e:
+        except zazu.config.IssueTrackerError as e:
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
     issue = make_issue_descriptor(name)
     if not no_verify:
         verify_ticket_exists(ctx.obj.issue_tracker(), issue.id)
     if issue.description is None:
-        issue.description = util.prompt('Enter a short description for the branch')
+        issue.description = zazu.util.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()
     offer_to_stash_changes(ctx.obj.repo)
@@ -132,10 +134,10 @@ def status(ctx):
         click.echo('The current branch does not contain a ticket ID')
         exit(-1)
     else:
-        gh = github_helper.make_gh()
+        gh = zazu.github_helper.make_gh()
 
         def get_pulls_for_branch(branch):
-            org, repo = github_helper.parse_github_url(ctx.obj.repo.remotes.origin.url)
+            org, repo = zazu.github_helper.parse_github_url(ctx.obj.repo.remotes.origin.url)
             pulls = gh.get_user(org).get_repo(repo).get_pulls()
             return [p for p in pulls if p.head.ref == branch]
 
@@ -149,7 +151,8 @@ def status(ctx):
                 issue = issue_future.result()
                 type = issue.fields.issuetype.name
                 click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
-                click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description.replace(config.JIRA_CREATED_BY_ZAZU, ''))
+                click.echo(click.style('    Description: '.format(type), fg='green') +
+                           issue.fields.description.replace(zazu.config.JIRA_CREATED_BY_ZAZU, ''))
             except jira.exceptions.JIRAError:
                 click.echo("    No ticket found")
 
@@ -205,4 +208,3 @@ def ticket(ctx):
 def builds(ctx):
     """Display build statuses"""
     raise NotImplementedError
-

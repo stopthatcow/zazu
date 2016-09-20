@@ -6,9 +6,10 @@ import subprocess
 import config
 import cmake_helper
 import os
+import tool_helper
 
 
-class ComponentConfiguration:
+class ComponentConfiguration(object):
 
     def __init__(self, component):
         self._name = component['name']
@@ -37,7 +38,7 @@ class ComponentConfiguration:
         return self._goals
 
 
-class BuildGoal:
+class BuildGoal(object):
 
     def __init__(self, goal):
         self._name = goal.get('name', '')
@@ -70,7 +71,7 @@ class BuildGoal:
         return self._builds.get(arch, self._default_spec)
 
 
-class BuildSpec:
+class BuildSpec(object):
 
     def __init__(self, type='release', vars={}, requires={}, description='', arch='', script=None):
         self._build_type = type
