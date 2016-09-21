@@ -92,7 +92,8 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
                       '-DCMAKE_BUILD_TYPE=' + build_type.capitalize(),
                       '-DCPACK_SYSTEM_NAME=' + arch,
                       '-DCPACK_PACKAGE_VERSION=' + str(ver),
-                      '-DBOB_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools')
+                      '-DBOB_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools'),
+                      '-DZAZU_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools')
                       ]
     for k, v in build_variables.items():
         configure_args.append('-D{}={}'.format(k, v))
