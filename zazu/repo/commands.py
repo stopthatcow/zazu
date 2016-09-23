@@ -3,6 +3,7 @@ import zazu.teamcity_helper
 import zazu.git_helper
 import zazu.build
 
+
 @click.group()
 @click.pass_context
 def repo(ctx):
