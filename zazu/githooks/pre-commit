@@ -1,0 +1,2 @@
+#!/bin/sh
+zazu style --check --dirty

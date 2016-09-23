@@ -1,0 +1,18 @@
+issueTracker:
+    type: Jira
+    url: https://lily-robotics.atlassian.net/
+    project: STI
+    component: Zazu
+
+ci:
+    type: TeamCity
+    url: http://teamcity.lily.technology:8111/
+
+style:
+  exclude:
+    - dependency/
+    - build/
+    - dist/
+  autopep8:
+    options:
+      - "--max-line-length=150"
