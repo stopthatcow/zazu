@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import cmake_helper
 import os
-import tool_helper
+import zazu.tool.tool_helper
 import zazu.config
 
 
@@ -150,9 +150,9 @@ def build(ctx, arch, type, verbose, goal):
     requirements = spec.build_requires().get('zazu', [])
     for req in requirements:
         if verbose:
-            tool_helper.install_spec(req, echo=click.echo)
+            zazu.tool.tool_helper.install_spec(req, echo=click.echo)
         else:
-            tool_helper.install_spec(req)
+            zazu.tool.tool_helper.install_spec(req)
     ret = 0
     os.environ["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
     if spec.build_script() is None:

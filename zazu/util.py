@@ -4,7 +4,18 @@
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"
 
-import gnureadline
+try:
+    import gnureadline
+except ImportError:
+    # Fall back to regular raw_input
+    pass
+try:
+    import getch
+except ImportError:
+    # Fall back to regular raw_input
+    pass
+import inquirer
+import click
 
 
 def prompt(text, default=None, expected_type=str):
@@ -13,3 +24,14 @@ def prompt(text, default=None, expected_type=str):
     else:
         result = raw_input('{}: '.format(text))
     return expected_type(result)
+
+
+def pick(choices, message):
+    click.clear()
+    questions = [
+        inquirer.List(' ',
+                      message=message,
+                      choices=choices,
+                      ),
+    ]
+    return inquirer.prompt(questions)[' ']
