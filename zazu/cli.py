@@ -23,7 +23,7 @@ def cli(ctx):
         required_zazu_version = ctx.obj.zazu_version_required()
         if required_zazu_version and required_zazu_version != zazu.__version__:
             click.echo('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). \
-            Use "zazu upgrade" to fix this'.format(ctx.obj.zazu_version_required(), __version__))
+            Use "zazu upgrade" to fix this'.format(ctx.obj.zazu_version_required(), zazu.__version__))
     except subprocess.CalledProcessError:
         pass
 
