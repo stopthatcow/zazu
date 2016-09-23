@@ -1,7 +1,7 @@
 import click
 import zazu.teamcity_helper
 import zazu.git_helper
-
+import zazu.build
 
 @click.group()
 @click.pass_context
@@ -30,14 +30,14 @@ def ci(ctx):
     address = 'teamcity.lily.technology'
     port = 8111
     ctx.obj.check_repo()
-    ctx.obj.tc = zazu.teamcity_helper.make_tc(address, port)
+    ctx.obj._tc = zazu.teamcity_helper.make_tc(address, port)
     try:
-        project_config = load_project_file(os.path.join(ctx.obj.repo_root, config.PROJECT_FILE_NAME))
+        project_config = ctx.obj.project_config()
         if click.confirm("Post build configuration to TeamCity?"):
             components = project_config['components']
             for c in components:
-                component = ComponentConfiguration(c)
-                zazu.teamcity_helper.setup(ctx.obj.tc, component, ctx.obj.repo_root)
+                component = zazu.build.ComponentConfiguration(c)
+                zazu.teamcity_helper.setup(ctx.obj._tc, component, ctx.obj.repo_root)
     except IOError:
         raise click.ClickException("No {} file found in {}".format(project_file_name, ctx.obj.repo_root))
 
