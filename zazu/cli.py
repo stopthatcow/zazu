@@ -4,10 +4,10 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016, Lily Robotics"
 
 import click
-import config
 import git_helper
 import subprocess
 import zazu.build
+import zazu.config
 import zazu.dev.commands
 import zazu.repo.commands
 import zazu.style
@@ -19,7 +19,7 @@ import zazu.upgrade
 @click.pass_context
 def cli(ctx):
     try:
-        ctx.obj = config.Config(git_helper.get_root_path())
+        ctx.obj = zazu.config.Config(git_helper.get_root_path())
         required_zazu_version = ctx.obj.zazu_version_required()
         if required_zazu_version and required_zazu_version != zazu.__version__:
             click.echo('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). \

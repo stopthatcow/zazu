@@ -38,7 +38,9 @@ setuptools.setup(
                       'gcovr==3.2',
                       'teamcity-messages==1.19',
                       'futures==3.0.5',
-                      'glob2==0.4.1'],
+                      'glob2==0.4.1',
+                      'gnureadline==6.3.3',
+                      'pick==0.6.1'],
     entry_points='''
         [console_scripts]
         zazu=zazu.cli:cli

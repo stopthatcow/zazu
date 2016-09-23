@@ -7,6 +7,7 @@ import keyring
 import re
 import requests
 import socket
+import zazu.util
 
 
 def get_gh_token():
@@ -20,7 +21,7 @@ def get_gh_token():
     }
     token = None
     while token is None:
-        user = click.prompt("GitHub username", type=str)
+        user = zazu.util.prompt("GitHub username", type=str)
         password = click.prompt("GitHub password", type=str, hide_input=True)
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
