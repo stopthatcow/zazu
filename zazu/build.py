@@ -25,7 +25,7 @@ class ComponentConfiguration(object):
             if type is not None:
                 ret._build_type = type
         except KeyError:
-            ret = BuildSpec()
+            ret = BuildSpec(goal)
         return ret
 
     def description(self):
@@ -45,24 +45,29 @@ class BuildGoal(object):
         self._description = goal.get('description', '')
         self._build_type = goal.get('buildType', None)
         self._build_vars = goal.get('buildVars', {})
+        self._build_goal = goal.get('buildGoal', self._name)
         self._requires = goal.get('requires', {})
         self._builds = {}
-        self._default_spec = BuildSpec(self._build_type, self._build_vars, self._requires, self._description)
+        self._default_spec = BuildSpec(self._build_goal, self._build_type, self._build_vars, self._requires, self._description)
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
+            build_goal = b.get('buildGoal', self._build_goal)
             requires = b.get('requires', {})
             requires.update(self._requires)
             description = b.get('description', '')
             arch = b['arch']
             script = b.get('script', None)
-            self._builds[arch] = BuildSpec(type, vars, requires, description, arch, script=script)
+            self._builds[arch] = BuildSpec(build_goal, type, vars, requires, description, arch, script=script)
 
     def description(self):
         return self._description
 
     def name(self):
         return self._name
+
+    def goal(self):
+        return self._build_goal
 
     def builds(self):
         return self._builds
@@ -73,7 +78,8 @@ class BuildGoal(object):
 
 class BuildSpec(object):
 
-    def __init__(self, type='release', vars={}, requires={}, description='', arch='', script=None):
+    def __init__(self, goal, type='minSizeRel', vars={}, requires={}, description='', arch='', script=None):
+        self._build_goal = goal
         self._build_type = type
         self._build_vars = vars
         self._build_requires = requires
@@ -83,6 +89,9 @@ class BuildSpec(object):
 
     def build_type(self):
         return self._build_type
+
+    def build_goal(self):
+        return self._build_goal
 
     def build_vars(self):
         return self._build_vars
@@ -131,7 +140,7 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
 def build(ctx, arch, type, verbose, goal):
-    """Build project targets, the GOAL argument is the desired make target,
+    """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target,
      use distclean to clean whole build folder"""
     # Run the supplied build command if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
@@ -145,13 +154,14 @@ def build(ctx, arch, type, verbose, goal):
         else:
             tool_helper.install_spec(req)
     ret = 0
+    os.environ["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
     if spec.build_script() is None:
-        ret = cmake_build(ctx.obj.repo_root, arch, spec.build_type(), goal, verbose, spec.build_vars())
+        ret = cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, spec.build_vars())
     else:
         for s in spec.build_script():
             if verbose:
                 click.echo(str(s))
-            ret = subprocess.call(str(s), shell=True)
+            ret = subprocess.call(str(s), shell=True, cwd=ctx.obj.repo_root)
             if ret:
                 click.echo("Error {} exited with code {}".format(str(s), ret))
                 break

@@ -158,6 +158,9 @@ class Config(object):
     def astyle_config(self):
         return {}
 
+    def zazu_version_required(self):
+        return self.project_config().get('zazu', '')
+
     def project_config(self):
         return load_project_file(os.path.join(self.repo_root, PROJECT_FILE_NAME))
 
