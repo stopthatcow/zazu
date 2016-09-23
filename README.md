@@ -20,6 +20,13 @@ Zazu is implemented in Python and is a [Click](http://click.pocoo.org/5/) based 
 
 If you get an error that "trusted-host" is not a recognized argument you may need to upgrade pip itself: `pip install --upgrade pip`
 
+Note that you may need to install keyrings.alt on Linux: `pip install keyrings.alt`
+
+###Optional readline support (enables editing of entered text)
+
+    sudo apt-get install libncurses-dev libffi-dev
+    pip install gnureadline
+
 ##Command overview
 The following diagram shows the available subcommands of zazu.
 
@@ -127,8 +134,10 @@ The zazu.yaml file lives at the base of the repo and describes the CI goals and 
 	    options:
 	      - "--max-line-length=150" # options passed to autopep8
 
+	  zazu: 0.2.0 # optional required zazu version
+
 ###Compiler tuples
-Architectures are defined as tupple in the folowing form:
+Architectures are defined as tuple in the folowing form:
 `<ISA>-<OS>-<ABI>`
 ####Examples
 - x86\_64-linux-gcc
