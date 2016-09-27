@@ -153,16 +153,14 @@ def build(ctx, arch, type, verbose, goal):
             zazu.tool.tool_helper.install_spec(req, echo=click.echo)
         else:
             zazu.tool.tool_helper.install_spec(req)
-    ret = 0
     os.environ["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
     if spec.build_script() is None:
-        ret = cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, spec.build_vars())
+        cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, spec.build_vars())
     else:
         for s in spec.build_script():
             if verbose:
                 click.echo(str(s))
             ret = subprocess.call(str(s), shell=True, cwd=ctx.obj.repo_root)
             if ret:
-                click.echo("Error {} exited with code {}".format(str(s), ret))
-                break
-    return ret
+                raise click.ClickException("{} exited with code {}".format(str(s), ret))
+
