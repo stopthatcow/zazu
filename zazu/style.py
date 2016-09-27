@@ -6,7 +6,6 @@ __copyright__ = "Copyright 2016, Lily Robotics"
 
 import click
 import concurrent.futures
-import glob2 as glob
 import multiprocessing
 import os
 import subprocess
@@ -59,37 +58,14 @@ def astyle(files, config, check):
                 ret.append(l[len(needle):])
     return ret
 
-
-def find_files(directory, pattern='*'):
-    if not os.path.exists(directory):
-        raise ValueError("Directory not found {}".format(directory))
-
-    matches = []
-    for root, dirnames, filenames in os.walk(directory):
-        for filename in filenames:
-            full_path = os.path.join(root, filename)
-            if fnmatch.filter([full_path], pattern):
-                matches.append(os.path.join(root, filename))
-    return matches
-
-
-def glob_with_excludes(pattern, exclude):
-    """globs and then excludes certain paths"""
-    files = glob.glob(pattern)
-
-    for e in exclude:
-        files = [x for x in files if not x.startswith(e)]
-    return files
-
-
-default_astyle_paths = [os.path.join('**', '*.cpp'),
-                        os.path.join('**', '*.hpp'),
-                        os.path.join('**', '*.c'),
-                        os.path.join('**', '*.h')]
-default_py_paths = [os.path.join('**', '*.py')]
-default_exclude_paths = [os.path.join('build'),
-                         os.path.join('dependency'),
-                         os.path.join('dependencies')]
+default_astyle_paths = ['*.cpp',
+                        '*.hpp',
+                        '*.c',
+                        '*.h']
+default_py_paths = ['*.py']
+default_exclude_paths = ['build',
+                         'dependency',
+                         'dependencies']
 
 
 @click.command()
@@ -102,6 +78,7 @@ def style(ctx, check, dirty):
     ctx.obj.check_repo()
     os.chdir(ctx.obj.repo_root)
     violations = []
+    file_count = 0
     try:
         style_config = ctx.obj.project_config()['style']
     except KeyError:
@@ -112,26 +89,28 @@ def style(ctx, check, dirty):
     # astyle
     astyle_config = style_config.get('astyle', None)
     if astyle_config is not None:
-        for f in astyle_config.get('include', default_astyle_paths):
-            files = glob_with_excludes(f, exclude_paths)
-            if dirty:
-                files = set(files).intersection(dirty_files)
-            violations += astyle(files, astyle_config, check)
+        includes = astyle_config.get('include', default_astyle_paths)
+        files = zazu.util.scantree(ctx.obj.repo_root, includes, exclude_paths, exclude_hidden=True)
+        if dirty:
+            files = set(files).intersection(dirty_files)
+        file_count += len(files)
+        violations += astyle(files, astyle_config, check)
 
     # autopep8
     autopep8_config = style_config.get('autopep8', None)
     if autopep8_config is not None:
-        for f in autopep8_config.get('include', default_py_paths):
-            files = glob_with_excludes(f, exclude_paths)
-            if dirty:
-                files = set(files).intersection(dirty_files)
-            violations += autopep8(files, autopep8_config, check)
+        includes = autopep8_config.get('include', default_py_paths)
+        files = zazu.util.scantree(ctx.obj.repo_root, includes, exclude_paths, exclude_hidden=True)
+        if dirty:
+            files = set(files).intersection(dirty_files)
+        file_count += len(files)
+        violations += autopep8(files, autopep8_config, check)
     if check:
         for v in violations:
             click.echo("Violation in: {}".format(v))
-        click.echo('{} violations detected'.format(len(violations)))
+        click.echo('{} violations detected in {} files'.format(len(violations), file_count))
         ctx.exit(len(violations))
     else:
         for v in violations:
             click.echo("Formatted: {}".format(v))
-        click.echo('{} violations fixed'.format(len(violations)))
+        click.echo('{} violations fixed in {} files'.format(len(violations), file_count))
