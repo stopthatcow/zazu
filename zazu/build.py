@@ -163,4 +163,3 @@ def build(ctx, arch, type, verbose, goal):
             ret = subprocess.call(str(s), shell=True, cwd=ctx.obj.repo_root)
             if ret:
                 raise click.ClickException("{} exited with code {}".format(str(s), ret))
-
