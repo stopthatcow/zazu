@@ -21,4 +21,4 @@ def upgrade(ctx, version):
                 '--trusted-host', 'pypi.lily.technology',
                 '--index-url', 'http://pypi.lily.technology:8080/simple', 'zazu{}'.format(version)]
     click.echo('pip {}'.format(' '.join(pip_args)))
-    return pip.main(pip_args)
+    ctx.exit(pip.main(pip_args))
