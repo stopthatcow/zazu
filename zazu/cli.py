@@ -11,6 +11,7 @@ import zazu.config
 import zazu.dev.commands
 import zazu.repo.commands
 import zazu.style
+import zazu.tool.commands
 import zazu.upgrade
 
 
@@ -22,8 +23,8 @@ def cli(ctx):
         ctx.obj = zazu.config.Config(git_helper.get_root_path())
         required_zazu_version = ctx.obj.zazu_version_required()
         if required_zazu_version and required_zazu_version != zazu.__version__:
-            click.echo('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). \
-            Use "zazu upgrade" to fix this'.format(ctx.obj.zazu_version_required(), zazu.__version__))
+            click.echo('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). '
+                       'Use "zazu upgrade" to fix this'.format(ctx.obj.zazu_version_required(), zazu.__version__))
     except subprocess.CalledProcessError:
         pass
 
@@ -33,3 +34,4 @@ cli.add_command(zazu.style.style)
 cli.add_command(zazu.build.build)
 cli.add_command(zazu.dev.commands.dev)
 cli.add_command(zazu.repo.commands.repo)
+cli.add_command(zazu.tool.commands.tool)

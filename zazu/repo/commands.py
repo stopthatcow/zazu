@@ -63,14 +63,16 @@ def init(ctx):
 @click.pass_context
 def cleanup(ctx, remote, target_branch):
     """Clean up merged branches"""
+
     def filter_undeletable(branches):
         """Filters out branches that we don't want to delete"""
-        return filter(lambda s: not ('master' == s or 'develop' == s or '*' in s or '-' == s), branches)
+        undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-'])
+        return [b for b in branches if b not in undeletable and not b.startswith('*')]
 
     ctx.obj.repo.git.checkout('develop')
     if remote:
         ctx.obj.repo.git.fetch('--prune')
-        merged_remote_branches = filter_undeletable(zazu.git_helper.get_merged_branches(ctx.obj.repo, 'origin/master', remote=True))
+        merged_remote_branches = filter_undeletable(zazu.git_helper.get_merged_branches(ctx.obj.repo, target_branch, remote=True))
         if merged_remote_branches:
             click.echo('The following remote branches will be deleted:')
             for b in merged_remote_branches:
