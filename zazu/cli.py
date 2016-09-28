@@ -11,6 +11,7 @@ import zazu.config
 import zazu.dev.commands
 import zazu.repo.commands
 import zazu.style
+import zazu.tool.commands
 import zazu.upgrade
 
 
@@ -33,3 +34,4 @@ cli.add_command(zazu.style.style)
 cli.add_command(zazu.build.build)
 cli.add_command(zazu.dev.commands.dev)
 cli.add_command(zazu.repo.commands.repo)
+cli.add_command(zazu.tool.commands.tool)
