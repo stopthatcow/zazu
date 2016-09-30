@@ -11,6 +11,7 @@ import zazu.config
 
 
 class ComponentConfiguration(object):
+    """Stores a configuration for a single component"""
 
     def __init__(self, component):
         self._name = component['name']
@@ -40,6 +41,7 @@ class ComponentConfiguration(object):
 
 
 class BuildGoal(object):
+    """Stores a configuration for a single build goal with one or more architectures"""
 
     def __init__(self, goal):
         self._name = goal.get('name', '')
@@ -155,6 +157,7 @@ def tag_to_version(tag):
 
 
 def make_semver(repo_root, build_number):
+    """Parses SCM info and creates a semantic version"""
     branch_name, sha, last_tag, commits_past_tag = parse_describe(repo_root)
     return make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha)
 
@@ -177,6 +180,7 @@ def parse_describe(repo_root):
 
 
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
+    """Converts repo metadata and build version into a semantic version"""
     branch_name = branch_name.replace('/', '.')
     branch_name = branch_name.replace('-', '.')
     branch_name = branch_name.replace('_', '.')
@@ -199,6 +203,7 @@ def make_version_number(branch_name, build_number, last_tag, commits_past_tag, s
 
 
 def populate_version_environ_vars(version):
+    """Populates environment variables from a semantic version"""
     os.environ["ZAZU_BUILD_VERSION"] = str(version)
     os.environ["ZAZU_BUILD_VERSION_MAJOR"] = str(version.major)
     os.environ["ZAZU_BUILD_VERSION_MINOR"] = str(version.minor)
@@ -206,6 +211,7 @@ def populate_version_environ_vars(version):
 
 
 def install_requirements(requirements, verbose):
+    """Installs the requirements using the zazu tool manager"""
     for req in requirements:
         if verbose:
             zazu.tool.tool_helper.install_spec(req, echo=click.echo)
@@ -214,6 +220,7 @@ def install_requirements(requirements, verbose):
 
 
 def script_build(repo_root, spec, verbose):
+    """Build using a provided shell script"""
     for s in spec.build_script():
         if verbose:
             click.echo(str(s))
