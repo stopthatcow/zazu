@@ -4,7 +4,6 @@ import subprocess
 import multiprocessing
 import os
 import pkg_resources
-import semantic_version
 
 
 def architecture_to_generator(arch):
@@ -31,44 +30,6 @@ def get_toolchain_file_from_arch(arch):
     return ret
 
 
-def tag_to_version(tag):
-    """Converts a git tag into a semantic version string.
-     i.e. R4.1 becomes 4.1.0. The leading R is optional on the tag"""
-    if tag.startswith('R'):
-        tag = tag[1:]
-    components = tag.split('.')
-    major = '0'
-    minor = '0'
-    patch = '0'
-    try:
-        major = components[0]
-        minor = components[1]
-        patch = components[2]
-    except IndexError:
-        pass
-    return '.'.join([major, minor, patch])
-
-
-def parse_describe(repo_root):
-    """Parses the results of git describe into a semantic version in the form
-    <tag in x.y.z format>+<commits_since_tag>.g<sha>.<buildNum>"""
-    stdout = subprocess.check_output(['git', 'describe', '--dirty=.dirty', '--always'], cwd=repo_root)
-    components = stdout.strip().split('-')
-    sha = None
-    commits_past = None
-    last_tag = None
-    try:
-        sha = components.pop()
-        commits_past = components.pop()
-        last_tag = components.pop()
-    except IndexError:
-        pass
-    last_version = tag_to_version(last_tag)
-    # TODO Fix this
-    build_num = 0
-    return semantic_version.Version('{}+{}.{}.{}'.format(last_version, commits_past, sha, build_num))
-
-
 def known_arches():
     """Lists arches that zazu is familiar with"""
     return ['local',
@@ -82,16 +43,15 @@ def known_arches():
             'x86_32-win-msvc_2015']
 
 
-def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lambda x: x):
+def configure(repo_root, build_dir, arch, build_type, build_variables, version, echo=lambda x: x):
     """Configures a cmake based project to be built and caches args used to bypass configuration in future"""
     os.chdir(build_dir)
-    ver = parse_describe(repo_root)
     configure_args = ['cmake',
                       repo_root,
                       '-G', architecture_to_generator(arch),
                       '-DCMAKE_BUILD_TYPE=' + build_type.capitalize(),
                       '-DCPACK_SYSTEM_NAME=' + arch,
-                      '-DCPACK_PACKAGE_VERSION=' + str(ver),
+                      '-DCPACK_PACKAGE_VERSION=' + str(version),
                       '-DBOB_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools'),
                       '-DZAZU_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools')
                       ]

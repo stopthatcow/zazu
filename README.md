@@ -16,7 +16,7 @@ digraph G {
 Zazu is implemented in Python and is a [Click](http://click.pocoo.org/5/) based CLI. If you're wondering why Click, this is a well [answered](http://click.pocoo.org/5/why/) question.
 
 ##Install
-`pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple zazu`
+`pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple --ignore-installed six zazu`
 
 If you get an error that "trusted-host" is not a recognized argument you may need to upgrade pip itself: `pip install --upgrade pip`
 
