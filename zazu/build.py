@@ -135,10 +135,12 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars, version):
 
 def tag_to_version(tag):
     """Converts a git tag into a semantic version string.
-     i.e. R4.1 becomes 4.1.0. The leading R is optional on the tag"""
-    if tag.startswith('R'):
-        tag = tag[1:]
-    components = tag.split('.')
+     i.e. R4.1 becomes 4.1.0. A leading 'r' or 'v' is optional on the tag"""
+    components = []
+    if tag is not None:
+        if tag.lower().startswith('r') or tag.lower().startswith('v'):
+            tag = tag[1:]
+        components = tag.split('.')
     major = '0'
     minor = '0'
     patch = '0'
@@ -148,6 +150,7 @@ def tag_to_version(tag):
         patch = components[2]
     except IndexError:
         pass
+
     return '.'.join([major, minor, patch])
 
 
@@ -161,7 +164,7 @@ def parse_describe(repo_root):
     stdout = subprocess.check_output(['git', 'describe', '--dirty=.dirty', '--always'], cwd=repo_root)
     components = stdout.strip().split('-')
     sha = None
-    commits_past = None
+    commits_past = 0
     last_tag = None
     try:
         sha = components.pop()
@@ -174,23 +177,25 @@ def parse_describe(repo_root):
 
 
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
-    version = tag_to_version(last_tag)
     branch_name = branch_name.replace('/', '.')
     branch_name = branch_name.replace('-', '.')
     branch_name = branch_name.replace('_', '.')
-    extra_info = [sha, 'build', build_number, branch_name]
-    extra_info_str = '.'.join([str(i) for i in extra_info])
+    build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name]
+    prerelease = []
 
-    if commits_past_tag == 0:
-        pass
-    elif branch_name.startswith('release/'):
-        version = '0.2.{}'.format(build_number)
-    elif branch_name == 'develop':
-        version = '0.1.{}'.format(build_number)
+    if last_tag is not None and commits_past_tag == 0:
+        version = tag_to_version(last_tag)
+    elif branch_name.startswith('release/') or branch_name.startswith('hotfix/'):
+        version = tag_to_version(branch_name.split('/')[1:])
+        prerelease = [str(build_number)]
     else:
-        version = '0.0.{}'.format(build_number)
+        version = '0.0.0'
+        prerelease = [str(build_number)]
+    semver = semantic_version.Version(version)
+    semver.prerelease = prerelease
+    semver.build = build_info
 
-    return semantic_version.Version('{}+{}'.format(version, extra_info_str))
+    return semver
 
 
 def populate_version_environ_vars(version):
