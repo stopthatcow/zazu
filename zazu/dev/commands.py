@@ -86,9 +86,26 @@ def dev(ctx):
 
 
 @dev.command()
+@click.argument('name')
+@click.pass_context
+def rename(ctx, name):
+    """Renames the current branch, locally and remotely"""
+    repo = ctx.obj.repo
+    old_branch = repo.active_branch.name
+    protected_branches = ['develop', 'master']
+    if old_branch in protected_branches:
+        raise click.ClickException("Cannot rename branch {}!".format(old_branch))
+    repo.git.pull()
+    repo.git.branch(['-m', name])
+    repo.git.push(['origin', ':{}'.format(old_branch)])
+    repo.git.push(['-u'])
+
+
+@dev.command()
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
 @click.option('--head', is_flag=True, help='Branch off of the current head rather than develop')
+@click.option('--rename', is_flag=True, help='Rename the current branch rather than making a new one')
 @click.option('-t', '--type', type=click.Choice(['feature', 'release', 'hotfix']), help='the ticket type to make',
               default='feature')
 @click.pass_context
@@ -114,16 +131,20 @@ def start(ctx, name, no_verify, head, type):
         ctx.obj.repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))
     except git.exc.GitCommandError:
-        if not head:
-            click.echo('Checking out develop...')
-            ctx.obj.repo.heads.develop.checkout()
-            click.echo('Pulling from origin...')
-            try:
-                ctx.obj.repo.remotes.origin.pull()
-            except git.exc.GitCommandError:
-                click.secho('WARNING: unable to pull from origin!', fg='red')
-        click.echo('Creating new branch named "{}"...'.format(branch_name))
-        ctx.obj.repo.git.checkout('HEAD', b=branch_name)
+        if rename:
+            click.echo('Renaming current branch to "{}"...'.format(branch_name))
+            rename(ctx, branch_name)
+        else:
+            if not head:
+                click.echo('Checking out develop...')
+                ctx.obj.repo.heads.develop.checkout()
+                click.echo('Pulling from origin...')
+                try:
+                    ctx.obj.repo.remotes.origin.pull()
+                except git.exc.GitCommandError:
+                    click.secho('WARNING: unable to pull from origin!', fg='red')
+            click.echo('Creating new branch named "{}"...'.format(branch_name))
+            ctx.obj.repo.git.checkout('HEAD', b=branch_name)
 
 
 @dev.command()
