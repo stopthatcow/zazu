@@ -87,7 +87,7 @@ Zazu uses the zazu.yaml file to build goals defined there
 - `zazu build <goal>`
 - The target architecture is assumed to be 'local' but may be overridden using the --arch flag. e.g `zazu build --arch=arm32-linux-gnueabihf package` would build targeting 32 bit arm linux.
 
-##Build tool instalation
+##Build tool installation
 Zazu will automatically try to obtain required build tools needed for each target as specified in the zazu.yaml file. These may be installed/uninstalled manually as well:
 
 - `zazu tool install <tool==version>`
