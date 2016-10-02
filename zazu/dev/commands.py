@@ -105,11 +105,11 @@ def rename(ctx, name):
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
 @click.option('--head', is_flag=True, help='Branch off of the current head rather than develop')
-@click.option('--rename', is_flag=True, help='Rename the current branch rather than making a new one')
+@click.option('rename_flag', '--rename', is_flag=True, help='Rename the current branch rather than making a new one')
 @click.option('-t', '--type', type=click.Choice(['feature', 'release', 'hotfix']), help='the ticket type to make',
               default='feature')
 @click.pass_context
-def start(ctx, name, no_verify, head, type):
+def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar"""
     if name is None:
         try:
@@ -124,14 +124,14 @@ def start(ctx, name, no_verify, head, type):
         issue.description = zazu.util.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()
-    if not head:
+    if not (head or rename):
         offer_to_stash_changes(ctx.obj.repo)
     try:
         # Check if the target branch already exists
         ctx.obj.repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))
     except git.exc.GitCommandError:
-        if rename:
+        if rename_flag:
             click.echo('Renaming current branch to "{}"...'.format(branch_name))
             rename(ctx, branch_name)
         else:
