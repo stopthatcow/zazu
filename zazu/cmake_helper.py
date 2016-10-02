@@ -4,7 +4,6 @@ import subprocess
 import multiprocessing
 import os
 import pkg_resources
-import semantic_version
 
 
 def architecture_to_generator(arch):
@@ -15,12 +14,7 @@ def architecture_to_generator(arch):
         'x86_64-win-msvc_2013': 'Visual Studio 12 2013 Win64',
         'x86_32-win-msvc_2013': 'Visual Studio 12 2013'
     }
-    try:
-        ret = known_arches[arch]
-    except KeyError:
-        ret = 'Unix Makefiles'
-
-    return ret
+    return known_arches.get(arch, 'Unix Makefiles')
 
 
 def get_toolchain_file_from_arch(arch):
@@ -29,44 +23,6 @@ def get_toolchain_file_from_arch(arch):
     if 'arm32-linux-gnueabihf' in arch:
         ret = pkg_resources.resource_filename('zazu', 'cmake/arm32-linux-gnueabihf.cmake')
     return ret
-
-
-def tag_to_version(tag):
-    """Converts a git tag into a semantic version string.
-     i.e. R4.1 becomes 4.1.0. The leading R is optional on the tag"""
-    if tag.startswith('R'):
-        tag = tag[1:]
-    components = tag.split('.')
-    major = '0'
-    minor = '0'
-    patch = '0'
-    try:
-        major = components[0]
-        minor = components[1]
-        patch = components[2]
-    except IndexError:
-        pass
-    return '.'.join([major, minor, patch])
-
-
-def parse_describe(repo_root):
-    """Parses the results of git describe into a semantic version in the form
-    <tag in x.y.z format>+<commits_since_tag>.g<sha>.<buildNum>"""
-    stdout = subprocess.check_output(['git', 'describe', '--dirty=.dirty', '--always'], cwd=repo_root)
-    components = stdout.strip().split('-')
-    sha = None
-    commits_past = None
-    last_tag = None
-    try:
-        sha = components.pop()
-        commits_past = components.pop()
-        last_tag = components.pop()
-    except IndexError:
-        pass
-    last_version = tag_to_version(last_tag)
-    # TODO Fix this
-    build_num = 0
-    return semantic_version.Version('{}+{}.{}.{}'.format(last_version, commits_past, sha, build_num))
 
 
 def known_arches():
@@ -85,14 +41,12 @@ def known_arches():
 def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lambda x: x):
     """Configures a cmake based project to be built and caches args used to bypass configuration in future"""
     os.chdir(build_dir)
-    ver = parse_describe(repo_root)
     configure_args = ['cmake',
                       repo_root,
                       '-G', architecture_to_generator(arch),
                       '-DCMAKE_BUILD_TYPE=' + build_type.capitalize(),
                       '-DCPACK_SYSTEM_NAME=' + arch,
-                      '-DCPACK_PACKAGE_VERSION=' + str(ver),
-                      '-DBOB_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools'),
+                      '-DCPACK_PACKAGE_VERSION=' + build_variables['ZAZU_BUILD_VERSION'],
                       '-DZAZU_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools')
                       ]
     for k, v in build_variables.items():
@@ -112,12 +66,21 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
         pass
     r = 0
     if previous_args != configure_arg_str:
-        r = subprocess.call(configure_args)
+        try:
+            r = subprocess.call(configure_args)
+        except OSError:
+            r = -1
+            warn_uninstalled(configure_args[0])
         if not r:
             # Cache the call args
             with open(cache_file, 'w') as f:
                 f.write(configure_arg_str)
     return r
+
+
+def warn_uninstalled(pkg_name):
+    """Prints a warning to std error for a missing package"""
+    print('{} not found, install it via "apt-get install {}" or "brew install {}"'.format(pkg_name, pkg_name, pkg_name))
 
 
 def build(build_dir, build_type, target, verbose):
@@ -132,7 +95,10 @@ def build(build_dir, build_type, target, verbose):
         build_args = ['make', '-j{}'.format(multiprocessing.cpu_count()), target]
         if verbose:
             build_args.append('VERBOSE=1')
-    return subprocess.call(build_args)
-
+    try:
+        ret = subprocess.call(build_args)
+    except OSError:
+        warn_uninstalled(build_args[0])
+    return ret
 
 build_types = ['release', 'debug', 'minSizeRel', 'relWithDebInfo', 'coverage']

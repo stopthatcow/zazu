@@ -36,17 +36,22 @@ class JiraIssueTracker(IssueTracker):
         self._base_url = base_url
         self._default_project = default_project
         self._default_component = default_component
-        username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
-        self._jira_handle = jira.JIRA(self._base_url,
-                                      basic_auth=(username, password),
-                                      options={'check_update': False}, max_retries=0)
+        self._jira_handle = None
+
+    def jira_handle(self):
+        if self._jira_handle is None:
+            username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
+            self._jira_handle = jira.JIRA(self._base_url,
+                                          basic_auth=(username, password),
+                                          options={'check_update': False}, max_retries=0)
+        return self._jira_handle
 
     def browse_url(self, issue_id):
         return '{}/browse/{}'.format(self._base_url, issue_id)
 
     def issue(self, issue_id):
         try:
-            ret = self._jira_handle.issue(issue_id)
+            ret = self.jira_handle().issue(issue_id)
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
         return ret
@@ -61,13 +66,13 @@ class JiraIssueTracker(IssueTracker):
             }
             if component is not None:
                 issue_dict['components'] = [{'name': component}]
-            return self._jira_handle.create_issue(issue_dict)
+            return self.jira_handle().create_issue(issue_dict)
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
 
     def assign_issue(self, issue, assignee):
         try:
-            self._jira_handle.assign_issue(issue, assignee)
+            self.jira_handle().assign_issue(issue, assignee)
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
 
