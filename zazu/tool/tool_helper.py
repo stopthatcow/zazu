@@ -94,7 +94,7 @@ def download_extract_tar_to_folder(name, url, path):
 
 def install_tar_file_from_url(name, version, url_map):
     """Download and install a (optionally zipped) tar file from a URL and
-    extracts it to the proper instalation folder"""
+    extracts it to the proper installation folder"""
     try:
         url = url_map[platform.system()][platform.machine()]
         path = make_install_path(name, version)
