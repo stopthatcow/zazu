@@ -102,8 +102,7 @@ def install_tar_file_from_url(name, version, url_map):
         touch_token_file(name, version)
         return True
     except KeyError:
-        click.echo('Unsupported platform {} or arch {}'.format(platform.system(), platform.machine()))
-        sys.exit(-1)
+        raise click.ClickException('Unsupported platform {} or arch {}'.format(platform.system(), platform.machine()))
 
 
 def install_linaro_4_9_2014_05(name, version):
@@ -175,7 +174,6 @@ def get_tool_registry():
 
 def get_enforcer(name, version):
     """Gets a specific tool enforcer"""
-    enforcer = None
     reg = get_tool_registry()
     try:
         versions = reg[name]
@@ -184,13 +182,12 @@ def get_enforcer(name, version):
             enforcer._version = version
             enforcer._name = name
         except KeyError:
-            click.echo("Version {} not found for tool {}, choose from:".format(version, name))
-            for v in sorted(versions.keys()):
-                click.echo('- {}'.format(v))
-            sys.exit(-1)
+            known_versions = '\n'.join(['    - {}'.format(v) for v in sorted(versions.keys())])
+            raise click.ClickException("Version {} not found for tool {}, choose from:\n{}".format(version,
+                                                                                                   name,
+                                                                                                   known_versions))
     except KeyError:
-        click.echo('Tool {} not found'.format(name))
-        sys.exit(-1)
+        raise click.ClickException('Tool {} not found'.format(name))
 
     return enforcer
 

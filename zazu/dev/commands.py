@@ -158,8 +158,7 @@ def status(ctx):
     descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
     issue_id = descriptor.id
     if not issue_id:
-        click.echo('The current branch does not contain a ticket ID')
-        exit(-1)
+        raise click.ClickException('The current branch does not contain a ticket ID')
     else:
         gh = zazu.github_helper.make_gh()
 
