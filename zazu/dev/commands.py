@@ -85,20 +85,24 @@ def dev(ctx):
     ctx.obj.check_repo()
 
 
+def rename_branch(repo, old_branch, new_branch):
+    """Renames old_branch int repo to new_branch, locally and remotely"""
+    protected_branches = ['develop', 'master']
+    if old_branch in protected_branches:
+        raise click.ClickException('Cannot rename branch "{}"!'.format(old_branch))
+    # Pull first to avoid orphaning remote commits when we delete the remote branch
+    repo.git.pull()
+    repo.git.branch(['-m', new_branch])
+    repo.git.push(['origin', ':{}'.format(old_branch)])
+    repo.git.push(['-u'])
+
+
 @dev.command()
 @click.argument('name')
 @click.pass_context
 def rename(ctx, name):
     """Renames the current branch, locally and remotely"""
-    repo = ctx.obj.repo
-    old_branch = repo.active_branch.name
-    protected_branches = ['develop', 'master']
-    if old_branch in protected_branches:
-        raise click.ClickException('Cannot rename branch "{}"!'.format(old_branch))
-    repo.git.pull()
-    repo.git.branch(['-m', name])
-    repo.git.push(['origin', ':{}'.format(old_branch)])
-    repo.git.push(['-u'])
+    rename_branch(ctx.obj.repo, repo.active_branch.name, name)
 
 
 @dev.command()
@@ -124,7 +128,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         issue.description = zazu.util.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()
-    if not (head or rename):
+    if not (head or rename_flag):
         offer_to_stash_changes(ctx.obj.repo)
     try:
         # Check if the target branch already exists
@@ -133,7 +137,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     except git.exc.GitCommandError:
         if rename_flag:
             click.echo('Renaming current branch to "{}"...'.format(branch_name))
-            rename(ctx, branch_name)
+            rename_branch(ctx.obj.repo, ctx.obj.repo.active_branch.name, branch_name)
         else:
             if not head:
                 click.echo('Checking out develop...')
