@@ -86,7 +86,7 @@ def dev(ctx):
 
 
 def rename_branch(repo, old_branch, new_branch):
-    """Renames old_branch int repo to new_branch, locally and remotely"""
+    """Renames old_branch in repo to new_branch, locally and remotely"""
     protected_branches = ['develop', 'master']
     if old_branch in protected_branches:
         raise click.ClickException('Cannot rename branch "{}"!'.format(old_branch))
