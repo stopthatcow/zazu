@@ -94,7 +94,7 @@ def rename(ctx, name):
     old_branch = repo.active_branch.name
     protected_branches = ['develop', 'master']
     if old_branch in protected_branches:
-        raise click.ClickException("Cannot rename branch {}!".format(old_branch))
+        raise click.ClickException('Cannot rename branch "{}"!'.format(old_branch))
     repo.git.pull()
     repo.git.branch(['-m', name])
     repo.git.push(['origin', ':{}'.format(old_branch)])
