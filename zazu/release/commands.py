@@ -6,9 +6,6 @@ import git
 import re
 import semantic_version
 
-
-base_url = 'git@github.com:LilyRobotics/'
-
 RELEASE_STARTING_BRANCH = 'develop'
 
 
@@ -117,9 +114,12 @@ def release_repo(g, starting_branch, tag, dry_run):
     """Merges 'starting_branch' to master and tags master with 'tag'"""
     if not dry_run:
         g.git.checkout('master')
+        g.git.pull()
         g.git.merge(starting_branch)
+        # TODO: delete release branch
     else:
         click.echo('[{}] Would checkout master'.format(g, starting_branch))
+        click.echo('[{}] Would pull'.format(g, starting_branch))
         click.echo('[{}] Would merge "{}" to master'.format(g, starting_branch))
     if not dry_run:
         g.git.tag(tag)
