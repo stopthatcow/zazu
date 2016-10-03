@@ -112,7 +112,7 @@ class BuildSpec(object):
         return self._build_script
 
 
-def cmake_build(repo_root, arch, type, goal, verbose, vars, version):
+def cmake_build(repo_root, arch, type, goal, verbose, vars):
     """Build using cmake"""
     if arch not in zazu.cmake_helper.known_arches():
         raise click.BadParameter("Arch not recognized, choose from:\n    - {}".format('\n    - '.join(zazu.cmake_helper.known_arches())))
@@ -123,10 +123,10 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars, version):
         os.makedirs(build_dir)
     except OSError:
         pass
-    if 'distclean' in goal:
+    if 'distclean' == goal:
         shutil.rmtree(build_dir)
     else:
-        ret = zazu.cmake_helper.configure(repo_root, build_dir, arch, type, vars, version, click.echo if verbose else lambda x: x)
+        ret = zazu.cmake_helper.configure(repo_root, build_dir, arch, type, vars, click.echo if verbose else lambda x: x)
         if ret:
             raise click.ClickException("Error configuring with cmake")
         ret = zazu.cmake_helper.build(build_dir, type, goal, verbose)
@@ -202,14 +202,6 @@ def make_version_number(branch_name, build_number, last_tag, commits_past_tag, s
     return semver
 
 
-def populate_version_environ_vars(version):
-    """Populates environment variables from a semantic version"""
-    os.environ["ZAZU_BUILD_VERSION"] = str(version)
-    os.environ["ZAZU_BUILD_VERSION_MAJOR"] = str(version.major)
-    os.environ["ZAZU_BUILD_VERSION_MINOR"] = str(version.minor)
-    os.environ["ZAZU_BUILD_VERSION_PATCH"] = str(version.patch)
-
-
 def install_requirements(requirements, verbose):
     """Installs the requirements using the zazu tool manager"""
     for req in requirements:
@@ -219,14 +211,24 @@ def install_requirements(requirements, verbose):
             zazu.tool.tool_helper.install_spec(req)
 
 
-def script_build(repo_root, spec, verbose):
+def script_build(repo_root, spec, build_args, verbose):
     """Build using a provided shell script"""
+    env = os.environ
+    env.update(build_args)
     for s in spec.build_script():
         if verbose:
             click.echo(str(s))
-        ret = subprocess.call(str(s), shell=True, cwd=repo_root)
+        ret = subprocess.call(str(s), shell=True, cwd=repo_root, env=env)
         if ret:
             raise click.ClickException("{} exited with code {}".format(str(s), ret))
+
+
+def parse_key_value_pairs(arg_string):
+    """Parses a argument string in the form x=y j=k and returns a dictionary of the key value pairs"""
+    try:
+        return {key: value for (key, value) in [tuple(str(arg).split('=', 1)) for arg in arg_string]}
+    except ValueError:
+        raise click.ClickException("argument string must be in the form x=y")
 
 
 @click.command()
@@ -237,7 +239,8 @@ def script_build(repo_root, spec, verbose):
 @click.option('-n', '--build_num', help='build number', default=os.environ.get('BUILD_NUMBER', 0))
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
-def build(ctx, arch, type, build_num, verbose, goal):
+@click.argument('extra_args_str', nargs=-1)
+def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target,
      use distclean to clean whole build folder"""
     # Run the supplied build script if there is one, otherwise assume cmake
@@ -247,11 +250,14 @@ def build(ctx, arch, type, build_num, verbose, goal):
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
     install_requirements(requirements, verbose)
-    os.environ["ZAZU_BUILD_NUMBER"] = str(build_num)
-    os.environ["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
-    version = make_semver(ctx.obj.repo_root, build_num)
-    populate_version_environ_vars(version)
+    build_args = {}
+    build_args["ZAZU_BUILD_NUMBER"] = str(build_num)
+    build_args["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
+    extra_args = parse_key_value_pairs(extra_args_str)
+    if 'ZAZU_BUILD_VERSION' not in extra_args:
+        build_args['ZAZU_BUILD_VERSION'] = str(make_semver(ctx.obj.repo_root, build_num))
+    build_args.update(spec.build_vars())
     if spec.build_script() is None:
-        cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, spec.build_vars(), version)
+        cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
-        script_build(ctx.obj.repo_root, spec, verbose)
+        script_build(ctx.obj.repo_root, spec, build_args, verbose)

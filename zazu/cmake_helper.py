@@ -14,12 +14,7 @@ def architecture_to_generator(arch):
         'x86_64-win-msvc_2013': 'Visual Studio 12 2013 Win64',
         'x86_32-win-msvc_2013': 'Visual Studio 12 2013'
     }
-    try:
-        ret = known_arches[arch]
-    except KeyError:
-        ret = 'Unix Makefiles'
-
-    return ret
+    return known_arches.get(arch, 'Unix Makefiles')
 
 
 def get_toolchain_file_from_arch(arch):
@@ -43,7 +38,7 @@ def known_arches():
             'x86_32-win-msvc_2015']
 
 
-def configure(repo_root, build_dir, arch, build_type, build_variables, version, echo=lambda x: x):
+def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lambda x: x):
     """Configures a cmake based project to be built and caches args used to bypass configuration in future"""
     os.chdir(build_dir)
     configure_args = ['cmake',
@@ -51,8 +46,7 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, version, 
                       '-G', architecture_to_generator(arch),
                       '-DCMAKE_BUILD_TYPE=' + build_type.capitalize(),
                       '-DCPACK_SYSTEM_NAME=' + arch,
-                      '-DCPACK_PACKAGE_VERSION=' + str(version),
-                      '-DBOB_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools'),
+                      '-DCPACK_PACKAGE_VERSION=' + build_variables['ZAZU_BUILD_VERSION'],
                       '-DZAZU_TOOL_PATH=' + os.path.expanduser('~/.zazu/tools')
                       ]
     for k, v in build_variables.items():
@@ -72,12 +66,21 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, version, 
         pass
     r = 0
     if previous_args != configure_arg_str:
-        r = subprocess.call(configure_args)
+        try:
+            r = subprocess.call(configure_args)
+        except OSError:
+            r = -1
+            warn_uninstalled(configure_args[0])
         if not r:
             # Cache the call args
             with open(cache_file, 'w') as f:
                 f.write(configure_arg_str)
     return r
+
+
+def warn_uninstalled(pkg_name):
+    """Prints a warning to std error for a missing package"""
+    print('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
 
 
 def build(build_dir, build_type, target, verbose):
@@ -92,7 +95,10 @@ def build(build_dir, build_type, target, verbose):
         build_args = ['make', '-j{}'.format(multiprocessing.cpu_count()), target]
         if verbose:
             build_args.append('VERBOSE=1')
-    return subprocess.call(build_args)
-
+    try:
+        ret = subprocess.call(build_args)
+    except OSError:
+        warn_uninstalled(build_args[0])
+    return ret
 
 build_types = ['release', 'debug', 'minSizeRel', 'relWithDebInfo', 'coverage']
