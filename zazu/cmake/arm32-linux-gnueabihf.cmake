@@ -4,7 +4,7 @@ SET( CMAKE_SYSTEM_NAME Linux )
 SET( CMAKE_CROSSCOMPILING TRUE )
 
 # Set toolchain path
-SET(ROOTPATH    ${BOB_TOOL_PATH}/gcc-linaro-arm-linux-gnueabihf/4.9/arm-linux-gnueabihf)
+SET(ROOTPATH    ${ZAZU_TOOL_PATH}/gcc-linaro-arm-linux-gnueabihf/4.9/arm-linux-gnueabihf)
 
 SET(CROSSFIX        arm-linux-gnueabihf-)
 
