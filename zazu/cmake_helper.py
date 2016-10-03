@@ -80,7 +80,7 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
 
 def warn_uninstalled(pkg_name):
     """Prints a warning to std error for a missing package"""
-    print('{} not found, install it via "apt-get install {}" or "brew install {}"'.format(pkg_name, pkg_name, pkg_name))
+    print('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
 
 
 def build(build_dir, build_type, target, verbose):
