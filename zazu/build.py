@@ -181,12 +181,11 @@ def parse_describe(repo_root):
 
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
     """Converts repo metadata and build version into a semantic version"""
-    branch_name = branch_name.replace('/', '.')
-    branch_name = branch_name.replace('-', '.')
-    branch_name = branch_name.replace('_', '.')
-    build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name]
+    branch_name_sanitized = branch_name.replace('/', '.')
+    branch_name_sanitized = branch_name_sanitized.replace('-', '.')
+    branch_name_sanitized = branch_name_sanitized.replace('_', '.')
+    build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name_sanitized]
     prerelease = []
-
     if last_tag is not None and commits_past_tag == 0:
         version = tag_to_version(last_tag)
     elif branch_name.startswith('release/') or branch_name.startswith('hotfix/'):
