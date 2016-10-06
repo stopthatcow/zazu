@@ -22,7 +22,7 @@ def get_gh_token():
     token = None
     while token is None:
         user = zazu.util.prompt("GitHub username", expected_type=str)
-        password = click.prompt("GitHub password", expected_type=str, hide_input=True)
+        password = click.prompt("GitHub password", type=str, hide_input=True)
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
@@ -36,7 +36,7 @@ def get_gh_token():
         elif r.status_code == 422:
             click.echo('You already have a GitHub token for zazu in GitHub but it is not saved in the keychain! '
                        'Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
-            token = click.prompt('Enter new token manually')
+            token = zazu.util.prompt('Enter new token manually')
         else:
             raise Exception("Error authenticating with GitHub, status:{} content:{}".format(r.status_code, r.json()))
     return token
