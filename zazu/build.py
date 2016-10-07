@@ -275,8 +275,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
     install_requirements(requirements, verbose)
-    build_args = {}
-    build_args["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
+    build_args = {"ZAZU_TOOL_DIR": os.path.expanduser('~/.zazu/tools')}
     extra_args = parse_key_value_pairs(extra_args_str)
     build_args.update(spec.build_vars())
     build_args.update(extra_args)
