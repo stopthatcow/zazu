@@ -9,7 +9,7 @@ version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
 try:
     import pypandoc
     description = pypandoc.convert('README.md', 'rst')
-except (IOError, ImportError):
+except (OSError, IOError, ImportError):
     description = ''
 
 try:
@@ -23,8 +23,9 @@ try:
         version = '{}.{}.{}{}+{}'.format(semver.major, semver.minor, semver.patch, segment, '.'.join(semver.build))
 except IOError:
     version = '0.0.0.dev0'
-    with open(version_file_path, 'w') as version_file:
-        version_file.write(version)
+
+with open(version_file_path, 'w') as version_file:
+    version_file.write(version)
 
 
 setuptools.setup(
