@@ -246,13 +246,12 @@ def parse_key_value_pairs(arg_string):
 
 
 def add_version_args(repo_root, build_num, args):
-    """Adds version strings and build number arguments to the build environment"""
-    if 'ZAZU_BUILD_VERSION' in args:
+    """Adds version strings and build number arguments to args"""
+    try:
         semver = semantic_version.Version(args['ZAZU_BUILD_VERSION'])
-    else:
+    except KeyError:
         semver = make_semver(repo_root, build_num)
         args['ZAZU_BUILD_VERSION'] = str(semver)
-    click.echo(semver)
     args["ZAZU_BUILD_NUMBER"] = str(build_num)
     args['ZAZU_BUILD_VERSION_PEP440'] = pep440_from_semver(semver)
 
