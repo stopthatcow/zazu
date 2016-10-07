@@ -2,7 +2,6 @@
 
 import setuptools
 import os.path
-import semantic_version
 root_path = os.path.dirname(os.path.abspath(__file__))
 version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
 
