@@ -29,14 +29,16 @@ def prompt(text, default=None, expected_type=str):
 
 
 def pick(choices, message):
-    click.clear()
-    questions = [
-        inquirer.List(' ',
-                      message=message,
-                      choices=choices,
-                      ),
-    ]
-    return inquirer.prompt(questions)[' ']
+    if len(choices) > 1:
+        click.clear()
+        questions = [
+            inquirer.List(' ',
+                          message=message,
+                          choices=choices,
+                          ),
+        ]
+        return inquirer.prompt(questions)[' ']
+    return choices[0]
 
 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
