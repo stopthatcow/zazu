@@ -1,3 +1,13 @@
+components:
+  - name: zazu
+    goals:
+      - name: package
+        builds:
+          - arch: python
+            script: 
+              - echo "$ZAZU_BUILD_VERSION" > zazu/version.txt &&
+                python setup.py bdist_wheel
+
 issueTracker:
     type: Jira
     url: https://lily-robotics.atlassian.net/

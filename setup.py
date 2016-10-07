@@ -11,8 +11,14 @@ try:
 except (IOError, ImportError):
     description = ''
 
-with open(version_file_path, 'r') as version_file:
-    version = version_file.read()
+try:
+    with open(version_file_path, 'r') as version_file:
+        version = version_file.read()
+except IOError:
+    version = '0.0.0-0'
+    with open(version_file_path, 'w') as version_file:
+        version_file.write(version)
+
 
 setuptools.setup(
     name='zazu',
