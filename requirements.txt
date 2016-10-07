@@ -1,2 +1,2 @@
-pypandoc
-pytest
+pypandoc==1.2.0
+semantic_version==2.5.0

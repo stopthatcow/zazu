@@ -2,6 +2,7 @@
 
 import setuptools
 import os.path
+import semantic_version
 root_path = os.path.dirname(os.path.abspath(__file__))
 version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
 
@@ -14,8 +15,14 @@ except (IOError, ImportError):
 try:
     with open(version_file_path, 'r') as version_file:
         version = version_file.read()
+        # Convert semver to PEP440 compliant version
+        semver = semantic_version.Version(version)
+        segment = ''
+        if semver.prerelease:
+            segment = '.dev{}'.format(semver.prerelease[0])
+        version = '{}.{}.{}{}+{}'.format(semver.major, semver.minor, semver.patch, segment, '.'.join(semver.build))
 except IOError:
-    version = '0.0.0-0'
+    version = '0.0.0.dev0'
     with open(version_file_path, 'w') as version_file:
         version_file.write(version)
 
