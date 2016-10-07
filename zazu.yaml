@@ -5,8 +5,8 @@ components:
         builds:
           - arch: python
             script: 
-              - echo "$ZAZU_BUILD_VERSION" > zazu/version.txt &&
-                python setup.py bdist_wheel upload -r lily_pypi
+              - echo "$ZAZU_BUILD_VERSION_PEP440" > zazu/version.txt &&
+                python setup.py bdist_wheel
 
 
 issueTracker:
