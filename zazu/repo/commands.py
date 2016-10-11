@@ -67,12 +67,12 @@ def cleanup(ctx, remote, target_branch):
     def filter_undeletable(branches):
         """Filters out branches that we don't want to delete"""
         undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-'])
-        return [b for b in branches if b not in undeletable and not b.startswith('*')]
-
-    ctx.obj.repo.git.checkout('develop')
+        return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (b != target_branch) and (not b.startswith('origin/HEAD'))]
+    repo_obj = ctx.obj.repo
+    repo_obj.git.checkout('develop')
     if remote:
-        ctx.obj.repo.git.fetch('--prune')
-        merged_remote_branches = filter_undeletable(zazu.git_helper.get_merged_branches(ctx.obj.repo, target_branch, remote=True))
+        repo_obj.git.fetch('--prune')
+        merged_remote_branches = filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch, remote=True))
         if merged_remote_branches:
             click.echo('The following remote branches will be deleted:')
             for b in merged_remote_branches:
@@ -80,8 +80,9 @@ def cleanup(ctx, remote, target_branch):
             if click.confirm('Proceed?'):
                 for b in merged_remote_branches:
                     click.echo('Deleting {}'.format(b))
-                    ctx.obj.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
-    merged_branches = filter_undeletable(zazu.git_helper.get_merged_branches(ctx.obj.repo, target_branch))
+                local_branch_names = [b.replace('origin/', '') for b in merged_remote_branches]
+                repo_obj.git.push('-df', 'origin', *local_branch_names)
+    merged_branches = filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch))
     if merged_branches:
         click.echo('The following local branches will be deleted:')
         for b in merged_branches:
@@ -89,4 +90,4 @@ def cleanup(ctx, remote, target_branch):
         if click.confirm('Proceed?'):
             for b in merged_branches:
                 click.echo('Deleting {}'.format(b))
-                ctx.obj.repo.git.branch('-d', b)
+            repo_obj.git.branch('-D', *merged_branches)
