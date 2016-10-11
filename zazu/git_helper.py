@@ -74,4 +74,4 @@ def get_merged_branches(repo, target_branch, remote=False):
     args = ['--merged', target_branch]
     if remote:
         args.insert(0, '-r')
-    return [b.strip() for b in repo.git.branch(args).split('\n')]
+    return [b.strip() for b in repo.git.branch(args).strip().split('\n') if b]
