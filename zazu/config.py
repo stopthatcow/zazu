@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """config classes and methods for zazu"""
+import collections
 import click
 import zazu.credential_helper
 import git
@@ -32,21 +33,26 @@ JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IM
 class JiraIssueTracker(IssueTracker):
     """Implements zazu issue tracker interface for JIRA"""
 
-    def __init__(self, base_url, default_project, default_component):
+    def __init__(self, base_url, default_project, components):
         self._base_url = base_url
         self._default_project = default_project
-        self._default_component = default_component
-        username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
-        self._jira_handle = jira.JIRA(self._base_url,
-                                      basic_auth=(username, password),
-                                      options={'check_update': False}, max_retries=0)
+        self._components = components
+        self._jira_handle = None
+
+    def jira_handle(self):
+        if self._jira_handle is None:
+            username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
+            self._jira_handle = jira.JIRA(self._base_url,
+                                          basic_auth=(username, password),
+                                          options={'check_update': False}, max_retries=0)
+        return self._jira_handle
 
     def browse_url(self, issue_id):
         return '{}/browse/{}'.format(self._base_url, issue_id)
 
     def issue(self, issue_id):
         try:
-            ret = self._jira_handle.issue(issue_id)
+            ret = self.jira_handle().issue(issue_id)
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
         return ret
@@ -61,13 +67,13 @@ class JiraIssueTracker(IssueTracker):
             }
             if component is not None:
                 issue_dict['components'] = [{'name': component}]
-            return self._jira_handle.create_issue(issue_dict)
+            return self.jira_handle().create_issue(issue_dict)
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
 
     def assign_issue(self, issue, assignee):
         try:
-            self._jira_handle.assign_issue(issue, assignee)
+            self.jira_handle().assign_issue(issue, assignee)
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
 
@@ -77,8 +83,8 @@ class JiraIssueTracker(IssueTracker):
     def issue_types(self):
         return ['Task', 'Bug', 'Story']
 
-    def default_component(self):
-        return self._default_component
+    def issue_components(self):
+        return self._components
 
     @staticmethod
     def from_config(config):
@@ -91,8 +97,10 @@ class JiraIssueTracker(IssueTracker):
             project = config['project']
         except KeyError:
             raise ZazuException('Jira config requires a "project" field')
-        component = config.get('component', None)
-        return JiraIssueTracker(url, project, component)
+        components = config.get('component', None)
+        if not isinstance(components, list):
+            components = [components]
+        return JiraIssueTracker(url, project, components)
 
 
 def issue_tracker_factory(config):
