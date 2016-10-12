@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import semantic_version
 import os
+import teamcity_helper
 import zazu.tool.tool_helper
 import zazu.cmake_helper
 import zazu.config
@@ -50,8 +51,14 @@ class BuildGoal(object):
         self._build_vars = goal.get('buildVars', {})
         self._build_goal = goal.get('buildGoal', self._name)
         self._requires = goal.get('requires', {})
+        self._artifacts = goal.get('artifacts', [])
         self._builds = {}
-        self._default_spec = BuildSpec(self._build_goal, self._build_type, self._build_vars, self._requires, self._description)
+        self._default_spec = BuildSpec(goal=self._build_goal,
+                                       type=self._build_type,
+                                       vars=self._build_vars,
+                                       requires=self._requires,
+                                       description=self._description,
+                                       artifacts=self._artifacts)
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
@@ -61,7 +68,15 @@ class BuildGoal(object):
             description = b.get('description', '')
             arch = b['arch']
             script = b.get('script', None)
-            self._builds[arch] = BuildSpec(build_goal, type, vars, requires, description, arch, script=script)
+            artifacts = b.get('artifacts', self._artifacts)
+            self._builds[arch] = BuildSpec(goal=build_goal,
+                                           type=type,
+                                           vars=vars,
+                                           requires=requires,
+                                           description=description,
+                                           arch=arch,
+                                           script=script,
+                                           artifacts=artifacts)
 
     def description(self):
         return self._description
@@ -81,7 +96,7 @@ class BuildGoal(object):
 
 class BuildSpec(object):
 
-    def __init__(self, goal, type='minSizeRel', vars={}, requires={}, description='', arch='', script=None):
+    def __init__(self, goal, type='minSizeRel', vars={}, requires={}, description='', arch='', script=None, artifacts=[]):
         self._build_goal = goal
         self._build_type = type
         self._build_vars = vars
@@ -89,9 +104,13 @@ class BuildSpec(object):
         self._build_description = description
         self._build_arch = arch
         self._build_script = script
+        self._build_artifacts = artifacts
 
     def build_type(self):
         return self._build_type
+
+    def build_artifacts(self):
+        return self._build_artifacts
 
     def build_goal(self):
         return self._build_goal
@@ -260,7 +279,7 @@ def add_version_args(repo_root, build_num, args):
 @click.pass_context
 @click.option('-a', '--arch', default='local', help='the desired architecture to build for')
 @click.option('-t', '--type', type=click.Choice(zazu.cmake_helper.build_types),
-              help='defaults to what is specified in the {} file, or release if unspecified there'.format(zazu.config.PROJECT_FILE_NAME))
+              help='defaults to what is specified in the config file, or release if unspecified there')
 @click.option('-n', '--build_num', help='build number', default=os.environ.get('BUILD_NUMBER', 0))
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
@@ -284,3 +303,4 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
+    teamcity_helper.publish_artifacts(spec.build_artifacts())

@@ -79,10 +79,9 @@ def style(ctx, check, dirty):
     os.chdir(ctx.obj.repo_root)
     violations = []
     file_count = 0
-    try:
-        style_config = ctx.obj.project_config()['style']
-    except KeyError:
-        raise click.ClickException('no "style" settings found in {}'.format(PROJECT_FILE_NAME))
+    style_config = ctx.obj.style_config()
+    if not style_config:
+        raise click.ClickException('no style settings found')
     if dirty:
         dirty_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
     exclude_paths = style_config.get('exclude', default_exclude_paths)
@@ -98,7 +97,7 @@ def style(ctx, check, dirty):
 
     # autopep8
     autopep8_config = style_config.get('autopep8', None)
-    if autopep8_config is not None:
+    if autopep8_config:
         includes = autopep8_config.get('include', default_py_paths)
         files = zazu.util.scantree(ctx.obj.repo_root, includes, exclude_paths, exclude_hidden=True)
         if dirty:
@@ -108,9 +107,9 @@ def style(ctx, check, dirty):
     if check:
         for v in violations:
             click.echo("Violation in: {}".format(v))
-        click.echo('{} violations detected in {} files'.format(len(violations), file_count))
+        click.echo('{} files with violations in {} files'.format(len(violations), file_count))
         ctx.exit(len(violations))
     else:
         for v in violations:
             click.echo("Formatted: {}".format(v))
-        click.echo('{} violations fixed in {} files'.format(len(violations), file_count))
+        click.echo('{} files fixed in {} files'.format(len(violations), file_count))

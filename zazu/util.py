@@ -9,11 +9,6 @@ try:
 except ImportError:
     # Fall back to regular raw_input
     pass
-try:
-    import getch
-except ImportError:
-    # Fall back to regular raw_input
-    pass
 import inquirer
 import click
 import os
@@ -57,3 +52,8 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
                     if all(not fnmatch.fnmatch(file, e) for e in exclude_patterns):
                         files.append(file)
     return files
+
+
+def pprint_list(data):
+    """Formats list as a bulleted list string"""
+    return '\n  - {}'.format('\n  - '.join(data))

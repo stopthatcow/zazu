@@ -8,15 +8,22 @@ import os
 import filecmp
 import pkg_resources
 import shutil
-import subprocess
+import git
 
 
-def get_root_path():
-    return subprocess.check_output(['git', 'rev-parse', '--show-toplevel']).rstrip()
+def get_repo_root(starting_dir):
+    try:
+        g = git.Git(starting_dir)
+        ret = g.rev_parse('--show-toplevel')
+    except:
+        ret = ''
+    return ret
 
 
 def get_hooks_path(repo_base):
-    return os.path.join(repo_base, subprocess.check_output(['git', 'rev-parse', '--git-dir'], cwd=repo_base).rstrip(), 'hooks')
+    g = git.Git(repo_base)
+    git_dir = g.rev_parse('--git-dir')
+    return os.path.join(repo_base, git_dir, 'hooks')
 
 
 def get_default_git_hooks():

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """config classes and methods for zazu"""
-import collections
-import click
-import zazu.credential_helper
-import git
 import os
-import yaml
+import click
+import git
 import jira
+import yaml
+import zazu.credential_helper
 
 
 class IssueTracker(object):
@@ -24,7 +23,7 @@ class ZazuException(Exception):
         Exception.__init__("Error: {}".format(error))
 
 
-PROJECT_FILE_NAME = 'zazu.yaml'
+PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/LilyRobotics/zazu'
 JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
@@ -118,13 +117,24 @@ def issue_tracker_factory(config):
         raise ZazuException('IssueTracker config requires a "type" field')
 
 
-def load_project_file(path):
+def path_gen(search_paths, file_names):
+    """Generates full paths given a list of directories and list of file names"""
+    for p in search_paths:
+        for f in file_names:
+            yield os.path.join(p, f)
+
+
+def load_yaml_file(search_paths, file_names):
     """Load a project yaml file"""
-    try:
-        with open(path) as f:
-            return yaml.load(f)
-    except IOError:
-        raise click.ClickException('no {} file found in this repo'.format(PROJECT_FILE_NAME))
+    searched = path_gen(search_paths, file_names)
+    for file in searched:
+        try:
+            with open(file) as f:
+                return yaml.load(f)
+        except IOError:
+            pass
+    searched = path_gen(search_paths, file_names)
+    raise click.ClickException('no yaml file found, searched:{}'.format(zazu.util.pprint_list(searched)))
 
 
 class Config(object):
@@ -133,7 +143,10 @@ class Config(object):
 
     def __init__(self, repo_root):
         self.repo_root = repo_root
-        self.repo = git.Repo(self.repo_root)
+        if self.repo_root:
+            self.repo = git.Repo(self.repo_root)
+        else:
+            self.repo = None
         self._issue_tracker = None
         self._project_config = None
         self._tc = None
@@ -157,20 +170,18 @@ class Config(object):
 
     def project_config(self):
         if self._project_config is None:
-            self._project_config = load_project_file(os.path.join(self.repo_root, PROJECT_FILE_NAME))
+            self._project_config = load_yaml_file([self.repo_root], PROJECT_FILE_NAMES)
+            required_zazu_version = self.zazu_version_required()
+            if required_zazu_version and required_zazu_version != zazu.__version__:
+                click.secho('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). '
+                            'Use "zazu upgrade" to fix this'.format(required_zazu_version, zazu.__version__), fg='red')
         return self._project_config
 
-    def pep8_config(self):
-        return {}
-
-    def astyle_config(self):
-        return {}
+    def style_config(self):
+        return self.project_config().get('style', {})
 
     def zazu_version_required(self):
         return self.project_config().get('zazu', '')
-
-    def project_config(self):
-        return load_project_file(os.path.join(self.repo_root, PROJECT_FILE_NAME))
 
     def check_repo(self):
         """Checks that the config has a valid repo set"""
