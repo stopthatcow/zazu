@@ -33,10 +33,10 @@ def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
     project = issue_tracker.default_project()
     issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
-    click.echo("Making a new {} in the {} project...".format(issue_type.lower(), project))
+    component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
+    click.echo('Making a new {} in the "{}" project, "{}" component...'.format(issue_type.lower(), project, component))
     summary = zazu.util.prompt('Enter a title')
     description = zazu.util.prompt('Enter a description')
-    component = issue_tracker.default_component()
     issue = issue_tracker.create_issue(project, issue_type, summary, description, component)
     # Self assign the new ticket
     issue_tracker.assign_issue(issue, issue.fields.reporter.name)

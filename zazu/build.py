@@ -179,18 +179,23 @@ def parse_describe(repo_root):
     return branch_name, sha, last_tag, commits_past
 
 
+def sanitize_branch_name(branch_name):
+    """replaces punctuation that cannot be in semantic version from a branch name and replaces them with decimals"""
+    branch_name_sanitized = branch_name.replace('/', '.')
+    branch_name_sanitized = branch_name_sanitized.replace('-', '.')
+    branch_name_sanitized = branch_name_sanitized.replace('_', '.')
+    return branch_name_sanitized
+
+
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
     """Converts repo metadata and build version into a semantic version"""
-    branch_name = branch_name.replace('/', '.')
-    branch_name = branch_name.replace('-', '.')
-    branch_name = branch_name.replace('_', '.')
-    build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name]
+    branch_name_sanitized = sanitize_branch_name(branch_name)
+    build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name_sanitized]
     prerelease = []
-
     if last_tag is not None and commits_past_tag == 0:
         version = tag_to_version(last_tag)
     elif branch_name.startswith('release/') or branch_name.startswith('hotfix/'):
-        version = tag_to_version(branch_name.split('/')[1:])
+        version = tag_to_version(branch_name.split('/', 1)[1])
         prerelease = [str(build_number)]
     else:
         version = '0.0.0'
@@ -200,6 +205,15 @@ def make_version_number(branch_name, build_number, last_tag, commits_past_tag, s
     semver.build = build_info
 
     return semver
+
+
+def pep440_from_semver(semver):
+    # Convert semantic version to PEP440 compliant version
+    segment = ''
+    if semver.prerelease:
+        segment = '.dev{}'.format('.'.join(semver.prerelease))
+    version_str = '{}.{}.{}{}+{}'.format(semver.major, semver.minor, semver.patch, segment, '.'.join(semver.build))
+    return version_str
 
 
 def install_requirements(requirements, verbose):
@@ -231,6 +245,17 @@ def parse_key_value_pairs(arg_string):
         raise click.ClickException("argument string must be in the form x=y")
 
 
+def add_version_args(repo_root, build_num, args):
+    """Adds version strings and build number arguments to args"""
+    try:
+        semver = semantic_version.Version(args['ZAZU_BUILD_VERSION'])
+    except KeyError:
+        semver = make_semver(repo_root, build_num)
+        args['ZAZU_BUILD_VERSION'] = str(semver)
+    args["ZAZU_BUILD_NUMBER"] = str(build_num)
+    args['ZAZU_BUILD_VERSION_PEP440'] = pep440_from_semver(semver)
+
+
 @click.command()
 @click.pass_context
 @click.option('-a', '--arch', default='local', help='the desired architecture to build for')
@@ -250,13 +275,11 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
     install_requirements(requirements, verbose)
-    build_args = {}
-    build_args["ZAZU_BUILD_NUMBER"] = str(build_num)
-    build_args["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
+    build_args = {"ZAZU_TOOL_DIR": os.path.expanduser('~/.zazu/tools')}
     extra_args = parse_key_value_pairs(extra_args_str)
-    if 'ZAZU_BUILD_VERSION' not in extra_args:
-        build_args['ZAZU_BUILD_VERSION'] = str(make_semver(ctx.obj.repo_root, build_num))
     build_args.update(spec.build_vars())
+    build_args.update(extra_args)
+    add_version_args(ctx.obj.repo_root, build_num, build_args)
     if spec.build_script() is None:
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:

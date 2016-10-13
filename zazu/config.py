@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """config classes and methods for zazu"""
+import collections
 import click
 import zazu.credential_helper
 import git
@@ -32,10 +33,10 @@ JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IM
 class JiraIssueTracker(IssueTracker):
     """Implements zazu issue tracker interface for JIRA"""
 
-    def __init__(self, base_url, default_project, default_component):
+    def __init__(self, base_url, default_project, components):
         self._base_url = base_url
         self._default_project = default_project
-        self._default_component = default_component
+        self._components = components
         self._jira_handle = None
 
     def jira_handle(self):
@@ -82,8 +83,8 @@ class JiraIssueTracker(IssueTracker):
     def issue_types(self):
         return ['Task', 'Bug', 'Story']
 
-    def default_component(self):
-        return self._default_component
+    def issue_components(self):
+        return self._components
 
     @staticmethod
     def from_config(config):
@@ -96,8 +97,10 @@ class JiraIssueTracker(IssueTracker):
             project = config['project']
         except KeyError:
             raise ZazuException('Jira config requires a "project" field')
-        component = config.get('component', None)
-        return JiraIssueTracker(url, project, component)
+        components = config.get('component', None)
+        if not isinstance(components, list):
+            components = [components]
+        return JiraIssueTracker(url, project, components)
 
 
 def issue_tracker_factory(config):

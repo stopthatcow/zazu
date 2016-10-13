@@ -8,11 +8,17 @@ version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
 try:
     import pypandoc
     description = pypandoc.convert('README.md', 'rst')
-except (IOError, ImportError):
+except (OSError, IOError, ImportError):
     description = ''
 
-with open(version_file_path, 'r') as version_file:
-    version = version_file.read()
+try:
+    with open(version_file_path, 'r') as version_file:
+        version = version_file.read()
+except IOError:
+    version = '0.0.0.dev0'
+    with open(version_file_path, 'w') as version_file:
+        version_file.write(version)
+
 
 setuptools.setup(
     name='zazu',

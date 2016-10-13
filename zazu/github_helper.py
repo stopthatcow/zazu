@@ -36,7 +36,7 @@ def get_gh_token():
         elif r.status_code == 422:
             click.echo('You already have a GitHub token for zazu in GitHub but it is not saved in the keychain! '
                        'Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
-            token = click.prompt('Enter new token manually')
+            token = zazu.util.prompt('Enter new token manually')
         else:
             raise Exception("Error authenticating with GitHub, status:{} content:{}".format(r.status_code, r.json()))
     return token
