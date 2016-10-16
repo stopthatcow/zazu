@@ -25,7 +25,9 @@ class IssueDescriptor(object):
         self.description = description
 
     def get_branch_name(self):
-        sanitized_description = self.description.replace(' ', '_')
+        sanitized_description = ""
+        if self.description:
+            sanitized_description = self.description.replace(' ', '_')
         return '{}/{}_{}'.format(self.type, self.id, sanitized_description)
 
 

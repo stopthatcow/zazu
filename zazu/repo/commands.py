@@ -2,6 +2,8 @@ import click
 import zazu.teamcity_helper
 import zazu.git_helper
 import zazu.build
+import concurrent
+import multiprocessing
 
 
 @click.group()
@@ -73,21 +75,63 @@ def cleanup(ctx, remote, target_branch):
     if remote:
         repo_obj.git.fetch('--prune')
         merged_remote_branches = filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch, remote=True))
-        if merged_remote_branches:
+        branches_to_delete = merged_remote_branches
+        if branches_to_delete:
             click.echo('The following remote branches will be deleted:')
-            for b in merged_remote_branches:
+            for b in branches_to_delete:
                 click.echo('    - {}'.format(b))
             if click.confirm('Proceed?'):
-                for b in merged_remote_branches:
+                for b in branches_to_delete:
                     click.echo('Deleting {}'.format(b))
-                local_branch_names = [b.replace('origin/', '') for b in merged_remote_branches]
+                local_branch_names = [b.replace('origin/', '') for b in branches_to_delete]
                 repo_obj.git.push('-df', 'origin', *local_branch_names)
     merged_branches = filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch))
-    if merged_branches:
+    branches = filter_undeletable([b.name for b in repo_obj.heads])
+    issue_tracker = ctx.obj.issue_tracker()
+    closed_branches = []
+    if issue_tracker is not None:
+        closed_branches = [ticket.get_branch_name() for ticket in get_closed_branches(issue_tracker, branches)]
+    branches_to_delete = closed_branches + merged_branches
+    if branches_to_delete:
         click.echo('The following local branches will be deleted:')
-        for b in merged_branches:
+        for b in branches_to_delete:
             click.echo('    - {}'.format(b))
         if click.confirm('Proceed?'):
-            for b in merged_branches:
+            for b in branches_to_delete:
                 click.echo('Deleting {}'.format(b))
-            repo_obj.git.branch('-D', *merged_branches)
+            repo_obj.git.branch('-D', *branches_to_delete)
+
+
+def tickets_from_branches(branches):
+    descriptors = []
+    for b in branches:
+        try:
+            descriptors.append(zazu.dev.commands.make_issue_descriptor(b))
+        except Exception:
+            pass
+    return descriptors
+
+
+def get_closed_branches(issue_tracker, branches):
+    """get descriptors of branches that refer to closed branches"""
+    closed_tickets = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        futures = {executor.submit(ticket_is_closed, issue_tracker, d): d for d in tickets_from_branches(branches)}
+    for future in concurrent.futures.as_completed(futures):
+        result = future.result()
+        if result is not None:
+            closed_tickets.append(result)
+    return closed_tickets
+
+
+def closed(ticket):
+    return ticket.state == 'closed'
+
+
+def ticket_is_closed(issue_tracker, descriptor):
+    ticket = issue_tracker.issue(descriptor.id)
+    if closed(ticket):
+        ret = descriptor
+    else:
+        ret = None
+    return ret
