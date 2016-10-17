@@ -2,6 +2,7 @@ import click
 import zazu.teamcity_helper
 import zazu.git_helper
 import zazu.build
+import zazu.util
 
 
 @click.group()
@@ -76,9 +77,7 @@ def cleanup(ctx, remote, target_branch):
         merged_remote_branches = [b.replace('origin/', '') for b in merged_remote_branches]
         branches_to_delete = set(merged_remote_branches + closed_branches)
         if branches_to_delete:
-            click.echo('The following remote branches will be deleted:')
-            for b in branches_to_delete:
-                click.echo('    - {}'.format(b))
+            click.echo('These remote branches will be deleted: {}'.format(zazu.util.pprint_list(branches_to_delete)))
             if click.confirm('Proceed?'):
                 for b in branches_to_delete:
                     click.echo('Deleting {}'.format(b))
@@ -89,9 +88,7 @@ def cleanup(ctx, remote, target_branch):
         closed_branches = [ticket.get_branch_name() for ticket in get_closed_branches(issue_tracker, branches)]
     branches_to_delete = set(closed_branches + merged_branches)
     if branches_to_delete:
-        click.echo('The following local branches will be deleted:')
-        for b in branches_to_delete:
-            click.echo('    - {}'.format(b))
+        click.echo('These local branches will be deleted:{}'.format(zazu.util.pprint_list(branches_to_delete)))
         if click.confirm('Proceed?'):
             for b in branches_to_delete:
                 click.echo('Deleting {}'.format(b))
