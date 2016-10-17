@@ -75,3 +75,9 @@ def get_merged_branches(repo, target_branch, remote=False):
     if remote:
         args.insert(0, '-r')
     return [b.strip() for b in repo.git.branch(args).strip().split('\n') if b]
+
+
+def filter_undeletable(branches):
+    """Filters out branches that we don't want to delete"""
+    undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-'])
+    return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (not b.startswith('origin/HEAD'))]

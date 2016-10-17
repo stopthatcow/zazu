@@ -39,6 +39,14 @@ class JiraIssueTracker(IssueTracker):
         self._components = components
         self._jira_handle = None
 
+    @staticmethod
+    def closed(issue):
+        return str(issue.fields.status) == 'Closed'
+
+    @staticmethod
+    def resolved(issue):
+        return str(issue.fields.status) == 'Resolved'
+
     def jira_handle(self):
         if self._jira_handle is None:
             username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
