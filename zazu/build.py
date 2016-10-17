@@ -171,6 +171,7 @@ def parse_describe(repo_root):
     last_tag = None
     try:
         sha = components.pop()
+        sha = sha.replace('.dirty', '-dirty')
         commits_past = components.pop()
         last_tag = components.pop()
     except IndexError:
@@ -181,9 +182,8 @@ def parse_describe(repo_root):
 
 def sanitize_branch_name(branch_name):
     """replaces punctuation that cannot be in semantic version from a branch name and replaces them with decimals"""
-    branch_name_sanitized = branch_name.replace('/', '.')
-    branch_name_sanitized = branch_name_sanitized.replace('-', '.')
-    branch_name_sanitized = branch_name_sanitized.replace('_', '.')
+    branch_name_sanitized = branch_name.replace('/', '-')
+    branch_name_sanitized = branch_name_sanitized.replace('_', '-')
     return branch_name_sanitized
 
 
@@ -212,7 +212,11 @@ def pep440_from_semver(semver):
     segment = ''
     if semver.prerelease:
         segment = '.dev{}'.format('.'.join(semver.prerelease))
-    version_str = '{}.{}.{}{}+{}'.format(semver.major, semver.minor, semver.patch, segment, '.'.join(semver.build))
+    local_version = '.'.join(semver.build)
+    local_version = local_version.replace('-', '.')
+    version_str = '{}.{}.{}{}'.format(semver.major, semver.minor, semver.patch, segment)
+    if local_version:
+        version_str = '{}+{}'.format(version_str, local_version)
     return version_str
 
 
