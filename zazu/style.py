@@ -80,36 +80,37 @@ def style(ctx, check, dirty):
     violations = []
     file_count = 0
     style_config = ctx.obj.style_config()
-    if not style_config:
-        raise click.ClickException('no style settings found')
-    if dirty:
-        dirty_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
-    exclude_paths = style_config.get('exclude', default_exclude_paths)
-    # astyle
-    astyle_config = style_config.get('astyle', None)
-    if astyle_config is not None:
-        includes = astyle_config.get('include', default_astyle_paths)
-        files = zazu.util.scantree(ctx.obj.repo_root, includes, exclude_paths, exclude_hidden=True)
+    if style_config:
         if dirty:
-            files = set(files).intersection(dirty_files)
-        file_count += len(files)
-        violations += astyle(files, astyle_config, check)
+            dirty_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
+        exclude_paths = style_config.get('exclude', default_exclude_paths)
+        # astyle
+        astyle_config = style_config.get('astyle', None)
+        if astyle_config is not None:
+            includes = astyle_config.get('include', default_astyle_paths)
+            files = zazu.util.scantree(ctx.obj.repo_root, includes, exclude_paths, exclude_hidden=True)
+            if dirty:
+                files = set(files).intersection(dirty_files)
+            file_count += len(files)
+            violations += astyle(files, astyle_config, check)
 
-    # autopep8
-    autopep8_config = style_config.get('autopep8', None)
-    if autopep8_config:
-        includes = autopep8_config.get('include', default_py_paths)
-        files = zazu.util.scantree(ctx.obj.repo_root, includes, exclude_paths, exclude_hidden=True)
-        if dirty:
-            files = set(files).intersection(dirty_files)
-        file_count += len(files)
-        violations += autopep8(files, autopep8_config, check)
-    if check:
-        for v in violations:
-            click.echo("Violation in: {}".format(v))
-        click.echo('{} files with violations in {} files'.format(len(violations), file_count))
-        ctx.exit(len(violations))
+        # autopep8
+        autopep8_config = style_config.get('autopep8', None)
+        if autopep8_config:
+            includes = autopep8_config.get('include', default_py_paths)
+            files = zazu.util.scantree(ctx.obj.repo_root, includes, exclude_paths, exclude_hidden=True)
+            if dirty:
+                files = set(files).intersection(dirty_files)
+            file_count += len(files)
+            violations += autopep8(files, autopep8_config, check)
+        if check:
+            for v in violations:
+                click.echo("Violation in: {}".format(v))
+            click.echo('{} files with violations in {} files'.format(len(violations), file_count))
+            ctx.exit(len(violations))
+        else:
+            for v in violations:
+                click.echo("Formatted: {}".format(v))
+            click.echo('{} files fixed in {} files'.format(len(violations), file_count))
     else:
-        for v in violations:
-            click.echo("Formatted: {}".format(v))
-        click.echo('{} files fixed in {} files'.format(len(violations), file_count))
+        click.echo('no style settings found')
