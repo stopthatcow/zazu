@@ -67,15 +67,15 @@ def cleanup(ctx, remote, target_branch):
     repo_obj = ctx.obj.repo
     repo_obj.git.checkout('develop')
     issue_tracker = ctx.obj.issue_tracker()
-    closed_branches = []
+    closed_branches = set([])
     if remote:
         repo_obj.git.fetch('--prune')
         remote_branches = zazu.git_helper.filter_undeletable([b.name for b in repo_obj.remotes.origin.refs])
         if issue_tracker is not None:
-            closed_branches = [ticket.get_branch_name() for ticket in get_closed_branches(issue_tracker, remote_branches)]
+            closed_branches = set(get_closed_branches(issue_tracker, remote_branches))
         merged_remote_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch, remote=True))
         merged_remote_branches = [b.replace('origin/', '') for b in merged_remote_branches]
-        branches_to_delete = set(merged_remote_branches + closed_branches)
+        branches_to_delete = set(merged_remote_branches) | closed_branches
         if branches_to_delete:
             click.echo('These remote branches will be deleted: {}'.format(zazu.util.pprint_list(branches_to_delete)))
             if click.confirm('Proceed?'):
@@ -83,10 +83,11 @@ def cleanup(ctx, remote, target_branch):
                     click.echo('Deleting {}'.format(b))
                 repo_obj.git.push('-df', 'origin', *branches_to_delete)
     merged_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch))
-    branches = set(zazu.git_helper.filter_undeletable([b.name for b in repo_obj.heads])) - set(closed_branches)
+    local_branches = set(zazu.git_helper.filter_undeletable([b.name for b in repo_obj.heads]))
     if issue_tracker is not None:
-        closed_branches = [ticket.get_branch_name() for ticket in get_closed_branches(issue_tracker, branches)]
-    branches_to_delete = set(closed_branches + merged_branches)
+        branches_to_check = local_branches - closed_branches
+        closed_branches |= set(get_closed_branches(issue_tracker, branches_to_check))
+    branches_to_delete = (closed_branches & local_branches) | set(merged_branches)
     if branches_to_delete:
         click.echo('These local branches will be deleted:{}'.format(zazu.util.pprint_list(branches_to_delete)))
         if click.confirm('Proceed?'):
@@ -107,7 +108,7 @@ def tickets_from_branches(branches):
 
 def get_closed_branches(issue_tracker, branches):
     """get descriptors of branches that refer to closed branches"""
-    return [t for t in tickets_from_branches(branches) if ticket_is_closed(issue_tracker, t)]
+    return [t.get_branch_name() for t in tickets_from_branches(branches) if ticket_is_closed(issue_tracker, t)]
 
 
 def ticket_is_closed(issue_tracker, descriptor):
