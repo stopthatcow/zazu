@@ -6,9 +6,9 @@ import platform
 import io
 import requests
 import tarfile
-import sys
 import os
 import shutil
+import zazu.util
 
 
 class ToolEnforcer:
@@ -182,10 +182,10 @@ def get_enforcer(name, version):
             enforcer._version = version
             enforcer._name = name
         except KeyError:
-            known_versions = '\n'.join(['    - {}'.format(v) for v in sorted(versions.keys())])
-            raise click.ClickException("Version {} not found for tool {}, choose from:\n{}".format(version,
-                                                                                                   name,
-                                                                                                   known_versions))
+            known_versions = zazu.util.pprint_list(sorted(versions.keys()))
+            raise click.ClickException("Version {} not found for tool {}, choose from:{}".format(version,
+                                                                                                 name,
+                                                                                                 known_versions))
     except KeyError:
         raise click.ClickException('Tool {} not found'.format(name))
 
