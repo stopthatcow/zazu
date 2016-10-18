@@ -32,10 +32,10 @@ def pick(choices, message):
                           choices=choices,
                           ),
         ]
-        responce = inquirer.prompt(questions)
-        if responce is None:
+        response = inquirer.prompt(questions)
+        if response is None:
             raise KeyboardInterrupt
-        return responce[' ']
+        return response[' ']
     return choices[0]
 
 
