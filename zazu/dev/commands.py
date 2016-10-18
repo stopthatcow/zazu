@@ -25,8 +25,15 @@ class IssueDescriptor(object):
         self.description = description
 
     def get_branch_name(self):
-        sanitized_description = self.description.replace(' ', '_')
-        return '{}/{}_{}'.format(self.type, self.id, sanitized_description)
+        sanitized_description = ""
+        if self.description:
+            sanitized_description = self.description.replace(' ', '_')
+        ret = self.id
+        if self.type:
+            ret = '{}/{}'.format(self.type, ret)
+        if self.description:
+            ret = '{}_{}'.format(ret, sanitized_description)
+        return ret
 
 
 def make_ticket(issue_tracker):
@@ -64,13 +71,16 @@ def offer_to_stash_changes(repo):
 
 def make_issue_descriptor(name):
     """Splits input into type, id and description"""
+    known_types = set(['hotfix', 'release', 'feature'])
     type = None
     description = None
     if '-' not in name:
         raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
-    if len(components) == 2:
-        type = components[0]
+    if len(components) > 1:
+        type = components[-2]
+        if type not in known_types:
+            raise click.ClickException("Branch type specifier must be one of {}".format(known_types))
     components = components.pop().split('_', 1)
     if len(components) == 2:
         description = components[1]
