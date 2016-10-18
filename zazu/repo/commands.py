@@ -2,6 +2,7 @@ import click
 import zazu.teamcity_helper
 import zazu.git_helper
 import zazu.build
+import zazu.util
 
 
 @click.group()
@@ -62,31 +63,60 @@ def init(ctx):
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
 @click.pass_context
 def cleanup(ctx, remote, target_branch):
-    """Clean up merged branches"""
-
-    def filter_undeletable(branches):
-        """Filters out branches that we don't want to delete"""
-        undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-'])
-        return [b for b in branches if b not in undeletable and not b.startswith('*')]
-
-    ctx.obj.repo.git.checkout('develop')
+    """Clean up merged branches that have been merged or are associated with cloded/resolved tickets"""
+    repo_obj = ctx.obj.repo
+    repo_obj.git.checkout('develop')
+    issue_tracker = ctx.obj.issue_tracker()
+    closed_branches = set([])
     if remote:
-        ctx.obj.repo.git.fetch('--prune')
-        merged_remote_branches = filter_undeletable(zazu.git_helper.get_merged_branches(ctx.obj.repo, target_branch, remote=True))
-        if merged_remote_branches:
-            click.echo('The following remote branches will be deleted:')
-            for b in merged_remote_branches:
-                click.echo('    - {}'.format(b))
+        repo_obj.git.fetch('--prune')
+        remote_branches = zazu.git_helper.filter_undeletable([b.name for b in repo_obj.remotes.origin.refs])
+        if issue_tracker is not None:
+            closed_branches = set(get_closed_branches(issue_tracker, remote_branches))
+        merged_remote_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch, remote=True))
+        merged_remote_branches = [b.replace('origin/', '') for b in merged_remote_branches]
+        branches_to_delete = set(merged_remote_branches) | closed_branches
+        if branches_to_delete:
+            click.echo('These remote branches will be deleted: {}'.format(zazu.util.pprint_list(branches_to_delete)))
             if click.confirm('Proceed?'):
-                for b in merged_remote_branches:
+                for b in branches_to_delete:
                     click.echo('Deleting {}'.format(b))
-                    ctx.obj.repo.git.push('--delete', 'origin', b.replace('origin/', ''))
-    merged_branches = filter_undeletable(zazu.git_helper.get_merged_branches(ctx.obj.repo, target_branch))
-    if merged_branches:
-        click.echo('The following local branches will be deleted:')
-        for b in merged_branches:
-            click.echo('    - {}'.format(b))
+                repo_obj.git.push('-df', 'origin', *branches_to_delete)
+    merged_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch))
+    local_branches = set(zazu.git_helper.filter_undeletable([b.name for b in repo_obj.heads]))
+    if issue_tracker is not None:
+        branches_to_check = local_branches - closed_branches
+        closed_branches |= set(get_closed_branches(issue_tracker, branches_to_check))
+    branches_to_delete = (closed_branches & local_branches) | set(merged_branches)
+    if branches_to_delete:
+        click.echo('These local branches will be deleted:{}'.format(zazu.util.pprint_list(branches_to_delete)))
         if click.confirm('Proceed?'):
-            for b in merged_branches:
+            for b in branches_to_delete:
                 click.echo('Deleting {}'.format(b))
-                ctx.obj.repo.git.branch('-d', b)
+            repo_obj.git.branch('-D', *branches_to_delete)
+
+
+def tickets_from_branches(branches):
+    descriptors = []
+    for b in branches:
+        try:
+            descriptors.append(zazu.dev.commands.make_issue_descriptor(b))
+        except click.ClickException:
+            pass
+    return descriptors
+
+
+def get_closed_branches(issue_tracker, branches):
+    """get descriptors of branches that refer to closed branches"""
+    return [t.get_branch_name() for t in tickets_from_branches(branches) if ticket_is_closed(issue_tracker, t)]
+
+
+def ticket_is_closed(issue_tracker, descriptor):
+    """determines if a ticket is closed or not, defaults to false in case the ticket isn't found by the issue tracker"""
+    ret = False
+    try:
+        issue = issue_tracker.issue(descriptor.id)
+        ret = issue_tracker.resolved(issue) or issue_tracker.closed(issue)
+    except zazu.config.IssueTrackerError:
+        pass
+    return ret
