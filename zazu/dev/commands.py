@@ -25,8 +25,15 @@ class IssueDescriptor(object):
         self.description = description
 
     def get_branch_name(self):
-        sanitized_description = self.description.replace(' ', '_')
-        return '{}/{}_{}'.format(self.type, self.id, sanitized_description)
+        sanitized_description = ""
+        if self.description:
+            sanitized_description = self.description.replace(' ', '_')
+        ret = self.id
+        if self.type:
+            ret = '{}/{}'.format(self.type, ret)
+        if self.description:
+            ret = '{}_{}'.format(ret, sanitized_description)
+        return ret
 
 
 def make_ticket(issue_tracker):
@@ -64,13 +71,16 @@ def offer_to_stash_changes(repo):
 
 def make_issue_descriptor(name):
     """Splits input into type, id and description"""
+    known_types = set(['hotfix', 'release', 'feature'])
     type = None
     description = None
     if '-' not in name:
         raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
-    if len(components) == 2:
-        type = components[0]
+    if len(components) > 1:
+        type = components[-2]
+        if type not in known_types:
+            raise click.ClickException("Branch type specifier must be one of {}".format(known_types))
     components = components.pop().split('_', 1)
     if len(components) == 2:
         description = components[1]
@@ -85,15 +95,32 @@ def dev(ctx):
     ctx.obj.check_repo()
 
 
+def check_if_branch_is_protected(branch_name):
+    """throws if branch_name is protected from being renamed"""
+    protected_branches = ['develop', 'master']
+    if branch_name in protected_branches:
+        raise click.ClickException('branch "{}" is protected'.format(branch_name))
+
+
+def check_if_active_branch_can_be_renamed(repo):
+    """throws if the current head is detached or if the active branch is protected"""
+    if repo.head.is_detached:
+        raise click.ClickException("the current HEAD is detached")
+    check_if_branch_is_protected(repo.active_branch.name)
+
+
 def rename_branch(repo, old_branch, new_branch):
     """Renames old_branch in repo to new_branch, locally and remotely"""
-    protected_branches = ['develop', 'master']
-    if old_branch in protected_branches:
-        raise click.ClickException('Cannot rename branch "{}"!'.format(old_branch))
-    # Pull first to avoid orphaning remote commits when we delete the remote branch
-    repo.git.pull()
+    check_if_branch_is_protected(old_branch)
+    remote_branch_exists = repo.heads[old_branch].tracking_branch() is not None
+    if remote_branch_exists:
+        # Pull first to avoid orphaning remote commits when we delete the remote branch
+        repo.git.pull()
     repo.git.branch(['-m', new_branch])
-    repo.git.push(['origin', ':{}'.format(old_branch)])
+    try:
+        repo.git.push(['origin', ':{}'.format(old_branch)])
+    except git.exc.GitCommandError:
+        pass
     repo.git.push(['-u'])
 
 
@@ -115,6 +142,8 @@ def rename(ctx, name):
 @click.pass_context
 def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar"""
+    if rename_flag:
+        check_if_active_branch_can_be_renamed(ctx.obj.repo)
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))

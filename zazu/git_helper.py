@@ -8,15 +8,22 @@ import os
 import filecmp
 import pkg_resources
 import shutil
-import subprocess
+import git
 
 
-def get_root_path():
-    return subprocess.check_output(['git', 'rev-parse', '--show-toplevel']).rstrip()
+def get_repo_root(starting_dir):
+    try:
+        g = git.Git(starting_dir)
+        ret = g.rev_parse('--show-toplevel')
+    except:
+        ret = ''
+    return ret
 
 
 def get_hooks_path(repo_base):
-    return os.path.join(repo_base, subprocess.check_output(['git', 'rev-parse', '--git-dir'], cwd=repo_base).rstrip(), 'hooks')
+    g = git.Git(repo_base)
+    git_dir = g.rev_parse('--git-dir')
+    return os.path.join(repo_base, git_dir, 'hooks')
 
 
 def get_default_git_hooks():
@@ -75,3 +82,9 @@ def get_merged_branches(repo, target_branch, remote=False):
     if remote:
         args.insert(0, '-r')
     return [b.strip() for b in repo.git.branch(args).strip().split('\n') if b]
+
+
+def filter_undeletable(branches):
+    """Filters out branches that we don't want to delete"""
+    undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-'])
+    return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (not b.startswith('origin/HEAD'))]

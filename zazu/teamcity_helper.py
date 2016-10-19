@@ -5,6 +5,7 @@ import json
 import git
 import pyteamcity
 import requests
+import teamcity.messages
 import zazu.credential_helper
 
 
@@ -101,7 +102,7 @@ class TeamCityHelper(pyteamcity.TeamCity):
 
     def apply_settings_to_build(self, settings, build_config_id):
         for k, v in settings.items():
-            self._put_helper('buildTypes/id:{}/parameters/{}'.format(build_config_id, k), str(v),
+            self._put_helper('buildTypes/id:{}/settings/{}'.format(build_config_id, k), str(v),
                              content_type='text/plain')
 
     def add_agent_requirements_to_build(self, agent_requirements, build_config_id):
@@ -205,17 +206,17 @@ def setup_project(tc, git_url, repo_name, component):
             }
 
             agent_requirements = []
-            if 'linux' in a.build_arch():
-                agent_requirements.append({
-                    'name': "teamcity.agent.jvm.os.name",
-                    'type': 'contains',
-                    'value': 'Linux'
-                })
             if 'win-msvc' in a.build_arch():
                 agent_requirements.append({
                     'name': "teamcity.agent.jvm.os.name",
                     'type': 'contains',
                     'value': 'Windows'
+                })
+            else:
+                agent_requirements.append({
+                    'name': "teamcity.agent.jvm.os.name",
+                    'type': 'equals',
+                    'value': 'Linux'
                 })
             tc.setup_build_configuration(a.build_arch(), a.build_description(), subproject_id, vcs_root_id, template_id, parameters, settings,
                                          agent_requirements)
@@ -246,6 +247,13 @@ def get_git_name_and_url(path):
 def setup(tc, component, repo_path):
     repo_name, repo_url = get_git_name_and_url(repo_path)
     setup_project(tc, repo_url, repo_name, component)
+
+
+def publish_artifacts(artifact_paths):
+    if teamcity.is_running_under_teamcity():
+        messenger = teamcity.messages.TeamcityServiceMessages()
+        for a in artifact_paths:
+            messenger.publishArtifacts(a)
 
 # Some ideas for more TC interaction:
 # check status of builds associated with this branch
