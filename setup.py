@@ -13,7 +13,7 @@ except (OSError, IOError, ImportError):
 
 try:
     with open(version_file_path, 'r') as version_file:
-        version = version_file.read()
+        version = version_file.read().strip()
 except IOError:
     version = '0.0.0.dev0'
     with open(version_file_path, 'w') as version_file:
