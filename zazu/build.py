@@ -183,7 +183,7 @@ def make_semver(repo_root, build_number):
 
 def parse_describe(repo_root):
     """Parses the results of git describe into branch name, sha, last tag, and number of commits since the tag"""
-    stdout = subprocess.check_output(['git', 'describe', '--dirty=.dirty', '--always'], cwd=repo_root)
+    stdout = subprocess.check_output(['git', 'describe', '--dirty=.dirty', '--always', '--long'], cwd=repo_root)
     components = stdout.strip().split('-')
     sha = None
     commits_past = 0
@@ -192,7 +192,7 @@ def parse_describe(repo_root):
         sha = components.pop()
         sha = sha.replace('.dirty', '-dirty')
         commits_past = components.pop()
-        last_tag = components.pop()
+        last_tag = '-'.join(components.pop())
     except IndexError:
         pass
     branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], cwd=repo_root).rstrip()
