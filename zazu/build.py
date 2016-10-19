@@ -191,8 +191,8 @@ def parse_describe(repo_root):
     try:
         sha = components.pop()
         sha = sha.replace('.dirty', '-dirty')
-        commits_past = components.pop()
-        last_tag = '-'.join(components.pop())
+        commits_past = int(components.pop())
+        last_tag = '-'.join(components)
     except IndexError:
         pass
     branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], cwd=repo_root).rstrip()
