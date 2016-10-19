@@ -191,8 +191,8 @@ def parse_describe(repo_root):
     try:
         sha = components.pop()
         sha = sha.replace('.dirty', '-dirty')
-        commits_past = components.pop()
-        last_tag = '-'.join(components.pop())
+        commits_past = int(components.pop())
+        last_tag = '-'.join(components)
     except IndexError:
         pass
     branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], cwd=repo_root).rstrip()
@@ -212,7 +212,7 @@ def make_version_number(branch_name, build_number, last_tag, commits_past_tag, s
     build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name_sanitized]
     prerelease = []
     if last_tag is not None and commits_past_tag == 0:
-        version = tag_to_version(last_tag)
+=        version = tag_to_version(last_tag)
     elif branch_name.startswith('release/') or branch_name.startswith('hotfix/'):
         version = tag_to_version(branch_name.split('/', 1)[1])
         prerelease = [str(build_number)]
