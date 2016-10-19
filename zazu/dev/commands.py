@@ -25,18 +25,25 @@ class IssueDescriptor(object):
         self.description = description
 
     def get_branch_name(self):
-        sanitized_description = self.description.replace(' ', '_')
-        return '{}/{}_{}'.format(self.type, self.id, sanitized_description)
+        sanitized_description = ""
+        if self.description:
+            sanitized_description = self.description.replace(' ', '_')
+        ret = self.id
+        if self.type:
+            ret = '{}/{}'.format(self.type, ret)
+        if self.description:
+            ret = '{}_{}'.format(ret, sanitized_description)
+        return ret
 
 
 def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
     project = issue_tracker.default_project()
     issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
-    click.echo("Making a new {} in the {} project...".format(issue_type.lower(), project))
+    component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
+    click.echo('Making a new {} in the "{}" project, "{}" component...'.format(issue_type.lower(), project, component))
     summary = zazu.util.prompt('Enter a title')
     description = zazu.util.prompt('Enter a description')
-    component = issue_tracker.default_component()
     issue = issue_tracker.create_issue(project, issue_type, summary, description, component)
     # Self assign the new ticket
     issue_tracker.assign_issue(issue, issue.fields.reporter.name)
@@ -64,13 +71,16 @@ def offer_to_stash_changes(repo):
 
 def make_issue_descriptor(name):
     """Splits input into type, id and description"""
+    known_types = set(['hotfix', 'release', 'feature'])
     type = None
     description = None
     if '-' not in name:
         raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
-    if len(components) == 2:
-        type = components[0]
+    if len(components) > 1:
+        type = components[-2]
+        if type not in known_types:
+            raise click.ClickException("Branch type specifier must be one of {}".format(known_types))
     components = components.pop().split('_', 1)
     if len(components) == 2:
         description = components[1]
@@ -85,14 +95,55 @@ def dev(ctx):
     ctx.obj.check_repo()
 
 
+def check_if_branch_is_protected(branch_name):
+    """throws if branch_name is protected from being renamed"""
+    protected_branches = ['develop', 'master']
+    if branch_name in protected_branches:
+        raise click.ClickException('branch "{}" is protected'.format(branch_name))
+
+
+def check_if_active_branch_can_be_renamed(repo):
+    """throws if the current head is detached or if the active branch is protected"""
+    if repo.head.is_detached:
+        raise click.ClickException("the current HEAD is detached")
+    check_if_branch_is_protected(repo.active_branch.name)
+
+
+def rename_branch(repo, old_branch, new_branch):
+    """Renames old_branch in repo to new_branch, locally and remotely"""
+    check_if_branch_is_protected(old_branch)
+    remote_branch_exists = repo.heads[old_branch].tracking_branch() is not None
+    if remote_branch_exists:
+        # Pull first to avoid orphaning remote commits when we delete the remote branch
+        repo.git.pull()
+    repo.git.branch(['-m', new_branch])
+    try:
+        repo.git.push(['origin', ':{}'.format(old_branch)])
+    except git.exc.GitCommandError:
+        pass
+    repo.git.push(['-u'])
+
+
+@dev.command()
+@click.argument('name')
+@click.pass_context
+def rename(ctx, name):
+    """Renames the current branch, locally and remotely"""
+    rename_branch(ctx.obj.repo, repo.active_branch.name, name)
+
+
 @dev.command()
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
+@click.option('--head', is_flag=True, help='Branch off of the current head rather than develop')
+@click.option('rename_flag', '--rename', is_flag=True, help='Rename the current branch rather than making a new one')
 @click.option('-t', '--type', type=click.Choice(['feature', 'release', 'hotfix']), help='the ticket type to make',
               default='feature')
 @click.pass_context
-def start(ctx, name, no_verify, type):
+def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar"""
+    if rename_flag:
+        check_if_active_branch_can_be_renamed(ctx.obj.repo)
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
@@ -106,21 +157,27 @@ def start(ctx, name, no_verify, type):
         issue.description = zazu.util.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()
-    offer_to_stash_changes(ctx.obj.repo)
+    if not (head or rename_flag):
+        offer_to_stash_changes(ctx.obj.repo)
     try:
         # Check if the target branch already exists
         ctx.obj.repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))
     except git.exc.GitCommandError:
-        click.echo('Checking out develop...')
-        ctx.obj.repo.heads.develop.checkout()
-        click.echo('Pulling from origin...')
-        try:
-            ctx.obj.repo.remotes.origin.pull()
-        except git.exc.GitCommandError:
-            click.secho('WARNING: unable to pull from origin!', fg='red')
-        click.echo('Creating new branch named "{}"...'.format(branch_name))
-        ctx.obj.repo.git.checkout('HEAD', b=branch_name)
+        if rename_flag:
+            click.echo('Renaming current branch to "{}"...'.format(branch_name))
+            rename_branch(ctx.obj.repo, ctx.obj.repo.active_branch.name, branch_name)
+        else:
+            if not head:
+                click.echo('Checking out develop...')
+                ctx.obj.repo.heads.develop.checkout()
+                click.echo('Pulling from origin...')
+                try:
+                    ctx.obj.repo.remotes.origin.pull()
+                except git.exc.GitCommandError:
+                    click.secho('WARNING: unable to pull from origin!', fg='red')
+            click.echo('Creating new branch named "{}"...'.format(branch_name))
+            ctx.obj.repo.git.checkout('HEAD', b=branch_name)
 
 
 @dev.command()
@@ -130,8 +187,7 @@ def status(ctx):
     descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
     issue_id = descriptor.id
     if not issue_id:
-        click.echo('The current branch does not contain a ticket ID')
-        exit(-1)
+        raise click.ClickException('The current branch does not contain a ticket ID')
     else:
         gh = zazu.github_helper.make_gh()
 
@@ -189,13 +245,16 @@ def review(ctx):
 
 @dev.command()
 @click.pass_context
-def ticket(ctx):
-    """Open the JIRA ticket for this feature"""
-    descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
-    issue_id = descriptor.id
+@click.argument('ticket', default='')
+def ticket(ctx, ticket):
+    """Open the JIRA ticket for the current feature or the one supplied in the ticket argument"""
+    if ticket:
+        issue_id = ticket
+    else:
+        descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
+        issue_id = descriptor.id
     if not issue_id:
-        click.echo('The current branch does not contain a ticket ID')
-        exit(-1)
+        raise click.ClickException('The current branch does not contain a ticket ID')
     else:
         url = ctx.obj.issue_tracker().browse_url(issue_id)
         click.echo('Opening "{}"'.format(url))

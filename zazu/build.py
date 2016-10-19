@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import semantic_version
 import os
+import teamcity_helper
 import zazu.tool.tool_helper
 import zazu.cmake_helper
 import zazu.config
@@ -50,8 +51,14 @@ class BuildGoal(object):
         self._build_vars = goal.get('buildVars', {})
         self._build_goal = goal.get('buildGoal', self._name)
         self._requires = goal.get('requires', {})
+        self._artifacts = goal.get('artifacts', [])
         self._builds = {}
-        self._default_spec = BuildSpec(self._build_goal, self._build_type, self._build_vars, self._requires, self._description)
+        self._default_spec = BuildSpec(goal=self._build_goal,
+                                       type=self._build_type,
+                                       vars=self._build_vars,
+                                       requires=self._requires,
+                                       description=self._description,
+                                       artifacts=self._artifacts)
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
@@ -61,7 +68,15 @@ class BuildGoal(object):
             description = b.get('description', '')
             arch = b['arch']
             script = b.get('script', None)
-            self._builds[arch] = BuildSpec(build_goal, type, vars, requires, description, arch, script=script)
+            artifacts = b.get('artifacts', self._artifacts)
+            self._builds[arch] = BuildSpec(goal=build_goal,
+                                           type=type,
+                                           vars=vars,
+                                           requires=requires,
+                                           description=description,
+                                           arch=arch,
+                                           script=script,
+                                           artifacts=artifacts)
 
     def description(self):
         return self._description
@@ -81,7 +96,7 @@ class BuildGoal(object):
 
 class BuildSpec(object):
 
-    def __init__(self, goal, type='minSizeRel', vars={}, requires={}, description='', arch='', script=None):
+    def __init__(self, goal, type='minSizeRel', vars={}, requires={}, description='', arch='', script=None, artifacts=[]):
         self._build_goal = goal
         self._build_type = type
         self._build_vars = vars
@@ -89,9 +104,13 @@ class BuildSpec(object):
         self._build_description = description
         self._build_arch = arch
         self._build_script = script
+        self._build_artifacts = artifacts
 
     def build_type(self):
         return self._build_type
+
+    def build_artifacts(self):
+        return self._build_artifacts
 
     def build_goal(self):
         return self._build_goal
@@ -171,6 +190,7 @@ def parse_describe(repo_root):
     last_tag = None
     try:
         sha = components.pop()
+        sha = sha.replace('.dirty', '-dirty')
         commits_past = components.pop()
         last_tag = components.pop()
     except IndexError:
@@ -179,11 +199,16 @@ def parse_describe(repo_root):
     return branch_name, sha, last_tag, commits_past
 
 
+def sanitize_branch_name(branch_name):
+    """replaces punctuation that cannot be in semantic version from a branch name and replaces them with decimals"""
+    branch_name_sanitized = branch_name.replace('/', '-')
+    branch_name_sanitized = branch_name_sanitized.replace('_', '-')
+    return branch_name_sanitized
+
+
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
     """Converts repo metadata and build version into a semantic version"""
-    branch_name_sanitized = branch_name.replace('/', '.')
-    branch_name_sanitized = branch_name_sanitized.replace('-', '.')
-    branch_name_sanitized = branch_name_sanitized.replace('_', '.')
+    branch_name_sanitized = sanitize_branch_name(branch_name)
     build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name_sanitized]
     prerelease = []
     if last_tag is not None and commits_past_tag == 0:
@@ -199,6 +224,19 @@ def make_version_number(branch_name, build_number, last_tag, commits_past_tag, s
     semver.build = build_info
 
     return semver
+
+
+def pep440_from_semver(semver):
+    # Convert semantic version to PEP440 compliant version
+    segment = ''
+    if semver.prerelease:
+        segment = '.dev{}'.format('.'.join(semver.prerelease))
+    local_version = '.'.join(semver.build)
+    local_version = local_version.replace('-', '.')
+    version_str = '{}.{}.{}{}'.format(semver.major, semver.minor, semver.patch, segment)
+    if local_version:
+        version_str = '{}+{}'.format(version_str, local_version)
+    return version_str
 
 
 def install_requirements(requirements, verbose):
@@ -230,11 +268,22 @@ def parse_key_value_pairs(arg_string):
         raise click.ClickException("argument string must be in the form x=y")
 
 
+def add_version_args(repo_root, build_num, args):
+    """Adds version strings and build number arguments to args"""
+    try:
+        semver = semantic_version.Version(args['ZAZU_BUILD_VERSION'])
+    except KeyError:
+        semver = make_semver(repo_root, build_num)
+        args['ZAZU_BUILD_VERSION'] = str(semver)
+    args["ZAZU_BUILD_NUMBER"] = str(build_num)
+    args['ZAZU_BUILD_VERSION_PEP440'] = pep440_from_semver(semver)
+
+
 @click.command()
 @click.pass_context
 @click.option('-a', '--arch', default='local', help='the desired architecture to build for')
 @click.option('-t', '--type', type=click.Choice(zazu.cmake_helper.build_types),
-              help='defaults to what is specified in the {} file, or release if unspecified there'.format(zazu.config.PROJECT_FILE_NAME))
+              help='defaults to what is specified in the config file, or release if unspecified there')
 @click.option('-n', '--build_num', help='build number', default=os.environ.get('BUILD_NUMBER', 0))
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
 @click.argument('goal')
@@ -249,14 +298,13 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
     install_requirements(requirements, verbose)
-    build_args = {}
-    build_args["ZAZU_BUILD_NUMBER"] = str(build_num)
-    build_args["ZAZU_TOOL_DIR"] = os.path.expanduser('~/.zazu/tools')
+    build_args = {"ZAZU_TOOL_DIR": os.path.expanduser('~/.zazu/tools')}
     extra_args = parse_key_value_pairs(extra_args_str)
-    if 'ZAZU_BUILD_VERSION' not in extra_args:
-        build_args['ZAZU_BUILD_VERSION'] = str(make_semver(ctx.obj.repo_root, build_num))
     build_args.update(spec.build_vars())
+    build_args.update(extra_args)
+    add_version_args(ctx.obj.repo_root, build_num, build_args)
     if spec.build_script() is None:
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
+    teamcity_helper.publish_artifacts(spec.build_artifacts())

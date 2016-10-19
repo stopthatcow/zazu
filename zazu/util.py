@@ -9,11 +9,6 @@ try:
 except ImportError:
     # Fall back to regular raw_input
     pass
-try:
-    import getch
-except ImportError:
-    # Fall back to regular raw_input
-    pass
 import inquirer
 import click
 import os
@@ -29,14 +24,19 @@ def prompt(text, default=None, expected_type=str):
 
 
 def pick(choices, message):
-    click.clear()
-    questions = [
-        inquirer.List(' ',
-                      message=message,
-                      choices=choices,
-                      ),
-    ]
-    return inquirer.prompt(questions)[' ']
+    if len(choices) > 1:
+        click.clear()
+        questions = [
+            inquirer.List(' ',
+                          message=message,
+                          choices=choices,
+                          ),
+        ]
+        response = inquirer.prompt(questions)
+        if response is None:
+            raise KeyboardInterrupt
+        return response[' ']
+    return choices[0]
 
 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
@@ -55,3 +55,8 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
                     if all(not fnmatch.fnmatch(file, e) for e in exclude_patterns):
                         files.append(file)
     return files
+
+
+def pprint_list(data):
+    """Formats list as a bulleted list string"""
+    return '\n  - {}'.format('\n  - '.join(data))

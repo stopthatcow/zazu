@@ -92,7 +92,7 @@ You may pass extra variables to the build using key=value pairs.
 `zazu build --arch=arm32-linux-gnueabihf package FOO=bar`
 This sets the environement variable *FOO* to the value *bar* during the build.
 
-##Build tool instalation
+##Build tool installation
 Zazu will automatically try to obtain required build tools needed for each target as specified in the zazu.yaml file. These may be installed/uninstalled manually as well:
 
 - `zazu tool install <tool==version>`

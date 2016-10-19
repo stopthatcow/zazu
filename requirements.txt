@@ -1,2 +1,1 @@
-pypandoc
-pytest
+pypandoc==1.2.0
