@@ -13,7 +13,7 @@ except (OSError, IOError, ImportError):
 
 try:
     with open(version_file_path, 'r') as version_file:
-        version = version_file.read()
+        version = version_file.read().strip()
 except IOError:
     version = '0.0.0.dev0'
     with open(version_file_path, 'w') as version_file:
@@ -42,6 +42,7 @@ setuptools.setup(
                       'autopep8==1.2.4',
                       'semantic_version==2.5.0',
                       'gcovr==3.2',
+                      'gnureadline==6.3.3',
                       'teamcity-messages==1.19',
                       'futures==3.0.5',
                       'inquirer==2.1.7'],
