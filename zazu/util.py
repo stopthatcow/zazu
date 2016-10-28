@@ -7,8 +7,11 @@ __copyright__ = "Copyright 2016, Lily Robotics"
 try:
     import gnureadline
 except ImportError:
-    # Fall back to regular raw_input
-    pass
+    try:
+        import pyreadline
+    except ImportError:
+        # Fall back to regular raw_input
+        pass
 import inquirer
 import click
 import os
