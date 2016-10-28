@@ -144,6 +144,15 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar"""
     if rename_flag:
         check_if_active_branch_can_be_renamed(ctx.obj.repo)
+    if not (head or rename_flag):
+        offer_to_stash_changes(ctx.obj.repo)
+        click.echo('Checking out develop...')
+        ctx.obj.repo.heads.develop.checkout()
+        click.echo('Pulling from origin...')
+        try:
+            ctx.obj.repo.remotes.origin.pull()
+        except git.exc.GitCommandError:
+            click.secho('WARNING: unable to pull from origin!', fg='red')
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
@@ -157,8 +166,6 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         issue.description = zazu.util.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()
-    if not (head or rename_flag):
-        offer_to_stash_changes(ctx.obj.repo)
     try:
         # Check if the target branch already exists
         ctx.obj.repo.git.checkout(branch_name)
@@ -168,14 +175,6 @@ def start(ctx, name, no_verify, head, rename_flag, type):
             click.echo('Renaming current branch to "{}"...'.format(branch_name))
             rename_branch(ctx.obj.repo, ctx.obj.repo.active_branch.name, branch_name)
         else:
-            if not head:
-                click.echo('Checking out develop...')
-                ctx.obj.repo.heads.develop.checkout()
-                click.echo('Pulling from origin...')
-                try:
-                    ctx.obj.repo.remotes.origin.pull()
-                except git.exc.GitCommandError:
-                    click.secho('WARNING: unable to pull from origin!', fg='red')
             click.echo('Creating new branch named "{}"...'.format(branch_name))
             ctx.obj.repo.git.checkout('HEAD', b=branch_name)
 
