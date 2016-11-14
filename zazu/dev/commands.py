@@ -129,7 +129,8 @@ def rename_branch(repo, old_branch, new_branch):
 @click.pass_context
 def rename(ctx, name):
     """Renames the current branch, locally and remotely"""
-    rename_branch(ctx.obj.repo, repo.active_branch.name, name)
+    repo = ctx.obj.repo
+    rename_branch(repo, repo.active_branch.name, name)
 
 
 @dev.command()

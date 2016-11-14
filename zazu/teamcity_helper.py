@@ -193,7 +193,7 @@ def setup_project(tc, git_url, repo_name, component):
         subproject_id = tc.setup_project(
             g.name(), g.description(), parent_project_id)['id']
         for a in g.builds().values():
-            template_id = 'BobGitHubLilyRoboticsDefault'
+            template_id = 'ZazuGitHubLilyRoboticsDefault'
             parameters = {
                 'architecture': a.build_arch(),
                 'goal': g.name(),
