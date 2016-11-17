@@ -16,16 +16,19 @@ digraph G {
 Zazu is implemented in Python and is a [Click](http://click.pocoo.org/5/) based CLI. If you're wondering why Click, this is a well [answered](http://click.pocoo.org/5/why/) question.
 
 ##Install
-`pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple --ignore-installed six zazu`
-
-If you get an error that "trusted-host" is not a recognized argument you may need to upgrade pip itself: `pip install --upgrade pip`
-
-Note that you may need to install keyrings.alt on Linux: `pip install keyrings.alt`
-
-###Optional readline support (enables editing of entered text)
+###Pre-requsites (linux)
 
     sudo apt-get install libncurses-dev libffi-dev
-    pip install gnureadline
+    sudo pip install keyrings.alt
+
+###All platforms
+
+    sudo pip install --upgrade pip
+    sudo pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple zazu
+
+If you get an error about a package called "six" use the following command instead:
+    `sudo pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple --ignore-installed six zazu`
+
 
 ##Command overview
 The following diagram shows the available subcommands of zazu.
