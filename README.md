@@ -18,7 +18,7 @@ Zazu is implemented in Python and is a [Click](http://click.pocoo.org/5/) based 
 ##Install
 ###Pre-requsites (linux)
 
-    sudo apt-get install libncurses-dev libffi-dev
+    sudo apt-get install libncurses-dev python-dev libssl-dev libffi-dev
     sudo pip install keyrings.alt
 
 ###All platforms
