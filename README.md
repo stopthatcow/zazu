@@ -184,3 +184,14 @@ Add the following to your `~/.zshrc` file
 	}
 	
 	complete -F _zazu_completion -o default zazu;
+
+##Handy aliases
+
+	alias zz="zazu"
+	alias zd="zazu dev"
+	alias zds="zazu dev start"
+	alias zdr="zazu dev review"
+	alias zdt="zazu dev ticket"
+	alias zdb="zazu dev builds"
+	alias zs="zazu style"
+	alias zb="zazu build"
