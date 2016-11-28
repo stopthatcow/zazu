@@ -28,6 +28,16 @@ def update_to_branch(g, branch, dry_run):
         g.git.submodule('update', '-f', '--init', '--recursive')
 
 
+def merge_branch(g, branch, dry_run):
+    """Merges a branch into a target branch and updates submodules"""
+    if dry_run:
+        click.echo('[{}] Would merge "{}"'.format(g, branch))
+        click.echo('[{}] Would submodule update'.format(g))
+    else:
+        g.git.merge(branch)
+        g.git.submodule('update', '-f', '--init', '--recursive')
+
+
 def repo_belongs_to_lily(repo):
     return 'LilyRobotics' in repo.remotes.origin.url
 
@@ -37,9 +47,11 @@ def branch_repo(g, name, base):
     try:
         g.git.checkout('-f', name)
         g.git.pull()
+        g.git.submodule('update', '-f', '--init', '--recursive')
     except git.exc.GitCommandError:
         g.git.checkout('-f', base)
         g.git.pull()
+        g.git.submodule('update', '-f', '--init', '--recursive')
         g.git.checkout('-b', name)
         g.git.push('-u')
 
@@ -55,8 +67,9 @@ def submodule_branch(g, branch_name, base_branch=RELEASE_STARTING_BRANCH, dry_ru
 
 def submodule_release(g, release_name, dry_run=False):
     """recursively release repo to master"""
+    setup_action = functools.partial(update_to_branch, branch='master', dry_run=dry_run)
     post_action = functools.partial(release_repo, starting_branch='release/{}'.format(release_name), tag=release_name, dry_run=dry_run)
-    submodule_do(g, post_action=post_action, dry_run=dry_run)
+    submodule_do(g, setup_action=setup_action, post_action=post_action, dry_run=dry_run)
 
 
 def submodule_walk(g, action=lambda x: x, filter=repo_belongs_to_lily):
@@ -112,18 +125,13 @@ def start(ctx, version, dry_run):
 
 def release_repo(g, starting_branch, tag, dry_run):
     """Merges 'starting_branch' to master and tags master with 'tag'"""
+    merge_branch(g, starting_branch, dry_run)
     if not dry_run:
-        g.git.checkout('master')
-        g.git.pull()
-        g.git.merge(starting_branch)
-        # TODO: delete release branch
-    else:
-        click.echo('[{}] Would checkout master'.format(g, starting_branch))
-        click.echo('[{}] Would pull'.format(g, starting_branch))
-        click.echo('[{}] Would merge "{}" to master'.format(g, starting_branch))
-    if not dry_run:
-        g.git.tag(tag)
-        g.git.push()
+        try:
+            g.git.tag(tag, '-fam', 'tagged by zazu')
+        except git.exc.GitCommandError:
+            pass
+        g.git.push('--follow-tags', '-f')
     else:
         click.echo('[{}] Would tag master as {}'.format(g, tag))
 
