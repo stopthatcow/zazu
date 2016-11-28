@@ -2,7 +2,6 @@
 """update command for zazu"""
 
 import click
-import pip
 
 
 @click.command()
@@ -20,5 +19,6 @@ def upgrade(ctx, version):
     pip_args = ['install', '--upgrade',
                 '--trusted-host', 'pypi.lily.technology',
                 '--index-url', 'http://pypi.lily.technology:8080/simple', 'zazu{}'.format(version)]
+    import pip
     click.echo('pip {}'.format(' '.join(pip_args)))
     ctx.exit(pip.main(pip_args))
