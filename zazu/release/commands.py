@@ -5,8 +5,10 @@ import functools
 import git
 import re
 import semantic_version
+import zazu
 
 RELEASE_STARTING_BRANCH = 'develop'
+RELEASE_TARGET_BRANCH = 'master'
 
 
 @click.group()
@@ -18,11 +20,10 @@ def release(ctx):
 
 def update_to_branch(g, branch, dry_run):
     """Updates a repo and its submodules to the tip of a given branch"""
-    if dry_run:
-        click.echo('[{}] Would checkout "{}"'.format(g, branch))
-        click.echo('[{}] Would pull "{}"'.format(g, branch))
-        click.echo('[{}] Would submodule update'.format(g))
-    else:
+    zazu.info('[{}] Checkout "{}"'.format(g.working_tree_dir, branch))
+    zazu.info('[{}] Pull "{}"'.format(g.working_tree_dir, branch))
+    zazu.info('[{}] Submodule update'.format(g.working_tree_dir))
+    if not dry_run:
         g.git.checkout('-f', branch)
         g.git.pull()
         g.git.submodule('update', '-f', '--init', '--recursive')
@@ -30,10 +31,9 @@ def update_to_branch(g, branch, dry_run):
 
 def merge_branch(g, branch, dry_run):
     """Merges a branch into a target branch and updates submodules"""
-    if dry_run:
-        click.echo('[{}] Would merge "{}"'.format(g, branch))
-        click.echo('[{}] Would submodule update'.format(g))
-    else:
+    zazu.info('[{}] Merge "{}"'.format(g.working_tree_dir, branch))
+    zazu.info('[{}] Submodule update'.format(g.working_tree_dir))
+    if not dry_run:
         g.git.merge(branch)
         g.git.submodule('update', '-f', '--init', '--recursive')
 
@@ -42,32 +42,31 @@ def repo_belongs_to_lily(repo):
     return 'LilyRobotics' in repo.remotes.origin.url
 
 
-def branch_repo(g, name, base):
+def branch_repo(g, name, base, dry_run):
     """updates to 'name' branch if it exists, otherwise makes a branch starting on the 'base' branch"""
-    try:
-        g.git.checkout('-f', name)
-        g.git.pull()
-        g.git.submodule('update', '-f', '--init', '--recursive')
-    except git.exc.GitCommandError:
-        g.git.checkout('-f', base)
-        g.git.pull()
-        g.git.submodule('update', '-f', '--init', '--recursive')
-        g.git.checkout('-b', name)
-        g.git.push('-u')
+    zazu.info('[{}] Checkout branch "{}" based on "{}"'.format(g.working_tree_dir, name, base))
+    if not dry_run:
+        try:
+            g.git.checkout('-f', name)
+            g.git.pull()
+            g.git.submodule('update', '-f', '--init', '--recursive')
+        except git.exc.GitCommandError:
+            g.git.checkout('-f', base)
+            g.git.pull()
+            g.git.submodule('update', '-f', '--init', '--recursive')
+            g.git.checkout('-b', name)
+            g.git.push('-u')
 
 
 def submodule_branch(g, branch_name, base_branch=RELEASE_STARTING_BRANCH, dry_run=False):
     """recursively update submodules to a specific branch"""
-    if not dry_run:
-        setup_action = functools.partial(branch_repo, name=branch_name, base=base_branch)
-    else:
-        setup_action = lambda x: click.echo('[{}] Would checkout branch "{}" based on "{}"'.format(x, branch_name, RELEASE_STARTING_BRANCH))
+    setup_action = functools.partial(branch_repo, name=branch_name, base=base_branch, dry_run=dry_run)
     submodule_do(g, setup_action=setup_action, dry_run=dry_run)
 
 
 def submodule_release(g, release_name, dry_run=False):
     """recursively release repo to master"""
-    setup_action = functools.partial(update_to_branch, branch='master', dry_run=dry_run)
+    setup_action = functools.partial(update_to_branch, branch=RELEASE_TARGET_BRANCH, dry_run=dry_run)
     post_action = functools.partial(release_repo, starting_branch='release/{}'.format(release_name), tag=release_name, dry_run=dry_run)
     submodule_do(g, setup_action=setup_action, post_action=post_action, dry_run=dry_run)
 
@@ -90,14 +89,16 @@ def submodule_do(g, setup_action=lambda x: x, pre_action=lambda x: x, post_actio
             submodule_do(s.module(), setup_action, pre_action, post_action, filter=filter, dry_run=dry_run)
     pre_action(g)
     if modules_to_be_updated:
-        if dry_run:
-            click.echo("[{}] Would commit submodules".format(g))
-        else:
+        if not dry_run:
             modules_modified = [m for m in modules_to_be_updated if g.git.diff(m.name)]
             if modules_modified:
+                zazu.echo("[{}] Commit submodules".format(g.working_tree_dir))
                 g.git.add(modules_modified)
                 g.git.commit('-m', 'submodule update')
+                zazu.info("[{}] push".format(g.working_tree_dir))
                 g.git.push()
+        else:
+            zazu.info("[{}] Would commit submodules".format(g.working_tree_dir.path))
     post_action(g)
 
 
@@ -116,24 +117,20 @@ def validate_release_name(version):
 def start(ctx, version, dry_run):
     """Create a branch named "release/version" including submodules starting from RELEASE_STARTING_BRANCH"""
     validate_release_name(version)
-    click.echo('Starting release "{}"'.format(version))
+    zazu.info('Starting release "{}"'.format(version))
     branch_name = 'release/{}'.format(version)
     update_to_branch(ctx.obj.repo, RELEASE_STARTING_BRANCH, dry_run)
     submodule_branch(ctx.obj.repo, branch_name, RELEASE_STARTING_BRANCH, dry_run)
-    click.echo('Release branch "{}" is ready'.format(branch_name))
+    zazu.info('Release branch "{}" is ready'.format(branch_name))
 
 
 def release_repo(g, starting_branch, tag, dry_run):
-    """Merges 'starting_branch' to master and tags master with 'tag'"""
+    """Merges 'starting_branch' to RELEASE_TARGET_BRANCH and tags RELEASE_TARGET_BRANCH with 'tag'"""
     merge_branch(g, starting_branch, dry_run)
     if not dry_run:
-        try:
-            g.git.tag(tag, '-fam', 'tagged by zazu')
-        except git.exc.GitCommandError:
-            pass
+        g.git.tag(tag, '-fam', 'tagged by zazu')
         g.git.push('--follow-tags', '-f')
-    else:
-        click.echo('[{}] Would tag master as {}'.format(g, tag))
+    zazu.info('[{}] Tag {} as {}'.format(g.working_tree_dir, RELEASE_TARGET_BRANCH, tag))
 
 
 @release.command()
@@ -141,12 +138,12 @@ def release_repo(g, starting_branch, tag, dry_run):
 @click.argument('version')
 @click.pass_context
 def finish(ctx, version, dry_run):
-    """merge release branch to master, tag master branch, merge release branch to develop"""
+    """merge release branch to RELEASE_TARGET_BRANCH, tag RELEASE_TARGET_BRANCH branch, merge release branch to develop"""
     validate_release_name(version)
     release_branch_name = 'release/{}'.format(version)
-    click.echo('Updating to latest on "{}"'.format(release_branch_name))
+    zazu.info('Updating to latest on "{}"'.format(release_branch_name))
     submodule_branch(ctx.obj.repo, release_branch_name, dry_run=dry_run)
-    click.echo('Releasing {}'.format(version))
+    zazu.info('Releasing {}'.format(version))
     submodule_release(ctx.obj.repo, version, dry_run=dry_run)
     # TODO update the develop branch with all the new develop heads
 
@@ -180,7 +177,7 @@ def collect_submodules(g, modules):
 @release.command()
 @click.pass_context
 def status(ctx):
-    """Check all of the submodules abe be sure that any shared ones are on the same version"""
+    """Check all of the submodules and be sure that any shared ones are on the same version"""
     map = []
     submodule_walk(ctx.obj.repo, functools.partial(collect_submodules, modules=map))
     modules = {}
@@ -194,3 +191,11 @@ def status(ctx):
     for k, v in modules.items():
         if len(set(v)) > 1:
             raise click.ClickException('Version mismatch in "{}": {}'.format(k, v))
+
+
+@release.command()
+@click.option('--dry-run', is_flag=True)
+@click.option('-b', '--branch', default='develop', help='The branch name to update to')
+@click.pass_context
+def update(ctx, branch, dry_run):
+    submodule_branch(ctx.obj.repo, branch, ctx.obj.repo.active_branch.name, dry_run=dry_run)

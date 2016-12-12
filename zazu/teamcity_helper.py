@@ -26,7 +26,7 @@ class TeamCityHelper(pyteamcity.TeamCity):
                     {'name': 'agentCleanFilesPolicy',
                      'value': 'ALL_UNTRACKED'},
                     {'name': 'agentCleanPolicy',
-                     'value': 'ON_BRANCH_CHANGE'},
+                     'value': 'ALWAYS'},
                     {"name": "authMethod",
                      "value": "TEAMCITY_SSH_KEY"},
                     {"name": "teamcitySshKey",
