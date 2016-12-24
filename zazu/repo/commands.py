@@ -1,5 +1,4 @@
 import click
-import zazu.teamcity_helper
 import zazu.git_helper
 import zazu.build
 import zazu.util
@@ -29,6 +28,7 @@ def hooks(ctx):
 @click.pass_context
 def ci(ctx):
     """Setup TeamCity configurations based on a zazu.yaml file"""
+    import zazu.teamcity_helper
     address = 'teamcity.lily.technology'
     port = 8111
     ctx.obj.check_repo()

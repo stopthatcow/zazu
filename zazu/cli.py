@@ -14,10 +14,11 @@ import zazu.repo.commands
 import zazu.style
 import zazu.tool.commands
 import zazu.upgrade
+import zazu.version
 
 
 @click.group()
-@click.version_option(version=zazu.__version__)
+@click.version_option(version=zazu.version.Version())
 @click.option('-v', '--verbose', count=True)
 @click.pass_context
 def cli(ctx, verbose):

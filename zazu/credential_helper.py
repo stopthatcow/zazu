@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """credential functions for zazu"""
-import keyring
-import click
-import zazu.util
 
 
 def get_user_pass_credentials(component, use_saved=True):
     """Retrieves a stored user/password for a named component or offers to store a new set"""
+    import keyring
+    import click
+    import zazu.util
     keyring_user = component.lower() + '_user'
     keyring_password = component.lower() + '_password'
     user = None

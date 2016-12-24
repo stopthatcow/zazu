@@ -5,7 +5,6 @@ import shutil
 import subprocess
 import semantic_version
 import os
-import teamcity_helper
 import zazu.tool.tool_helper
 import zazu.cmake_helper
 import zazu.config
@@ -293,6 +292,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
      use distclean to clean whole build folder"""
     # Run the supplied build script if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
+    import teamcity_helper
     project_config = ctx.obj.project_config()
     component = ComponentConfiguration(project_config['components'][0])
     spec = component.get_spec(goal, arch, type)

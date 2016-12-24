@@ -3,7 +3,6 @@
 import subprocess
 import multiprocessing
 import os
-import pkg_resources
 
 
 def architecture_to_generator(arch):
@@ -21,6 +20,7 @@ def get_toolchain_file_from_arch(arch):
     """Gets the required toolchain file for a given architecture"""
     ret = None
     if 'arm32-linux-gnueabihf' in arch:
+        import pkg_resources
         ret = pkg_resources.resource_filename('zazu', 'cmake/arm32-linux-gnueabihf.cmake')
     return ret
 

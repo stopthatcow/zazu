@@ -3,9 +3,6 @@
 import os
 import click
 import git
-import jira
-import yaml
-import zazu.credential_helper
 
 
 class IssueTracker(object):
@@ -48,6 +45,8 @@ class JiraIssueTracker(IssueTracker):
 
     def jira_handle(self):
         if self._jira_handle is None:
+            import zazu.credential_helper
+            import jira
             username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
             self._jira_handle = jira.JIRA(self._base_url,
                                           basic_auth=(username, password),
@@ -138,6 +137,7 @@ def load_yaml_file(search_paths, file_names):
     for file in searched:
         try:
             with open(file) as f:
+                import yaml
                 return yaml.load(f)
         except IOError:
             pass

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
 import click
-import getpass
 import github
 import keyring
 import re
-import requests
-import socket
 import zazu.util
 
 
 def get_gh_token():
     """Make new GitHub token"""
+    import getpass
+    import socket
+    import requests
     api_url = 'https://api.github.com'
     add_auth = {
         "scopes": [

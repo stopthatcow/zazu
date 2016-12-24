@@ -1,7 +1,6 @@
 
 import click
 import concurrent.futures
-import jira
 import webbrowser
 import urllib
 import textwrap
@@ -184,6 +183,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
 @click.pass_context
 def status(ctx):
     """Get status of this branch"""
+    import jira
     descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
     issue_id = descriptor.id
     if not issue_id:
