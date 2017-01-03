@@ -4,6 +4,7 @@ import os
 import click
 import git
 import jira
+import teamcity_helper
 import yaml
 import zazu.credential_helper
 
@@ -112,17 +113,32 @@ class JiraIssueTracker(IssueTracker):
 
 def issue_tracker_factory(config):
     """A factory function that makes and initializes a IssueTracker object from a config"""
-    known_issue_trackers = {'jira': JiraIssueTracker.from_config}
+    known_types = {'jira': JiraIssueTracker.from_config}
     if 'type' in config:
         type = config['type']
         type = type.lower()
-        if type in known_issue_trackers:
-            return known_issue_trackers[type](config)
+        if type in known_types:
+            return known_types[type](config)
         else:
             raise ZazuException('{} is not a known issueTracker, please choose from {}'.format(type,
-                                                                                               known_issue_trackers.keys()))
+                                                                                               known_types.keys()))
     else:
         raise ZazuException('IssueTracker config requires a "type" field')
+
+
+def continuous_integration_factory(config):
+    """A factory function that makes and initializes a CI object from a config"""
+    known_types = {'teamcity': teamcity_helper.TeamCityHelper.from_config}
+    if 'type' in config:
+        type = config['type']
+        type = type.lower()
+        if type in known_types:
+            return known_types[type](config)
+        else:
+            raise ZazuException('{} is not a known CI service, please choose from {}'.format(type,
+                                                                                             known_types.keys()))
+    else:
+        raise ZazuException('CI config requires a "type" field')
 
 
 def path_gen(search_paths, file_names):
@@ -156,6 +172,7 @@ class Config(object):
         else:
             self.repo = None
         self._issue_tracker = None
+        self._continuous_integration = None
         self._project_config = None
         self._tc = None
 
@@ -172,6 +189,14 @@ class Config(object):
             return self.project_config()['issueTracker']
         except KeyError:
             raise ZazuException("no issueTracker config found")
+
+    def continuous_integration(self):
+        if self._continuous_integration is None:
+            try:
+                self._continuous_integration = continuous_integration_factory(self.ci_config())
+            except ZazuException as e:
+                raise click.ClickException(str(e))
+        return self._continuous_integration
 
     def ci_config(self):
         return self.project_config().get('ci', {})

@@ -28,18 +28,16 @@ def hooks(ctx):
 @setup.command()
 @click.pass_context
 def ci(ctx):
-    """Setup TeamCity configurations based on a zazu.yaml file"""
-    address = 'teamcity.lily.technology'
-    port = 8111
+    """Setup CI configurations based on a zazu.yaml file"""
     ctx.obj.check_repo()
-    ctx.obj._tc = zazu.teamcity_helper.make_tc(address, port)
+    continuous_integration = ctx.obj.continuous_integration()
     try:
         project_config = ctx.obj.project_config()
-        if click.confirm("Post build configuration to TeamCity?"):
+        if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
             components = project_config['components']
             for c in components:
                 component = zazu.build.ComponentConfiguration(c)
-                zazu.teamcity_helper.setup(ctx.obj._tc, component, ctx.obj.repo_root)
+                zazu.teamcity_helper.setup(continuous_integration, component, ctx.obj.repo_root)
     except IOError:
         raise click.ClickException("No {} file found in {}".format(project_file_name, ctx.obj.repo_root))
 

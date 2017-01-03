@@ -12,8 +12,11 @@ import zazu.credential_helper
 class TeamCityHelper(pyteamcity.TeamCity):
     """Extends the pyteamcity.Teamcity object to expose interfaces to create projects and build configurations"""
 
-    def __init__(self, username=None, password=None, server=None, port=None, session=None):
-        pyteamcity.TeamCity.__init__(self, username, password, server, port, session)
+    def __init__(self, username, password, address, port=80, protocol='http'):
+        pyteamcity.TeamCity.__init__(self,
+                                     username=username, password=password,
+                                     server=address, port=port,
+                                     protocol=protocol)
 
     def setup_vcs_root(self, name, parent_project_id, git_url):
         vcs_root = {
@@ -183,6 +186,47 @@ class TeamCityHelper(pyteamcity.TeamCity):
             ret = ret.json()
         return ret
 
+    @staticmethod
+    def type():
+        return 'TeamCity'
+
+    @staticmethod
+    def from_config(config):
+        try:
+            url = config['url']
+        except KeyError:
+            raise ZazuException('TeamCity config requires a "url" field')
+
+        from urlparse import urlparse
+        parsed = urlparse(url)
+        if parsed.netloc:
+            components = parsed.netloc.split(':')
+            address = components.pop(0)
+            try:
+                port = int(components.pop(0))
+            except IndexError:
+                port = 80
+            protocol = parsed.scheme
+
+        else:
+            raise ZazuException('Unable to parse Teamcity URL "{}"'.format(url))
+
+        use_saved_credentials = True
+        while True:
+            tc_user, tc_pass = zazu.credential_helper.get_user_pass_credentials('TeamCity', use_saved_credentials)
+            tc = TeamCityHelper(username=tc_user,
+                                password=tc_pass,
+                                address=address,
+                                port=port,
+                                protocol=protocol)
+            try:
+                tc.get_user_by_username(tc_user)
+                break
+            except pyteamcity.HTTPError:
+                click.echo("incorrect username or password!")
+                use_saved_credentials = False
+        return tc
+
 
 def setup_project(tc, git_url, repo_name, component):
     project_name = component.name()
@@ -220,20 +264,6 @@ def setup_project(tc, git_url, repo_name, component):
                 })
             tc.setup_build_configuration(a.build_arch(), a.build_description(), subproject_id, vcs_root_id, template_id, parameters, settings,
                                          agent_requirements)
-
-
-def make_tc(address, port=8111):
-    use_saved_credentials = True
-    while True:
-        tc_user, tc_pass = zazu.credential_helper.get_user_pass_credentials('TeamCity', use_saved_credentials)
-        tc = TeamCityHelper(tc_user, tc_pass, address, port)
-        try:
-            tc.get_user_by_username(tc_user)
-            break
-        except pyteamcity.HTTPError:
-            click.echo("incorrect username or password!")
-            use_saved_credentials = False
-    return tc
 
 
 def get_git_name_and_url(path):
