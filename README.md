@@ -23,11 +23,13 @@ Zazu is implemented in Python and is a [Click](http://click.pocoo.org/5/) based 
 
 ###All platforms
 
+    git clone git@github.com:stopthatcow/zazu.git
+    cd zazu
     sudo pip install --upgrade pip
-    sudo pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple zazu
+    sudo pip install --upgrade .
 
 If you get an error about a package called "six" use the following command instead:
-    `sudo pip install --upgrade --trusted-host pypi.lily.technology --index-url http://pypi.lily.technology:8080/simple --ignore-installed six zazu`
+    `sudo pip install --upgrade --ignore-installed six .`
 
 
 ##Command overview
