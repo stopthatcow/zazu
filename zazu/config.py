@@ -39,6 +39,10 @@ class JiraIssueTracker(IssueTracker):
         self._components = components
         self._jira_handle = None
 
+    def connect(self):
+        """Get handle to ensure that JIRA credentials are in place"""
+        self.jira_handle()
+
     @staticmethod
     def closed(issue):
         return str(issue.fields.status) == 'Closed'
