@@ -182,6 +182,11 @@ def start(ctx, name, no_verify, head, rename_flag, type):
             ctx.obj.repo.git.checkout('HEAD', b=branch_name)
 
 
+def wrap_text(text):
+    return '\n'.join(['\n'.join(textwrap.wrap(line, 90, break_long_words=False, initial_indent='    ',
+                                              subsequent_indent='    ')) for line in text.splitlines()])
+
+
 @dev.command()
 @click.pass_context
 def status(ctx):
@@ -207,8 +212,10 @@ def status(ctx):
             try:
                 issue = issue_future.result()
                 type = issue.fields.issuetype.name
-                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
-                click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
+                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green'), nl=False)
+                click.echo(issue.fields.summary)
+                click.echo(click.style('    Description:\n', fg='green'), nl=False)
+                click.echo(wrap_text(issue.fields.description))
             except zazu.issue_tracker.IssueTrackerError:
                 click.echo("    No ticket found")
 
@@ -219,9 +226,7 @@ def status(ctx):
                 for p in matches:
                     click.echo(click.style('    PR Name:  ', fg='green') + p.title)
                     click.echo(click.style('    PR State: ', fg='green') + p.state)
-                    body = '\n'.join(['\n'.join(textwrap.wrap(line, 90, break_long_words=False, initial_indent='    ',
-                                                              subsequent_indent='    ')) for line in p.body.splitlines()])
-                    click.echo(click.style('    PR Body:  \n', fg='green') + body)
+                    click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
 
                     # TODO: build status from TC
 
