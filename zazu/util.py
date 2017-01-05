@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
 try:
-    import gnureadline  # noqa # pylint: disable=unused-import
+    import gnureadline
+    assert gnureadline
 except ImportError:
     try:
-        import pyreadline  # noqa # pylint: disable=unused-import
+        import pyreadline
+        assert pyreadline
     except ImportError:
         # Fall back to regular raw_input
         pass
