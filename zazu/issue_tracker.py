@@ -1,5 +1,6 @@
 
 class IssueTracker(object):
+    """Parent of all IssueTracker objects"""
     pass
 
 

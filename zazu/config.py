@@ -3,10 +3,10 @@
 import os
 import click
 import git
-import jira_issue_tracker
-import teamcity_helper
+import straight.plugin
 import yaml
-import zazu.credential_helper
+import zazu.build_server
+import zazu.issue_tracker
 
 
 PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
@@ -14,7 +14,8 @@ PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 
 def issue_tracker_factory(config):
     """A factory function that makes and initializes a IssueTracker object from a config"""
-    known_types = {'jira': jira_issue_tracker.JiraIssueTracker.from_config}
+    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.issue_tracker.IssueTracker)
+    known_types = {p.type().lower(): p.from_config for p in plugins}
     if 'type' in config:
         type = config['type']
         type = type.lower()
@@ -29,7 +30,8 @@ def issue_tracker_factory(config):
 
 def continuous_integration_factory(config):
     """A factory function that makes and initializes a CI object from a config"""
-    known_types = {'teamcity': teamcity_helper.TeamCityHelper.from_config}
+    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.build_server.BuildServer)
+    known_types = {p.type().lower(): p.from_config for p in plugins}
     if 'type' in config:
         type = config['type']
         type = type.lower()

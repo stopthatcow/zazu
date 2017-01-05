@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Defines helper functions for teamcity interaction"""
+"""Defines helper functions for tool install/uninstall"""
 import click
 import requests
 import platform

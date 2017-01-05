@@ -1,5 +1,4 @@
 import click
-import zazu.teamcity_helper
 import zazu.git_helper
 import zazu.build
 import zazu.util
@@ -25,6 +24,12 @@ def hooks(ctx):
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
+def get_git_hub_name(url):
+    name = url.rsplit('/', 1)[-1]
+    name = name.replace('.git', '')
+    return name
+
+
 @setup.command()
 @click.pass_context
 def ci(ctx):
@@ -34,10 +39,12 @@ def ci(ctx):
     try:
         project_config = ctx.obj.project_config()
         if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
+            scm_url = ctx.obj.repo.remotes.origin.url
+            scm_name = get_git_hub_name(scm_url)
             components = project_config['components']
             for c in components:
                 component = zazu.build.ComponentConfiguration(c)
-                zazu.teamcity_helper.setup(continuous_integration, component, ctx.obj.repo_root)
+                continuous_integration.setup_component(component, scm_name, scm_url)
     except IOError:
         raise click.ClickException("No {} file found in {}".format(project_file_name, ctx.obj.repo_root))
 

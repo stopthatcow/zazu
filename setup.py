@@ -44,7 +44,8 @@ setuptools.setup(
                       'gcovr==3.2',
                       'teamcity-messages==1.19',
                       'futures==3.0.5',
-                      'inquirer==2.1.7'],
+                      'inquirer==2.1.7',
+                      'straight.plugin==1.4.1'],
     extras_require={
         ':sys_platform == "win32"': [
             'pyreadline==2.1'

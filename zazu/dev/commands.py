@@ -1,7 +1,6 @@
 
 import click
 import concurrent.futures
-import jira
 import webbrowser
 import urllib
 import textwrap
@@ -206,9 +205,8 @@ def status(ctx):
                 issue = issue_future.result()
                 type = issue.fields.issuetype.name
                 click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
-                click.echo(click.style('    Description: '.format(type), fg='green') +
-                           issue.fields.description.replace(zazu.config.JIRA_CREATED_BY_ZAZU, ''))
-            except jira.exceptions.JIRAError:
+                click.echo(click.style('    Description: '.format(type), fg='green') + issue.fields.description)
+            except zazu.issue_tracker.IssueTrackerError:
                 click.echo("    No ticket found")
 
             matches = pulls_future.result()
@@ -237,7 +235,7 @@ def review(ctx):
         url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
         click.echo('Opening "{}"'.format(url))
         webbrowser.open_new(url)
-        # TODO: add link to jira ticket in the PR, zazu logo
+        # TODO: add link to ticket in the PR, zazu logo
         # <img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=50"/>
     else:
         raise click.UsageError("Can't open a PR for a non-github repo")
@@ -247,7 +245,7 @@ def review(ctx):
 @click.pass_context
 @click.argument('ticket', default='')
 def ticket(ctx, ticket):
-    """Open the JIRA ticket for the current feature or the one supplied in the ticket argument"""
+    """Open the ticket for the current feature or the one supplied in the ticket argument"""
     if ticket:
         issue_id = ticket
     else:

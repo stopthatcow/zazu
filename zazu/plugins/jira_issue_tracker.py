@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""The goal of the JIRA helper is to expose a simple interface that will allow us to collect ticket information
+"""The goal of the JIRA issue tracker is to expose a simple interface that will allow us to collect ticket information
  pertaining to the current branch based on ticket ID. Additionally we can integrate with JIRA to create new tickets
  for bug fixes and features"""
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
-import issue_tracker
 import jira
 import zazu.credential_helper
+import zazu.issue_tracker
 
 
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
@@ -16,7 +16,7 @@ ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
 JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
 
 
-class JiraIssueTracker(issue_tracker.IssueTracker):
+class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for JIRA"""
 
     def __init__(self, base_url, default_project, components):
@@ -50,7 +50,10 @@ class JiraIssueTracker(issue_tracker.IssueTracker):
 
     def issue(self, issue_id):
         try:
+            import re
             ret = self.jira_handle().issue(issue_id)
+            # Only show description up to the separator
+            ret.fields.description = ret.fields.description.split('\n\n----')[0]
         except jira.exceptions.JIRAError as e:
             raise IssueTrackerError(str(e))
         return ret
@@ -99,6 +102,10 @@ class JiraIssueTracker(issue_tracker.IssueTracker):
         if not isinstance(components, list):
             components = [components]
         return JiraIssueTracker(url, project, components)
+
+    @staticmethod
+    def type():
+        return 'Jira'
 
 # Some ideas for APIs
 # list work assigned to me in this sprint
