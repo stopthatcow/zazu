@@ -55,7 +55,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             # Only show description up to the separator
             ret.fields.description = ret.fields.description.split('\n\n----')[0]
         except jira.exceptions.JIRAError as e:
-            raise IssueTrackerError(str(e))
+            raise zazu.issue_tracker.IssueTrackerError(str(e))
         return ret
 
     def create_issue(self, project, issue_type, summary, description, component):
@@ -70,13 +70,13 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
                 issue_dict['components'] = [{'name': component}]
             return self.jira_handle().create_issue(issue_dict)
         except jira.exceptions.JIRAError as e:
-            raise IssueTrackerError(str(e))
+            raise zazu.issue_tracker.IssueTrackerError(str(e))
 
     def assign_issue(self, issue, assignee):
         try:
             self.jira_handle().assign_issue(issue, assignee)
         except jira.exceptions.JIRAError as e:
-            raise IssueTrackerError(str(e))
+            raise zazu.issue_tracker.IssueTrackerError(str(e))
 
     def default_project(self):
         return self._default_project
