@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """git functions for zazu"""
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
-
 import os
 import filecmp
 import pkg_resources
 import shutil
 import git
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 def get_repo_root(starting_dir):

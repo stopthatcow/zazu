@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
 import click
 import zazu.git_helper
 import zazu.build
 import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 @click.group()
@@ -36,17 +40,14 @@ def ci(ctx):
     """Setup CI configurations based on a zazu.yaml file"""
     ctx.obj.check_repo()
     continuous_integration = ctx.obj.continuous_integration()
-    try:
-        project_config = ctx.obj.project_config()
-        if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
-            scm_url = ctx.obj.repo.remotes.origin.url
-            scm_name = get_git_hub_name(scm_url)
-            components = project_config['components']
-            for c in components:
-                component = zazu.build.ComponentConfiguration(c)
-                continuous_integration.setup_component(component, scm_name, scm_url)
-    except IOError:
-        raise click.ClickException("No {} file found in {}".format(project_file_name, ctx.obj.repo_root))
+    project_config = ctx.obj.project_config()
+    if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
+        scm_url = ctx.obj.repo.remotes.origin.url
+        scm_name = get_git_hub_name(scm_url)
+        components = project_config['components']
+        for c in components:
+            component = zazu.build.ComponentConfiguration(c)
+            continuous_integration.setup_component(component, scm_name, scm_url)
 
 
 @repo.command()

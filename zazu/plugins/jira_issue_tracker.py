@@ -2,14 +2,12 @@
 """The goal of the JIRA issue tracker is to expose a simple interface that will allow us to collect ticket information
  pertaining to the current branch based on ticket ID. Additionally we can integrate with JIRA to create new tickets
  for bug fixes and features"""
-
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
-
 import jira
 import zazu.credential_helper
 import zazu.issue_tracker
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
@@ -50,7 +48,6 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def issue(self, issue_id):
         try:
-            import re
             ret = self.jira_handle().issue(issue_id)
             # Only show description up to the separator
             ret.fields.description = ret.fields.description.split('\n\n----')[0]

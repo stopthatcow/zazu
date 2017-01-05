@@ -8,6 +8,8 @@ import yaml
 import zazu.build_server
 import zazu.issue_tracker
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 

@@ -4,6 +4,9 @@ import keyring
 import click
 import zazu.util
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
+
 
 def get_user_pass_credentials(component, use_saved=True):
     """Retrieves a stored user/password for a named component or offers to store a new set"""

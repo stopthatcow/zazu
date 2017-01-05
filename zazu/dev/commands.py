@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 import click
 import concurrent.futures
 import webbrowser
@@ -8,6 +8,9 @@ import git
 import zazu.github_helper
 import zazu.config
 import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 def description_to_branch(description):

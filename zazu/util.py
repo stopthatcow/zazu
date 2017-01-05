@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
-
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
-
 try:
-    import gnureadline
+    import gnureadline  # noqa # pylint: disable=unused-import
 except ImportError:
     try:
-        import pyreadline
+        import pyreadline  # noqa # pylint: disable=unused-import
     except ImportError:
         # Fall back to regular raw_input
         pass
@@ -16,6 +12,9 @@ import inquirer
 import click
 import os
 import fnmatch
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 def prompt(text, default=None, expected_type=str):

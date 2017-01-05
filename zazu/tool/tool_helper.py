@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for tool install/uninstall"""
 import click
-import requests
-import platform
 import io
-import requests
-import tarfile
 import os
+import platform
+import requests
 import shutil
+import tarfile
 import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 class ToolEnforcer:

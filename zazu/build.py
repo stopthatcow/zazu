@@ -9,6 +9,9 @@ import zazu.tool.tool_helper
 import zazu.cmake_helper
 import zazu.config
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
+
 
 class ComponentConfiguration(object):
     """Stores a configuration for a single component"""

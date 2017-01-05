@@ -3,6 +3,9 @@
 
 import click
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
+
 
 @click.command()
 @click.pass_context

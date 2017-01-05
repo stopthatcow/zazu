@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """entry point for zazu"""
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
-
 import click
 import os
 import git_helper
@@ -13,6 +10,9 @@ import zazu.repo.commands
 import zazu.style
 import zazu.tool.commands
 import zazu.upgrade
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 @click.group()

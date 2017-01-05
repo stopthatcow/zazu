@@ -8,6 +8,9 @@ import teamcity.messages
 import zazu.build_server
 import zazu.credential_helper
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
+
 
 class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
     """Extends the pyteamcity.Teamcity object to expose interfaces to create projects and build configurations"""
