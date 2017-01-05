@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """entry point for zazu"""
 __author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016, Lily Robotics"
+__copyright__ = "Copyright 2016"
 
 import click
 import os

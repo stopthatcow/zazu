@@ -7,3 +7,10 @@ try:
         __version__ = version_file.readline().rstrip()
 except IOError:
     __version__ = "unknown"
+
+
+class ZazuException(Exception):
+    """Parent of all Zazu errors"""
+
+    def __init___(self, error):
+        Exception.__init__("Error: {}".format(error))

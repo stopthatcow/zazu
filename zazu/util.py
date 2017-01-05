@@ -2,7 +2,7 @@
 """utility functions for zazu"""
 
 __author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016, Lily Robotics"
+__copyright__ = "Copyright 2016"
 
 try:
     import gnureadline

@@ -55,7 +55,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     try:
         issue = issue_tracker.issue(ticket_id)
         click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
-    except zazu.config.IssueTrackerError:
+    except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket named "{}"'.format(ticket_id))
 
 
@@ -157,7 +157,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
-        except zazu.config.IssueTrackerError as e:
+        except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
     issue = make_issue_descriptor(name)

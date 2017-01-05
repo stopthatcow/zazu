@@ -195,7 +195,7 @@ class TeamCityHelper(pyteamcity.TeamCity):
         try:
             url = config['url']
         except KeyError:
-            raise ZazuException('TeamCity config requires a "url" field')
+            raise zazu.ZazuException('TeamCity config requires a "url" field')
 
         from urlparse import urlparse
         parsed = urlparse(url)
@@ -209,7 +209,7 @@ class TeamCityHelper(pyteamcity.TeamCity):
             protocol = parsed.scheme
 
         else:
-            raise ZazuException('Unable to parse Teamcity URL "{}"'.format(url))
+            raise zazu.ZazuException('Unable to parse Teamcity URL "{}"'.format(url))
 
         use_saved_credentials = True
         while True:

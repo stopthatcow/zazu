@@ -115,6 +115,6 @@ def ticket_is_closed(issue_tracker, descriptor):
     try:
         issue = issue_tracker.issue(descriptor.id)
         ret = issue_tracker.resolved(issue) or issue_tracker.closed(issue)
-    except zazu.config.IssueTrackerError:
+    except zazu.issue_tracker.IssueTrackerError:
         pass
     return ret
