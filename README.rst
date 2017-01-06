@@ -77,6 +77,7 @@ The following diagram shows the available subcommands of zazu.
 
 .. image:: doc/cmds.png
    :align: center
+   
 Note: dashed lines are not yet implemented
 
 Repo management
