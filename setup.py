@@ -2,14 +2,12 @@
 
 import setuptools
 import os.path
+
 root_path = os.path.dirname(os.path.abspath(__file__))
 version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
 
-try:
-    import pypandoc
-    description = pypandoc.convert('README.md', 'rst')
-except (OSError, IOError, ImportError):
-    description = ''
+with open('README.rst', 'r') as f:
+    description = f.read()
 
 try:
     with open(version_file_path, 'r') as version_file:
@@ -29,6 +27,19 @@ setuptools.setup(
     author_email='nhwiles@gmail.com',
     url='https://github.com/stopthatcow/zazu',
     license='MIT',
+    platforms='POSIX,MacOS,Windows',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Software Development',
+        'Topic :: Software Development :: Build Tools',
+        'Topic :: Software Development :: Quality Assurance',
+        'Intended Audience :: Developers'
+    ],
+    keywords='teamcity, jira, git, github',
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'version.txt']},
     install_requires=['click==6.6',
