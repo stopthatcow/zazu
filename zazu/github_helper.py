@@ -9,6 +9,9 @@ import requests
 import socket
 import zazu.util
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
+
 
 def get_gh_token():
     """Make new GitHub token"""

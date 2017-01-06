@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
 import click
 import tool_helper
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 @click.group()
