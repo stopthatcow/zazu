@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 import click
 import concurrent.futures
 import webbrowser
@@ -8,6 +8,9 @@ import git
 import zazu.github_helper
 import zazu.config
 import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 def description_to_branch(description):
@@ -37,6 +40,8 @@ class IssueDescriptor(object):
 
 def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
+    # ensure that we have a connection
+    issue_tracker.connect()
     project = issue_tracker.default_project()
     issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
     component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
@@ -54,7 +59,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     try:
         issue = issue_tracker.issue(ticket_id)
         click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
-    except zazu.config.IssueTrackerError:
+    except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket named "{}"'.format(ticket_id))
 
 
@@ -156,7 +161,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
-        except zazu.config.IssueTrackerError as e:
+        except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
     issue = make_issue_descriptor(name)
@@ -179,11 +184,15 @@ def start(ctx, name, no_verify, head, rename_flag, type):
             ctx.obj.repo.git.checkout('HEAD', b=branch_name)
 
 
+def wrap_text(text):
+    return '\n'.join(['\n'.join(textwrap.wrap(line, 90, break_long_words=False, initial_indent='    ',
+                                              subsequent_indent='    ')) for line in text.splitlines()])
+
+
 @dev.command()
 @click.pass_context
 def status(ctx):
     """Get status of this branch"""
-    import jira
     descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
     issue_id = descriptor.id
     if not issue_id:
@@ -205,10 +214,11 @@ def status(ctx):
             try:
                 issue = issue_future.result()
                 type = issue.fields.issuetype.name
-                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green') + issue.fields.summary)
-                click.echo(click.style('    Description: '.format(type), fg='green') +
-                           issue.fields.description.replace(zazu.config.JIRA_CREATED_BY_ZAZU, ''))
-            except jira.exceptions.JIRAError:
+                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green'), nl=False)
+                click.echo(issue.fields.summary)
+                click.echo(click.style('    Description:\n', fg='green'), nl=False)
+                click.echo(wrap_text(issue.fields.description))
+            except zazu.issue_tracker.IssueTrackerError:
                 click.echo("    No ticket found")
 
             matches = pulls_future.result()
@@ -218,9 +228,7 @@ def status(ctx):
                 for p in matches:
                     click.echo(click.style('    PR Name:  ', fg='green') + p.title)
                     click.echo(click.style('    PR State: ', fg='green') + p.state)
-                    body = '\n'.join(['\n'.join(textwrap.wrap(line, 90, break_long_words=False, initial_indent='    ',
-                                                              subsequent_indent='    ')) for line in p.body.splitlines()])
-                    click.echo(click.style('    PR Body:  \n', fg='green') + body)
+                    click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
 
                     # TODO: build status from TC
 
@@ -237,7 +245,7 @@ def review(ctx):
         url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
         click.echo('Opening "{}"'.format(url))
         webbrowser.open_new(url)
-        # TODO: add link to jira ticket in the PR, zazu logo
+        # TODO: add link to ticket in the PR, zazu logo
         # <img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=50"/>
     else:
         raise click.UsageError("Can't open a PR for a non-github repo")
@@ -247,7 +255,7 @@ def review(ctx):
 @click.pass_context
 @click.argument('ticket', default='')
 def ticket(ctx, ticket):
-    """Open the JIRA ticket for the current feature or the one supplied in the ticket argument"""
+    """Open the ticket for the current feature or the one supplied in the ticket argument"""
     if ticket:
         issue_id = ticket
     else:

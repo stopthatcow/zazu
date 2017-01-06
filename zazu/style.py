@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """style functions for zazu"""
-
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016, Lily Robotics"
-
 import click
 import concurrent.futures
 import multiprocessing
 import os
 import subprocess
 import zazu.git_helper
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 def autopep8_file(file, config, check):

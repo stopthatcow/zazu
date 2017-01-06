@@ -9,6 +9,9 @@ import zazu.tool.tool_helper
 import zazu.cmake_helper
 import zazu.config
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
+
 
 class ComponentConfiguration(object):
     """Stores a configuration for a single component"""
@@ -292,7 +295,6 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
      use distclean to clean whole build folder"""
     # Run the supplied build script if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
-    import teamcity_helper
     project_config = ctx.obj.project_config()
     component = ComponentConfiguration(project_config['components'][0])
     spec = component.get_spec(goal, arch, type)
@@ -307,4 +309,4 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
-    teamcity_helper.publish_artifacts(spec.build_artifacts())
+    ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())

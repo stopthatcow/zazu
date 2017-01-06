@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Defines helper functions for teamcity interaction"""
+"""Defines helper functions for tool install/uninstall"""
 import click
-import platform
 import io
 import os
+import platform
 import shutil
 import zazu.util
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
-class ToolEnforcer:
+
+class ToolInstallFunctions:
     """Holds a checker fn, installer fn, and uninstaller fn"""
 
     def __init__(self, check, install, uninstall):
@@ -16,14 +19,23 @@ class ToolEnforcer:
         self.install_fn = install
         self.uninstall_fn = uninstall
 
+
+class ToolEnforcer:
+    """Holds a name, version and functions"""
+
+    def __init__(self, name, version, functions):
+        self.name = name
+        self.version = version
+        self.functions = functions
+
     def check(self):
-        return self.check_fn(self._name, self._version)
+        return self.functions.check_fn(self.name, self.version)
 
     def install(self):
-        return self.install_fn(self._name, self._version)
+        return self.functions.install_fn(self.name, self.version)
 
     def uninstall(self):
-        return self.uninstall_fn(self._name, self._version)
+        return self.functions.uninstall_fn(self.name, self.version)
 
 
 package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
@@ -160,12 +172,12 @@ def get_tool_registry():
     tools = {
         'gcc-linaro-arm-linux-gnueabihf':
             {
-                '4.9': ToolEnforcer(check_token_file_exists, install_linaro_4_9_2014_05, uninstall_folder)
+                '4.9': ToolInstallFunctions(check_token_file_exists, install_linaro_4_9_2014_05, uninstall_folder)
             },
         'gcc-arm-none-eabi':
             {
-                '4.7': ToolEnforcer(check_token_file_exists, install_gcc_arm_none_eabi_4_7_2014_q2, uninstall_folder),
-                '4.9': ToolEnforcer(check_token_file_exists, install_gcc_arm_none_eabi_4_9_2015_q1, uninstall_folder)
+                '4.7': ToolInstallFunctions(check_token_file_exists, install_gcc_arm_none_eabi_4_7_2014_q2, uninstall_folder),
+                '4.9': ToolInstallFunctions(check_token_file_exists, install_gcc_arm_none_eabi_4_9_2015_q1, uninstall_folder)
             }
     }
     return tools
@@ -177,9 +189,7 @@ def get_enforcer(name, version):
     try:
         versions = reg[name]
         try:
-            enforcer = versions[version]
-            enforcer._version = version
-            enforcer._name = name
+            enforcer = ToolEnforcer(name, version, versions[version])
         except KeyError:
             known_versions = zazu.util.pprint_list(sorted(versions.keys()))
             raise click.ClickException("Version {} not found for tool {}, choose from:{}".format(version,

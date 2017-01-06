@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
 import click
-import github
-import keyring
-import re
-import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 def get_gh_token():
@@ -12,6 +11,8 @@ def get_gh_token():
     import getpass
     import socket
     import requests
+    import zazu.util
+
     api_url = 'https://api.github.com'
     add_auth = {
         "scopes": [
@@ -43,6 +44,8 @@ def get_gh_token():
 
 
 def make_gh():
+    import github
+    import keyring
     token = keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")
@@ -54,6 +57,7 @@ def make_gh():
 
 def parse_github_url(url):
     """Parses github url into organization and repo name"""
+    import re
     tokens = re.split('/|:', url.replace('.git', ''))
     repo = tokens.pop()
     organization = tokens.pop()

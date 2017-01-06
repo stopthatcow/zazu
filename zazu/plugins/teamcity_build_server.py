@@ -1,19 +1,42 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for teamcity interaction"""
-import click
 import json
-import git
 import pyteamcity
 import requests
-import teamcity.messages
+import zazu
+import zazu.build_server
 import zazu.credential_helper
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
-class TeamCityHelper(pyteamcity.TeamCity):
+
+class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
     """Extends the pyteamcity.Teamcity object to expose interfaces to create projects and build configurations"""
 
-    def __init__(self, username=None, password=None, server=None, port=None, session=None):
-        pyteamcity.TeamCity.__init__(self, username, password, server, port, session)
+    def __init__(self, address, port=80, protocol='http'):
+        self._address = address
+        self._protocol = protocol
+        self._port = port
+        self._tc_handle = None
+
+    def teamcity_handle(self):
+        if self._tc_handle is None:
+            use_saved_credentials = True
+            while True:
+                tc_user, tc_pass = zazu.credential_helper.get_user_pass_credentials('TeamCity', use_saved_credentials)
+                tc = pyteamcity.TeamCity(username=tc_user, password=tc_pass,
+                                         server=self._address, port=self._port,
+                                         protocol=self._protocol)
+                try:
+                    tc.get_user_by_username(tc_user)
+                    self._tc_handle = tc
+                    break
+                except pyteamcity.HTTPError:
+                    zazu.echo("incorrect username or password!")
+                    use_saved_credentials = False
+
+        return self._tc_handle
 
     def setup_vcs_root(self, name, parent_project_id, git_url):
         vcs_root = {
@@ -51,7 +74,7 @@ class TeamCityHelper(pyteamcity.TeamCity):
             }
         }
         try:
-            ret = self.get_vcs_root_by_vcs_root_id(vcs_root['id'])
+            ret = self.teamcity_handle().get_vcs_root_by_vcs_root_id(vcs_root['id'])
             for p in vcs_root['properties']['property']:
                 self._put_helper('vcs-roots/{}/properties/{}'.format(vcs_root['id'], p['name']), str(p['value']),
                                  content_type='text/plain')
@@ -69,11 +92,11 @@ class TeamCityHelper(pyteamcity.TeamCity):
         else:
             id = name
         try:
-            ret = self.get_project_by_project_id(id)
+            ret = self.teamcity_handle().get_project_by_project_id(id)
             # TODO update description
             for k, v in project_data.items():
                 self._put_helper('projects/{}/{}'.format(id, k), str(v), content_type='text/plain')
-            ret = self.get_project_by_project_id(id)
+            ret = self.teamcity_handle().get_project_by_project_id(id)
         except pyteamcity.HTTPError:
             if parent_project_id is not None:
                 project_data['parentProject'] = {'id': parent_project_id}
@@ -141,7 +164,7 @@ class TeamCityHelper(pyteamcity.TeamCity):
             build_conf['description'] = str(description),
 
         try:
-            project = self.get_project_by_project_id(parent_project_id)
+            project = self.teamcity_handle().get_project_by_project_id(parent_project_id)
             build_types = project['buildTypes']['buildType']
             ret = [x for x in build_types if x['name'] == name][0]
         except (pyteamcity.HTTPError, IndexError):
@@ -155,9 +178,9 @@ class TeamCityHelper(pyteamcity.TeamCity):
         return ret
 
     def _post_helper(self, uri, json_data):
-        click.echo("POST to {} {}".format(uri, json.dumps(json_data)))
-        ret = requests.post(str(self.base_url + '/' + uri),
-                            auth=(self.username, self.password),
+        zazu.echo("POST to {} {}".format(uri, json.dumps(json_data)))
+        ret = requests.post(str(self.teamcity_handle().base_url + '/' + uri),
+                            auth=(self.teamcity_handle().username, self.teamcity_handle().password),
                             headers={'Accept': 'application/json'},
                             json=json_data)
         if 300 < ret.status_code >= 200:
@@ -168,11 +191,11 @@ class TeamCityHelper(pyteamcity.TeamCity):
     def _put_helper(self, uri, data, content_type='application/json', accept_type=None):
         if 'application/json' in content_type:
             data = json.dumps(data)
-        click.echo("PUT to {} {}".format(uri, data))
+        zazu.echo("PUT to {} {}".format(uri, data))
         if accept_type is None:
             accept_type = content_type
-        ret = requests.put(str(self.base_url + '/' + uri),
-                           auth=(self.username, self.password),
+        ret = requests.put(str(self.teamcity_handle().base_url + '/' + uri),
+                           auth=(self.teamcity_handle().username, self.teamcity_handle().password),
                            headers={'Accept': accept_type,
                                     'Content-type': content_type},
                            data=data)
@@ -183,77 +206,85 @@ class TeamCityHelper(pyteamcity.TeamCity):
             ret = ret.json()
         return ret
 
+    @staticmethod
+    def publish_artifacts(artifact_paths):
+        if pyteamcity.is_running_under_teamcity():
+            messenger = pyteamcity.messages.TeamcityServiceMessages()
+            for a in artifact_paths:
+                messenger.publishArtifacts(a)
 
-def setup_project(tc, git_url, repo_name, component):
-    project_name = component.name()
-    project_description = component.description()
-    parent_project_id = tc.setup_project(project_name, project_description, None)['id']
-    vcs_root_id = tc.setup_vcs_root(project_name, parent_project_id, git_url)['id']
-    for g in component.goals().values():
-        subproject_id = tc.setup_project(
-            g.name(), g.description(), parent_project_id)['id']
-        for a in g.builds().values():
-            template_id = 'ZazuGitHubLilyRoboticsDefault'
-            parameters = {
-                'architecture': a.build_arch(),
-                'goal': g.name(),
-                'gitHubRepoPath': repo_name,
-                'buildType': a.build_type()
-            }
+    @staticmethod
+    def type():
+        return 'TeamCity'
 
-            settings = {
-                'checkoutMode': 'ON_AGENT'
-            }
-
-            agent_requirements = []
-            if 'win-msvc' in a.build_arch():
-                agent_requirements.append({
-                    'name': "teamcity.agent.jvm.os.name",
-                    'type': 'contains',
-                    'value': 'Windows'
-                })
-            else:
-                agent_requirements.append({
-                    'name': "teamcity.agent.jvm.os.name",
-                    'type': 'equals',
-                    'value': 'Linux'
-                })
-            tc.setup_build_configuration(a.build_arch(), a.build_description(), subproject_id, vcs_root_id, template_id, parameters, settings,
-                                         agent_requirements)
-
-
-def make_tc(address, port=8111):
-    use_saved_credentials = True
-    while True:
-        tc_user, tc_pass = zazu.credential_helper.get_user_pass_credentials('TeamCity', use_saved_credentials)
-        tc = TeamCityHelper(tc_user, tc_pass, address, port)
+    @staticmethod
+    def from_config(config):
         try:
-            tc.get_user_by_username(tc_user)
-            break
-        except pyteamcity.HTTPError:
-            click.echo("incorrect username or password!")
-            use_saved_credentials = False
-    return tc
+            url = config['url']
+        except KeyError:
+            raise zazu.ZazuException('TeamCity config requires a "url" field')
 
+        from urlparse import urlparse
+        parsed = urlparse(url)
+        if parsed.netloc:
+            components = parsed.netloc.split(':')
+            address = components.pop(0)
+            try:
+                port = int(components.pop(0))
+            except IndexError:
+                port = 80
+            protocol = parsed.scheme
 
-def get_git_name_and_url(path):
-    r = git.Repo(path)
-    url = r.remotes.origin.url
-    name = url.rsplit('/', 1)[-1]
-    name = name.replace('.git', '')
-    return name, url
+        else:
+            raise zazu.ZazuException('Unable to parse Teamcity URL "{}"'.format(url))
 
+        tc = TeamCityBuildServer(address=address,
+                                 port=port,
+                                 protocol=protocol)
+        return tc
 
-def setup(tc, component, repo_path):
-    repo_name, repo_url = get_git_name_and_url(repo_path)
-    setup_project(tc, repo_url, repo_name, component)
+    def setup_component(self, component, repo_name, git_url):
+        project_name = component.name()
+        project_description = component.description()
+        parent_project_id = self.setup_project(project_name, project_description, None)['id']
+        vcs_root_id = self.setup_vcs_root(project_name, parent_project_id, git_url)['id']
+        for g in component.goals().values():
+            subproject_id = self.setup_project(
+                g.name(), g.description(), parent_project_id)['id']
+            for a in g.builds().values():
+                template_id = 'ZazuGitHubLilyRoboticsDefault'
+                parameters = {
+                    'architecture': a.build_arch(),
+                    'goal': g.name(),
+                    'gitHubRepoPath': repo_name,
+                    'buildType': a.build_type()
+                }
 
+                settings = {
+                    'checkoutMode': 'ON_AGENT'
+                }
 
-def publish_artifacts(artifact_paths):
-    if teamcity.is_running_under_teamcity():
-        messenger = teamcity.messages.TeamcityServiceMessages()
-        for a in artifact_paths:
-            messenger.publishArtifacts(a)
+                agent_requirements = []
+                if 'win-msvc' in a.build_arch():
+                    agent_requirements.append({
+                        'name': "teamcity.agent.jvm.os.name",
+                        'type': 'contains',
+                        'value': 'Windows'
+                    })
+                else:
+                    agent_requirements.append({
+                        'name': "teamcity.agent.jvm.os.name",
+                        'type': 'equals',
+                        'value': 'Linux'
+                    })
+                self.setup_build_configuration(a.build_arch(),
+                                               a.build_description(),
+                                               subproject_id,
+                                               vcs_root_id,
+                                               template_id,
+                                               parameters,
+                                               settings,
+                                               agent_requirements)
 
 # Some ideas for more TC interaction:
 # check status of builds associated with this branch

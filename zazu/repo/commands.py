@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
 import click
 import zazu.git_helper
 import zazu.build
 import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 @click.group()
@@ -21,27 +25,30 @@ def setup():
 @click.pass_context
 def hooks(ctx):
     """Setup default git hooks"""
-    zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
+    zazu.git_helper.install_git_hooks(ctx.obj.repo)
+
+
+def get_git_hub_name(url):
+    name = url.rsplit('/', 1)[-1]
+    name = name.replace('.git', '')
+    return name
 
 
 @setup.command()
 @click.pass_context
 def ci(ctx):
-    """Setup TeamCity configurations based on a zazu.yaml file"""
+    """Setup CI configurations based on a zazu.yaml file"""
     import zazu.teamcity_helper
-    address = 'teamcity.lily.technology'
-    port = 8111
     ctx.obj.check_repo()
-    ctx.obj._tc = zazu.teamcity_helper.make_tc(address, port)
-    try:
-        project_config = ctx.obj.project_config()
-        if click.confirm("Post build configuration to TeamCity?"):
-            components = project_config['components']
-            for c in components:
-                component = zazu.build.ComponentConfiguration(c)
-                zazu.teamcity_helper.setup(ctx.obj._tc, component, ctx.obj.repo_root)
-    except IOError:
-        raise click.ClickException("No {} file found in {}".format(project_file_name, ctx.obj.repo_root))
+    continuous_integration = ctx.obj.continuous_integration()
+    project_config = ctx.obj.project_config()
+    if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
+        scm_url = ctx.obj.repo.remotes.origin.url
+        scm_name = get_git_hub_name(scm_url)
+        components = project_config['components']
+        for c in components:
+            component = zazu.build.ComponentConfiguration(c)
+            continuous_integration.setup_component(component, scm_name, scm_url)
 
 
 @repo.command()
@@ -118,6 +125,6 @@ def ticket_is_closed(issue_tracker, descriptor):
     try:
         issue = issue_tracker.issue(descriptor.id)
         ret = issue_tracker.resolved(issue) or issue_tracker.closed(issue)
-    except zazu.config.IssueTrackerError:
+    except zazu.issue_tracker.IssueTrackerError:
         pass
     return ret

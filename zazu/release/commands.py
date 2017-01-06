@@ -2,9 +2,7 @@
 
 import click
 import functools
-import git
 import re
-import semantic_version
 import zazu
 
 RELEASE_STARTING_BRANCH = 'develop'
@@ -46,6 +44,7 @@ def branch_repo(g, name, base, dry_run):
     """updates to 'name' branch if it exists, otherwise makes a branch starting on the 'base' branch"""
     zazu.info('[{}] Checkout branch "{}" based on "{}"'.format(g.working_tree_dir, name, base))
     if not dry_run:
+        import git
         try:
             g.git.checkout('-f', name)
             g.git.pull()
@@ -104,6 +103,7 @@ def submodule_do(g, setup_action=lambda x: x, pre_action=lambda x: x, post_actio
 
 def validate_release_name(version):
     """Validates that a version is a valid semantic version"""
+    import semantic_version
     try:
         semantic_version.Version(version)
     except ValueError:

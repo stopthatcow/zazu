@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
-
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016, Lily Robotics"
-
 try:
     import gnureadline
+    assert gnureadline
 except ImportError:
     try:
         import pyreadline
+        assert pyreadline
     except ImportError:
         # Fall back to regular raw_input
         pass
-import inquirer
 import click
 import os
 import fnmatch
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 def prompt(text, default=None, expected_type=str):
@@ -27,6 +27,7 @@ def prompt(text, default=None, expected_type=str):
 
 
 def pick(choices, message):
+    import inquirer
     if len(choices) > 1:
         click.clear()
         questions = [
