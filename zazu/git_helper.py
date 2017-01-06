@@ -19,8 +19,9 @@ def get_repo_root(starting_dir):
     return ret
 
 
-def get_hooks_path(repo):
-    git_dir = repo.rev_parse('--git-dir')
+def get_hooks_path(repo_base):
+    g = git.Git(repo_base)
+    git_dir = g.rev_parse('--git-dir')
     return os.path.join(repo_base, git_dir, 'hooks')
 
 
@@ -57,9 +58,9 @@ def check_git_hook(hooks_folder, hook_name, hook_resource_path):
     return exists and os.access(hook_path, os.X_OK) and filecmp.cmp(hook_path, hook_resource_path)
 
 
-def install_git_hooks(repo):
+def install_git_hooks(repo_base):
     """Enforces that proper git hooks are in place"""
-    hooks_folder = get_hooks_path(repo)
+    hooks_folder = get_hooks_path(repo_base)
     for name, file in get_default_git_hooks().items():
         install_git_hook(hooks_folder, name, file)
 

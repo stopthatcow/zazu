@@ -25,7 +25,7 @@ def setup():
 @click.pass_context
 def hooks(ctx):
     """Setup default git hooks"""
-    zazu.git_helper.install_git_hooks(ctx.obj.repo)
+    zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
 def get_git_hub_name(url):
@@ -38,7 +38,6 @@ def get_git_hub_name(url):
 @click.pass_context
 def ci(ctx):
     """Setup CI configurations based on a zazu.yaml file"""
-    import zazu.teamcity_helper
     ctx.obj.check_repo()
     continuous_integration = ctx.obj.continuous_integration()
     project_config = ctx.obj.project_config()

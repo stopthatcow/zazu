@@ -5,6 +5,7 @@ import click
 import git
 import git_helper
 import straight.plugin
+import zazu.build_server
 import zazu.issue_tracker
 
 __author__ = "Nicholas Wiles"
