@@ -1,6 +1,7 @@
 Zazu (at your service)
 ======================
 .. image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
+   :height: 150 px
    :width: 150 px
    :align: center
 
@@ -77,7 +78,7 @@ The following diagram shows the available subcommands of zazu.
 
 .. image:: doc/cmds.png
    :align: center
-   
+
 Note: dashed lines are not yet implemented
 
 Repo management
