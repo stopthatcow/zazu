@@ -40,6 +40,8 @@ class IssueDescriptor(object):
 
 def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
+    # ensure that we have a connection
+    issue_tracker.connect()
     project = issue_tracker.default_project()
     issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
     component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
