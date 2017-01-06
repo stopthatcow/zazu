@@ -237,7 +237,7 @@ def pep440_from_semver(semver):
     local_version = local_version.replace('-', '.')
     version_str = '{}.{}.{}{}'.format(semver.major, semver.minor, semver.patch, segment)
     # Include the local version if we are not a true release
-    if local_version and not semver.prerelease:
+    if local_version and semver.prerelease:
         version_str = '{}+{}'.format(version_str, local_version)
     return version_str
 
