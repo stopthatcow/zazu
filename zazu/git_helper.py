@@ -3,7 +3,6 @@
 
 import os
 import filecmp
-import pkg_resources
 import shutil
 import git
 
@@ -28,6 +27,7 @@ def get_hooks_path(repo_base):
 
 def get_default_git_hooks():
     """gets list of get hooks to install"""
+    import pkg_resources
     return {
         "pre-commit": pkg_resources.resource_filename('zazu', 'githooks/pre-commit'),
         "post-checkout": pkg_resources.resource_filename('zazu', 'githooks/post-checkout'),

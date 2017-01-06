@@ -10,7 +10,6 @@ except ImportError:
     except ImportError:
         # Fall back to regular raw_input
         pass
-import inquirer
 import click
 import os
 import fnmatch
@@ -28,6 +27,7 @@ def prompt(text, default=None, expected_type=str):
 
 
 def pick(choices, message):
+    import inquirer
     if len(choices) > 1:
         click.clear()
         questions = [

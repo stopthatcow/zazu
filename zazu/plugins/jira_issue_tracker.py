@@ -3,7 +3,6 @@
  pertaining to the current branch based on ticket ID. Additionally we can integrate with JIRA to create new tickets
  for bug fixes and features"""
 import jira
-import zazu.credential_helper
 import zazu.issue_tracker
 
 __author__ = "Nicholas Wiles"
@@ -37,6 +36,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def jira_handle(self):
         if self._jira_handle is None:
+            import zazu.credential_helper
             username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
             self._jira_handle = jira.JIRA(self._base_url,
                                           basic_auth=(username, password),

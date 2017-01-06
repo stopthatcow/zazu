@@ -3,8 +3,8 @@
 import os
 import click
 import git
+import git_helper
 import straight.plugin
-import yaml
 import zazu.build_server
 import zazu.issue_tracker
 
@@ -59,6 +59,7 @@ def load_yaml_file(search_paths, file_names):
     for file in searched:
         try:
             with open(file) as f:
+                import yaml
                 return yaml.load(f)
         except IOError:
             pass
@@ -70,8 +71,8 @@ class Config(object):
 
     """Holds all zazu configuration info"""
 
-    def __init__(self, repo_root):
-        self.repo_root = repo_root
+    def __init__(self, working_dir):
+        self.repo_root = git_helper.get_repo_root(working_dir)
         if self.repo_root:
             self.repo = git.Repo(self.repo_root)
         else:

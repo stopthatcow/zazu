@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for teamcity interaction"""
-import click
 import json
 import pyteamcity
 import requests
-import teamcity.messages
+import zazu
 import zazu.build_server
 import zazu.credential_helper
 
@@ -34,7 +33,7 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
                     self._tc_handle = tc
                     break
                 except pyteamcity.HTTPError:
-                    click.echo("incorrect username or password!")
+                    zazu.echo("incorrect username or password!")
                     use_saved_credentials = False
 
         return self._tc_handle
@@ -50,7 +49,7 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
                     {'name': 'agentCleanFilesPolicy',
                      'value': 'ALL_UNTRACKED'},
                     {'name': 'agentCleanPolicy',
-                     'value': 'ON_BRANCH_CHANGE'},
+                     'value': 'ALWAYS'},
                     {"name": "authMethod",
                      "value": "TEAMCITY_SSH_KEY"},
                     {"name": "teamcitySshKey",
@@ -179,7 +178,7 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
         return ret
 
     def _post_helper(self, uri, json_data):
-        click.echo("POST to {} {}".format(uri, json.dumps(json_data)))
+        zazu.echo("POST to {} {}".format(uri, json.dumps(json_data)))
         ret = requests.post(str(self.teamcity_handle().base_url + '/' + uri),
                             auth=(self.teamcity_handle().username, self.teamcity_handle().password),
                             headers={'Accept': 'application/json'},
@@ -192,7 +191,7 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
     def _put_helper(self, uri, data, content_type='application/json', accept_type=None):
         if 'application/json' in content_type:
             data = json.dumps(data)
-        click.echo("PUT to {} {}".format(uri, data))
+        zazu.echo("PUT to {} {}".format(uri, data))
         if accept_type is None:
             accept_type = content_type
         ret = requests.put(str(self.teamcity_handle().base_url + '/' + uri),
@@ -209,8 +208,8 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
 
     @staticmethod
     def publish_artifacts(artifact_paths):
-        if teamcity.is_running_under_teamcity():
-            messenger = teamcity.messages.TeamcityServiceMessages()
+        if pyteamcity.is_running_under_teamcity():
+            messenger = pyteamcity.messages.TeamcityServiceMessages()
             for a in artifact_paths:
                 messenger.publishArtifacts(a)
 

@@ -65,10 +65,11 @@ def init(ctx):
 
 
 @repo.command()
+@click.option('-y', '--yes', is_flag=True, help='Answer yes if prompted')
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
 @click.pass_context
-def cleanup(ctx, remote, target_branch):
+def cleanup(ctx, yes, remote, target_branch):
     """Clean up merged branches that have been merged or are associated with cloded/resolved tickets"""
     repo_obj = ctx.obj.repo
     repo_obj.git.checkout('develop')
@@ -84,7 +85,7 @@ def cleanup(ctx, remote, target_branch):
         branches_to_delete = set(merged_remote_branches) | closed_branches
         if branches_to_delete:
             click.echo('These remote branches will be deleted: {}'.format(zazu.util.pprint_list(branches_to_delete)))
-            if click.confirm('Proceed?'):
+            if yes or click.confirm('Proceed?'):
                 for b in branches_to_delete:
                     click.echo('Deleting {}'.format(b))
                 repo_obj.git.push('-df', 'origin', *branches_to_delete)
@@ -96,7 +97,7 @@ def cleanup(ctx, remote, target_branch):
     branches_to_delete = (closed_branches & local_branches) | set(merged_branches)
     if branches_to_delete:
         click.echo('These local branches will be deleted:{}'.format(zazu.util.pprint_list(branches_to_delete)))
-        if click.confirm('Proceed?'):
+        if yes or click.confirm('Proceed?'):
             for b in branches_to_delete:
                 click.echo('Deleting {}'.format(b))
             repo_obj.git.branch('-D', *branches_to_delete)

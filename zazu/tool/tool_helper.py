@@ -4,9 +4,7 @@ import click
 import io
 import os
 import platform
-import requests
 import shutil
-import tarfile
 import zazu.util
 
 __author__ = "Nicholas Wiles"
@@ -81,6 +79,7 @@ def touch_token_file(name, version):
 def download_with_progress_bar(name, url):
     """Download a URL with a progress bar"""
     ret = b''
+    import requests
     r = requests.get(url, stream=True)
     if r.status_code == 200:
         total_size = int(r.headers.get('content-length'))
@@ -99,6 +98,7 @@ def download_extract_tar_to_folder(name, url, path):
     ensure_directory_exists(path)
     click.echo('Extracting to "{}"...'.format(path))
     file_like_object = io.BytesIO(r)
+    import tarfile
     with tarfile.open(fileobj=file_like_object) as f:
         f.extractall(path)
 
