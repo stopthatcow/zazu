@@ -5,6 +5,9 @@ import multiprocessing
 import os
 import pkg_resources
 
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
+
 
 def architecture_to_generator(arch):
     """Gets the required generator for a given architecture"""

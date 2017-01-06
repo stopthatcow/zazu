@@ -5,10 +5,12 @@ import shutil
 import subprocess
 import semantic_version
 import os
-import teamcity_helper
 import zazu.tool.tool_helper
 import zazu.cmake_helper
 import zazu.config
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 class ComponentConfiguration(object):
@@ -234,7 +236,8 @@ def pep440_from_semver(semver):
     local_version = '.'.join(semver.build)
     local_version = local_version.replace('-', '.')
     version_str = '{}.{}.{}{}'.format(semver.major, semver.minor, semver.patch, segment)
-    if local_version:
+    # Include the local version if we are not a true release
+    if local_version and not semver.prerelease:
         version_str = '{}+{}'.format(version_str, local_version)
     return version_str
 
@@ -307,4 +310,4 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
-    teamcity_helper.publish_artifacts(spec.build_artifacts())
+    ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
