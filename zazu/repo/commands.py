@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 import click
-import zazu.teamcity_helper
 import zazu.git_helper
 import zazu.build
 import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 @click.group()
@@ -25,21 +28,26 @@ def hooks(ctx):
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
+def get_git_hub_name(url):
+    name = url.rsplit('/', 1)[-1]
+    name = name.replace('.git', '')
+    return name
+
+
 @setup.command()
 @click.pass_context
 def ci(ctx):
     """Setup CI configurations based on a zazu.yaml file"""
     ctx.obj.check_repo()
     continuous_integration = ctx.obj.continuous_integration()
-    try:
-        project_config = ctx.obj.project_config()
-        if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
-            components = project_config['components']
-            for c in components:
-                component = zazu.build.ComponentConfiguration(c)
-                zazu.teamcity_helper.setup(continuous_integration, component, ctx.obj.repo_root)
-    except IOError:
-        raise click.ClickException("No {} file found in {}".format(project_file_name, ctx.obj.repo_root))
+    project_config = ctx.obj.project_config()
+    if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
+        scm_url = ctx.obj.repo.remotes.origin.url
+        scm_name = get_git_hub_name(scm_url)
+        components = project_config['components']
+        for c in components:
+            component = zazu.build.ComponentConfiguration(c)
+            continuous_integration.setup_component(component, scm_name, scm_url)
 
 
 @repo.command()
@@ -115,6 +123,6 @@ def ticket_is_closed(issue_tracker, descriptor):
     try:
         issue = issue_tracker.issue(descriptor.id)
         ret = issue_tracker.resolved(issue) or issue_tracker.closed(issue)
-    except zazu.config.IssueTrackerError:
+    except zazu.issue_tracker.IssueTrackerError:
         pass
     return ret

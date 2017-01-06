@@ -5,10 +5,12 @@ import shutil
 import subprocess
 import semantic_version
 import os
-import teamcity_helper
 import zazu.tool.tool_helper
 import zazu.cmake_helper
 import zazu.config
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2016"
 
 
 class ComponentConfiguration(object):
@@ -307,4 +309,4 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
-    teamcity_helper.publish_artifacts(spec.build_artifacts())
+    ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
