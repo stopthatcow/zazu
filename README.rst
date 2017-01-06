@@ -15,7 +15,7 @@ elements of git flow with CI and issue tracking.
     "Zazu" -> "Jira"
   }
 
-.. image:: doc/services.png
+.. image:: https://github.com/stopthatcow/zazu/raw/9357ae070b6277ad59579e95e036c264ba63086f/doc/services.png
    :align: center
 
 Zazu is implemented in Python and is a
@@ -76,7 +76,7 @@ The following diagram shows the available subcommands of zazu.
     "dev" -> "ticket"
   }
 
-.. image:: doc/cmds.png
+.. image:: https://github.com/stopthatcow/zazu/raw/9357ae070b6277ad59579e95e036c264ba63086f/doc/cmds.png
    :align: center
 
 Note: dashed lines are not yet implemented
