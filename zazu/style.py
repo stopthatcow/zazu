@@ -6,6 +6,7 @@ import multiprocessing
 import os
 import subprocess
 import zazu.git_helper
+import zazu.util
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -20,7 +21,10 @@ def autopep8_file(file, config, check):
     check_args = args + ['--diff', file]
     fix_args = args + ['--in-place', file]
 
-    output = subprocess.check_output(check_args)
+    try:
+        output = subprocess.check_output(check_args)
+    except OSError:
+        zazu.util.raise_uninstalled(args[0])
     if len(output):
         if not check:
             subprocess.check_output(fix_args)
@@ -50,7 +54,7 @@ def astyle(files, config, check):
         try:
             output = subprocess.check_output(args)
         except OSError:
-            raise click.ClickException('astyle not found, please install it with brew or apt-get and ensure it is on your path')
+            zazu.util.raise_uninstalled(args[0])
         needle = 'Formatted  '
         for l in output.split('\n'):
             if l.startswith(needle):
@@ -69,7 +73,7 @@ default_exclude_paths = ['build',
 
 @click.command()
 @click.pass_context
-@click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them (exit with the number of violations)')
+@click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them')
 @click.option('--dirty', is_flag=True, help='only examine files that are staged for CI commit')
 def style(ctx, check, dirty):
     """Style repo files or check that they are valid style"""
@@ -106,7 +110,7 @@ def style(ctx, check, dirty):
             for v in violations:
                 click.echo("Violation in: {}".format(v))
             click.echo('{} files with violations in {} files'.format(len(violations), file_count))
-            ctx.exit(len(violations))
+            ctx.exit(-1 if violations else 0)
         else:
             for v in violations:
                 click.echo("Formatted: {}".format(v))

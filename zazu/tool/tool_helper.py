@@ -12,6 +12,8 @@ import zazu.util
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
+package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
+
 
 class ToolInstallFunctions:
     """Holds a checker fn, installer fn, and uninstaller fn"""
@@ -38,9 +40,6 @@ class ToolEnforcer:
 
     def uninstall(self):
         return self.functions.uninstall_fn(self.name, self.version)
-
-
-package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
 
 
 def get_install_path(name, version):

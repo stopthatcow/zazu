@@ -64,3 +64,8 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
 def pprint_list(data):
     """Formats list as a bulleted list string"""
     return '\n  - {}'.format('\n  - '.join(data))
+
+
+def raise_uninstalled(pkg_name):
+    """Prints a warning to std error for a missing package"""
+    raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))

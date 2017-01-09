@@ -56,13 +56,12 @@ def path_gen(search_paths, file_names):
 def load_yaml_file(search_paths, file_names):
     """Load a project yaml file"""
     searched = path_gen(search_paths, file_names)
-    for file in searched:
+    for file_name in searched:
         try:
-            with open(file) as f:
+            with open(file_name) as f:
                 return yaml.load(f)
         except IOError:
             pass
-    searched = path_gen(search_paths, file_names)
     raise click.ClickException('no yaml file found, searched:{}'.format(zazu.util.pprint_list(searched)))
 
 
