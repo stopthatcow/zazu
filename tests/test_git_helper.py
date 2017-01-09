@@ -1,26 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import git
 import os
-import pytest
-import tempfile
 import zazu.git_helper
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
-
-
-@pytest.fixture
-def git_repo():
-    dir = tempfile.mkdtemp()
-    print('Tmpdir: {}'.format(dir))
-    repo = git.Repo.init(dir)
-    readme = os.path.join(dir, 'README.md')
-    with open(readme, 'w'):
-        pass
-    repo.index.add([readme])
-    repo.index.commit('initial readme')
-    return repo
 
 
 def test_repo_root(git_repo):

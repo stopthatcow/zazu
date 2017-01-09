@@ -1,27 +1,13 @@
 # -*- coding: utf-8 -*-
 import click.testing
-import git
 import os
 import pip
 import pytest
-import tempfile
 import yaml
 import zazu.cli
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
-
-
-@pytest.fixture()
-def git_repo():
-    dir = tempfile.mkdtemp()
-    repo = git.Repo.init(dir)
-    readme = os.path.join(dir, 'README.md')
-    with open(readme, 'w'):
-        pass
-    repo.index.add([readme])
-    repo.index.commit('initial readme')
-    return repo
 
 
 @pytest.fixture()
