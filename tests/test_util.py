@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import click
 import os
+import pytest
 import tempfile
 import zazu.util
+import __builtin__
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -34,3 +37,46 @@ def test_pprint_list():
     formatted = zazu.util.pprint_list(list)
     expected = '\n  - a\n  - b\n  - c'
     assert expected == formatted
+
+
+def test_raise_uninstalled():
+    with pytest.raises(click.ClickException):
+        zazu.util.raise_uninstalled('foo')
+
+
+def test_prompt_default(monkeypatch):
+    monkeypatch.setattr(__builtin__, 'raw_input', lambda x: '')
+    expected = 'bar'
+    assert zazu.util.prompt('foo', expected) == expected
+
+
+def test_prompt_overide_default(monkeypatch):
+    expected2 = 'baz'
+    monkeypatch.setattr(__builtin__, 'raw_input', lambda x: expected2)
+    assert zazu.util.prompt('foo', 'bar') == expected2
+
+
+def test_prompt(monkeypatch):
+    expected2 = 'baz'
+    monkeypatch.setattr(__builtin__, 'raw_input', lambda x: expected2)
+    assert zazu.util.prompt('foo') == expected2
+    with pytest.raises(ValueError):
+        zazu.util.prompt('foo', expected_type=int)
+
+
+def test_pick_single():
+    choices = ['one']
+    assert zazu.util.pick(choices, 'foo') == choices[0]
+
+
+def test_pick(monkeypatch):
+    choices = ['one', 'two']
+    monkeypatch.setattr('inquirer.prompt', lambda x: {' ': choices[0]})
+    assert zazu.util.pick(choices, 'foo') == choices[0]
+
+
+def test_pick_interupted(monkeypatch):
+    choices = ['one', 'two']
+    monkeypatch.setattr('inquirer.prompt', lambda x: None)
+    with pytest.raises(KeyboardInterrupt):
+        zazu.util.pick(choices, 'foo')
