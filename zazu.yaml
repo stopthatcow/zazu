@@ -6,7 +6,13 @@ components:
           - arch: python
             script: 
               - echo "$ZAZU_BUILD_VERSION_PEP440" > zazu/version.txt &&
+                rm -rf dist &&
                 python setup.py sdist bdist_wheel
+      - name: coverage
+        builds:
+          - arch: python
+            script: 
+              - pytest --cov-report html --cov=zazu
 
 issueTracker:
     type: Jira

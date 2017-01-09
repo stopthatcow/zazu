@@ -49,12 +49,12 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
     exclude_dirs = set([os.path.normpath(e) for e in exclude_patterns])
     for dirName, subdirList, fileList in os.walk(base_path):
         for i in xrange(len(subdirList) - 1, -1, -1):
-            sub = os.path.relpath(os.path.join(dirName, subdirList[i]))
+            sub = os.path.relpath(os.path.join(dirName, subdirList[i]), base_path)
             if sub in exclude_dirs:
                 del subdirList[i]
         for f in fileList:
             if (not exclude_hidden) or (f[0] != '.'):
-                file = os.path.relpath(os.path.join(dirName, f))
+                file = os.path.relpath(os.path.join(dirName, f), base_path)
                 if any(fnmatch.fnmatch(file, i) for i in include_patterns):
                     if all(not fnmatch.fnmatch(file, e) for e in exclude_patterns):
                         files.append(file)

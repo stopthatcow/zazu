@@ -15,7 +15,7 @@ def get_repo_root(starting_dir):
     try:
         g = git.Git(starting_dir)
         ret = g.rev_parse('--show-toplevel')
-    except:
+    except git.exc.GitCommandError:
         ret = ''
     return ret
 
@@ -38,14 +38,15 @@ def get_default_git_hooks():
 
 def get_touched_files(repo):
     """Gets list of files that are scheduled to be committed (Added, created, modified, or renamed)"""
-    return repo.git.diff('--cached', '--name-only', '--diff-filter=ACMR').split('\n')
+    return [file for file in repo.git.diff('--cached', '--name-only', '--diff-filter=ACMR').split('\n') if file]
 
 
 def check_git_hooks(repo_base):
     """Checks that the default git hooks are in place"""
     have_hooks = True
+    hooks_folder = get_hooks_path(repo_base)
     for name, file in get_default_git_hooks().items():
-        if not check_git_hook(repo_base, name, file):
+        if not check_git_hook(hooks_folder, name, file):
             have_hooks = False
             break
     return have_hooks
@@ -76,15 +77,24 @@ def install_git_hook(hooks_folder, hook_name, hook_resource_path):
         shutil.copy(hook_resource_path, hook_path)
 
 
+def parse_branch_return_list(branches):
+    ret = branches
+    for i, branch in enumerate(ret):
+        if branch.startswith('* '):
+            ret[i] = branch[2:]
+            break
+    return ret
+
+
 def get_merged_branches(repo, target_branch, remote=False):
     """Returns list of branches that have been merged with the target_branch"""
     args = ['--merged', target_branch]
     if remote:
         args.insert(0, '-r')
-    return [b.strip() for b in repo.git.branch(args).strip().split('\n') if b]
+    return parse_branch_return_list([b.strip() for b in repo.git.branch(args).strip().split('\n') if b])
 
 
 def filter_undeletable(branches):
     """Filters out branches that we don't want to delete"""
-    undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-'])
+    undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-', 'HEAD'])
     return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (not b.startswith('origin/HEAD'))]
