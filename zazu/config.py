@@ -59,9 +59,14 @@ def load_yaml_file(search_paths, file_names):
     for file_name in searched:
         try:
             with open(file_name) as f:
-                return yaml.load(f)
+                config = yaml.load(f)
+                if config is None:
+                    raise click.ClickException('unable to parse config file')
+                return config
         except IOError:
             pass
+    # need a new generator
+    searched = path_gen(search_paths, file_names)
     raise click.ClickException('no yaml file found, searched:{}'.format(zazu.util.pprint_list(searched)))
 
 
@@ -108,7 +113,7 @@ class Config(object):
     def project_config(self):
         if self._project_config is None:
             self._project_config = load_yaml_file([self.repo_root], PROJECT_FILE_NAMES)
-            required_zazu_version = self.zazu_version_required()
+            required_zazu_version = self._project_config.get('zazu', '')
             if required_zazu_version and required_zazu_version != zazu.__version__:
                 click.secho('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). '
                             'Use "zazu upgrade" to fix this'.format(required_zazu_version, zazu.__version__), fg='red')
