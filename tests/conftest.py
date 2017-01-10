@@ -29,7 +29,7 @@ def repo_with_style(git_repo):
                 'options': ''
             },
             'astyle': {
-                'options': ['--max-line-length=150']
+                'options': ''
             }
         }
     }
