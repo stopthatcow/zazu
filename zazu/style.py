@@ -39,7 +39,7 @@ def autopep8(files, config, check, working_dir):
     with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
         futures = {executor.submit(autopep8_file, f, config, check): f for f in abs_files}
         for future in concurrent.futures.as_completed(futures):
-            ret += future.result()
+            ret += [os.path.relpath(f, working_dir) for f in future.result()]
     return ret
 
 
@@ -59,7 +59,7 @@ def astyle(files, config, check, working_dir):
         needle = 'Formatted  '
         for l in output.split('\n'):
             if l.startswith(needle):
-                ret.append(l[len(needle):])
+                ret.append(os.path.relpath(l[len(needle):], working_dir))
     return ret
 
 default_astyle_paths = ['*.cpp',
