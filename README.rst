@@ -8,15 +8,10 @@ Zazu (at your service)
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
 
-..
-  digraph G {
+.. image:: https://g.gravizo.com/svg?digraph G {
     "Zazu" -> "TeamCity"
     "Zazu" -> "GitHub"
-    "Zazu" -> "Jira"
-  }
-
-.. image:: https://github.com/stopthatcow/zazu/raw/9357ae070b6277ad59579e95e036c264ba63086f/doc/services.png
-   :align: center
+    "Zazu" -> "Jira"}
 
 Zazu is implemented in Python and is a
 `Click <http://click.pocoo.org/5/>`__ based CLI. If you're wondering why
@@ -51,8 +46,7 @@ Command overview
 ----------------
 The following diagram shows the available subcommands of zazu.
 
-..
-  digraph G {
+.. image:: https://g.gravizo.com/svg?digraph G {
     "zazu" -> "build"
     "zazu" -> "tool"
     "tool" -> "install"
@@ -73,11 +67,7 @@ The following diagram shows the available subcommands of zazu.
     dev_builds [label=builds, style=dashed]
     "dev" -> "dev_builds"
     "dev" -> "review"
-    "dev" -> "ticket"
-  }
-
-.. image:: https://github.com/stopthatcow/zazu/raw/9357ae070b6277ad59579e95e036c264ba63086f/doc/cmds.png
-   :align: center
+    "dev" -> "ticket"}
 
 Note: dashed lines are not yet implemented
 
@@ -216,7 +206,12 @@ Command autocompletion
 ----------------------
 
 Note that autocompletion currently only works for commands and
-subcommands (not arguments) ###BASH users Add the following to your
+subcommands (not arguments).
+
+BASH users
+~~~~~~~~~~
+
+Add the following to your
 ``~/.bashrc`` file:
 
 ::
