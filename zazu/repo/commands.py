@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
-from git import Git
-from git import GitCommandError
+import git
 import zazu.git_helper
 import zazu.build
 import zazu.util
@@ -55,22 +54,28 @@ def ci(ctx):
 
 
 @repo.command()
-@click.argument('repository')
+@click.argument('repository_url')
 @click.option('--nohooks', is_flag=True)
 @click.pass_context
-def clone(ctx, repository, nohooks):
-    """Clone and initialize a repo"""
+def clone(ctx, repository_url, nohooks):
+    """Clone and initialize a repo
+
+    Args:
+        repository_url(str):url of the repository to clone
+ 
+    flags:
+        --nohooks: does not install git hooks in the cloned repo
+    """
     try:
-        Git().clone(repository)
+        git.Git().clone(repository_url)
         click.echo('Repository successfully cloned')
 
         if not nohooks:
             click.echo('Installing Git Hooks')
-            zazu.git_helper.install_git_hooks(repository.rsplit('/', 1)[-1].replace('.git', ''))
-            click.echo('Done')
+            zazu.git_helper.install_git_hooks(repository_url.rsplit('/', 1)[-1].replace('.git', ''))
 
     except GitCommandError:
-        click.echo('Error cloning repository: {}'.format(repository))
+        click.echo('Error cloning repository: {}'.format(repository_url))
 
 
 @repo.command()
