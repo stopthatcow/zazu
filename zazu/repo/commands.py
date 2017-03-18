@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
+from git import Git 
+from git import GitCommandError
 import zazu.git_helper
 import zazu.build
 import zazu.util
@@ -51,11 +53,16 @@ def ci(ctx):
 
 
 @repo.command()
+@click.argument('repository')
 @click.pass_context
-def clone(ctx):
+def clone(ctx, repository):
     """Clone and initialize a repo"""
-    raise NotImplementedError
+    try:
+        Git().clone(repository)
+        click.echo('Repository successfully cloned')
 
+    except GitCommandError, e:
+        click.echo('Error cloning repository: {}'.format(repository))
 
 @repo.command()
 @click.pass_context
