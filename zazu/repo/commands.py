@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
 import git
+import sys
 import zazu.git_helper
 import zazu.build
 import zazu.util
@@ -62,7 +63,7 @@ def clone(ctx, repository_url, nohooks):
 
     Args:
         repository_url(str):url of the repository to clone
- 
+
     flags:
         --nohooks: does not install git hooks in the cloned repo
     """
@@ -73,9 +74,8 @@ def clone(ctx, repository_url, nohooks):
         if not nohooks:
             click.echo('Installing Git Hooks')
             zazu.git_helper.install_git_hooks(repository_url.rsplit('/', 1)[-1].replace('.git', ''))
-
-    except GitCommandError:
-        click.echo('Error cloning repository: {}'.format(repository_url))
+    except git.GitCommandError, err:
+        sys.stderr.write('Error: {}{}'.format(str(err), '\n'))
 
 
 @repo.command()
