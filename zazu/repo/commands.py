@@ -56,12 +56,18 @@ def ci(ctx):
 
 @repo.command()
 @click.argument('repository')
+@click.option('--nohooks', is_flag=True)
 @click.pass_context
-def clone(ctx, repository):
+def clone(ctx, repository, nohooks):
     """Clone and initialize a repo"""
     try:
         Git().clone(repository)
         click.echo('Repository successfully cloned')
+
+        if not nohooks:
+            click.echo('Installing Git Hooks')
+            zazu.git_helper.install_git_hooks(repository.rsplit('/', 1)[-1].replace('.git', ''))
+            click.echo('Done')
 
     except GitCommandError:
         click.echo('Error cloning repository: {}'.format(repository))
