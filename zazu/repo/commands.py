@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
-from git import Git 
+from git import Git
 from git import GitCommandError
 import zazu.git_helper
 import zazu.build
@@ -14,7 +14,9 @@ __copyright__ = "Copyright 2016"
 @click.pass_context
 def repo(ctx):
     """Manage repository"""
-    ctx.obj.check_repo()
+    if not ctx.invoked_subcommand == 'clone':
+        ctx.obj.check_repo()
+    pass
 
 
 @repo.group()
@@ -61,8 +63,9 @@ def clone(ctx, repository):
         Git().clone(repository)
         click.echo('Repository successfully cloned')
 
-    except GitCommandError, e:
+    except GitCommandError:
         click.echo('Error cloning repository: {}'.format(repository))
+
 
 @repo.command()
 @click.pass_context
