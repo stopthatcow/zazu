@@ -8,7 +8,7 @@ Zazu (at your service)
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
 
-.. image:: https://g.gravizo.com/svg?digraph G {
+.. image:: https://g.gravizo.com/svg?digraph%20G%20{
     "Zazu" -> "TeamCity"
     "Zazu" -> "GitHub"
     "Zazu" -> "Jira"}
@@ -46,28 +46,28 @@ Command overview
 ----------------
 The following diagram shows the available subcommands of zazu.
 
-.. image:: https://g.gravizo.com/svg?digraph G {
-    "zazu" -> "build"
-    "zazu" -> "tool"
-    "tool" -> "install"
-    "tool" -> "uninstall"
-    "zazu" -> "style"
-    "zazu" -> "repo"
-    "repo" -> "setup"
-    "setup" -> "hooks"
-    "setup" -> "ci"
-    "repo" -> "cleanup"
-    "repo" -> "repo_init"
-    repo_init [label=init, style=dashed]
-    "repo" -> "repo_clone"
-    repo_clone [label=clone, style=dashed]
-    "zazu" -> "dev"
-    "dev" -> "start"
-    "dev" -> "status"
-    dev_builds [label=builds, style=dashed]
-    "dev" -> "dev_builds"
-    "dev" -> "review"
-    "dev" -> "ticket"}
+.. image:: https://g.gravizo.com/svg?digraph%20G%20{
+      "zazu" -> "build"
+      "zazu" -> "tool"
+      "tool" -> "install"
+      "tool" -> "uninstall"
+      "zazu" -> "style"
+      "zazu" -> "repo"
+      "repo" -> "setup"
+      "setup" -> "hooks"
+      "setup" -> "ci"
+      "repo" -> "cleanup"
+      "repo" -> "repo_init"
+      repo_init [label=init, style=dashed]
+      "repo" -> "repo_clone"
+      repo_clone [label=clone, style=dashed]
+      "zazu" -> "dev"
+      "dev" -> "start"
+      "dev" -> "status"
+      dev_builds [label=builds, style=dashed]
+      "dev" -> "dev_builds"
+      "dev" -> "review"
+      "dev" -> "ticket"}
 
 Note: dashed lines are not yet implemented
 
