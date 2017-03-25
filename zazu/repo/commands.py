@@ -12,11 +12,12 @@ __copyright__ = "Copyright 2016"
 
 REPO_CHECK_EXCLUSIONS = ['clone', 'setup', 'cleanup']
 
+
 @click.group()
 @click.pass_context
 def repo(ctx):
     """Manage repository"""
-    if not ctx.invoked_subcommand in REPO_CHECK_EXCLUSIONS:
+    if ctx.invoked_subcommand not in REPO_CHECK_EXCLUSIONS:
         ctx.obj.check_repo()
     pass
 
@@ -58,17 +59,14 @@ def ci(ctx):
 
 @repo.command()
 @click.argument('repository_url')
-@click.option('--nohooks', is_flag=True)
-@click.option('--nosubmodules', is_flag=True)
+@click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
+@click.option('--nosubmodules', is_flag=True, help='does not update submodules')
 @click.pass_context
 def clone(ctx, repository_url, nohooks, nosubmodules):
     """Clone and initialize a repo
 
-    Args:
-        repository_url(str):url of the repository to clone
-
-    flags:
-        --nohooks: does not install git hooks in the cloned repo
+        Args:
+            repository_url(str):url of the repository to clone
     """
     try:
         repo = git.Repo.clone_from(repository_url, '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', '')))
@@ -79,7 +77,7 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
             zazu.git_helper.install_git_hooks(repo.working_dir)
 
         if not nosubmodules:
-            click.echo('Updating all submodues')
+            click.echo('Updating all submodules')
             repo.submodule_update(init=True, recursive=True)
 
     except git.GitCommandError as err:
