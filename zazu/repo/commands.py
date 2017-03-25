@@ -10,11 +10,13 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
+REPO_CHECK_EXCLUSIONS = ['clone', 'setup', 'cleanup']
+
 @click.group()
 @click.pass_context
 def repo(ctx):
     """Manage repository"""
-    if not ctx.invoked_subcommand == 'clone':
+    if not ctx.invoked_subcommand in REPO_CHECK_EXCLUSIONS:
         ctx.obj.check_repo()
     pass
 
