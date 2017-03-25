@@ -69,7 +69,8 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
             repository_url(str):url of the repository to clone
     """
     try:
-        repo = git.Repo.clone_from(repository_url, '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', '')))
+        destination ='{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', '')) 
+        repo = git.Repo.clone_from(repository_url, destination)
         click.echo('Repository successfully cloned')
 
         if not nohooks:
