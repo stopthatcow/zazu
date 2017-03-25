@@ -66,7 +66,6 @@ The following diagram shows the available subcommands of zazu.
     "repo" -> "repo_init"
     repo_init [label=init, style=dashed]
     "repo" -> "repo_clone"
-    repo_clone [label=clone, style=dashed]
     "zazu" -> "dev"
     "dev" -> "start"
     "dev" -> "status"
