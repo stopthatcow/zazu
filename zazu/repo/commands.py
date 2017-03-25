@@ -77,8 +77,8 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
             zazu.git_helper.install_git_hooks(repo.working_dir)
 
         if not nosubmodules:
-            for submodule in repo.submodules:
-                submodule.update(init=True)
+            click.echo('Updating all submodues')
+            repo.submodule_update(init=True, recursive=True)
 
     except git.GitCommandError as err:
         raise click.ClickException(str(err))
