@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
 import git
+import os
 import zazu.git_helper
 import zazu.build
 import zazu.util
@@ -56,8 +57,9 @@ def ci(ctx):
 @repo.command()
 @click.argument('repository_url')
 @click.option('--nohooks', is_flag=True)
+@click.option('--nosubmodules', is_flag=True)
 @click.pass_context
-def clone(ctx, repository_url, nohooks):
+def clone(ctx, repository_url, nohooks, nosubmodules):
     """Clone and initialize a repo
 
     Args:
@@ -67,12 +69,17 @@ def clone(ctx, repository_url, nohooks):
         --nohooks: does not install git hooks in the cloned repo
     """
     try:
-        git.Git().clone(repository_url)
+        repo = git.Repo.clone_from(repository_url, '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', '')))
         click.echo('Repository successfully cloned')
 
         if not nohooks:
             click.echo('Installing Git Hooks')
-            zazu.git_helper.install_git_hooks(repository_url.rsplit('/', 1)[-1].replace('.git', ''))
+            zazu.git_helper.install_git_hooks(repo.working_dir)
+
+        if not nosubmodules:
+            for submodule in repo.submodules:
+                submodule.update(init=True)
+
     except git.GitCommandError as err:
         raise click.ClickException(str(err))
 
