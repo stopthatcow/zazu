@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
+import git
+import os
 import zazu.git_helper
 import zazu.build
 import zazu.util
@@ -12,12 +14,14 @@ __copyright__ = "Copyright 2016"
 @click.pass_context
 def repo(ctx):
     """Manage repository"""
-    ctx.obj.check_repo()
+    pass
 
 
 @repo.group()
-def setup():
+@click.pass_context
+def setup(ctx):
     """Setup repository with services"""
+    ctx.obj.check_repo()
     pass
 
 
@@ -51,10 +55,31 @@ def ci(ctx):
 
 
 @repo.command()
+@click.argument('repository_url')
+@click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
+@click.option('--nosubmodules', is_flag=True, help='does not update submodules')
 @click.pass_context
-def clone(ctx):
-    """Clone and initialize a repo"""
-    raise NotImplementedError
+def clone(ctx, repository_url, nohooks, nosubmodules):
+    """Clone and initialize a repo
+
+        Args:
+            repository_url(str):url of the repository to clone
+    """
+    try:
+        destination = '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', ''))
+        repo = git.Repo.clone_from(repository_url, destination)
+        click.echo('Repository successfully cloned')
+
+        if not nohooks:
+            click.echo('Installing Git Hooks')
+            zazu.git_helper.install_git_hooks(repo.working_dir)
+
+        if not nosubmodules:
+            click.echo('Updating all submodules')
+            repo.submodule_update(init=True, recursive=True)
+
+    except git.GitCommandError as err:
+        raise click.ClickException(str(err))
 
 
 @repo.command()
@@ -70,6 +95,7 @@ def init(ctx):
 @click.pass_context
 def cleanup(ctx, remote, target_branch):
     """Clean up merged branches that have been merged or are associated with cloded/resolved tickets"""
+    ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
     repo_obj.git.checkout('develop')
     issue_tracker = ctx.obj.issue_tracker()
