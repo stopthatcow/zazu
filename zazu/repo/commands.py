@@ -10,21 +10,18 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-REPO_CHECK_EXCLUSIONS = ['clone', 'setup', 'cleanup']
-
-
 @click.group()
 @click.pass_context
 def repo(ctx):
     """Manage repository"""
-    if ctx.invoked_subcommand not in REPO_CHECK_EXCLUSIONS:
-        ctx.obj.check_repo()
     pass
 
 
 @repo.group()
-def setup():
+@click.pass_context
+def setup(ctx):
     """Setup repository with services"""
+    ctx.obj.check_repo()
     pass
 
 
@@ -69,7 +66,7 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
             repository_url(str):url of the repository to clone
     """
     try:
-        destination ='{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', '')) 
+        destination = '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', ''))
         repo = git.Repo.clone_from(repository_url, destination)
         click.echo('Repository successfully cloned')
 
@@ -98,6 +95,7 @@ def init(ctx):
 @click.pass_context
 def cleanup(ctx, remote, target_branch):
     """Clean up merged branches that have been merged or are associated with cloded/resolved tickets"""
+    ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
     repo_obj.git.checkout('develop')
     issue_tracker = ctx.obj.issue_tracker()
