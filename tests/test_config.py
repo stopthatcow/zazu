@@ -15,7 +15,7 @@ def repo_with_teamcity(git_repo):
     teamcity_config = {
         'ci': {
             'type': 'TeamCity',
-            'url': 'http://teamcity.lily.technology:8111/'
+            'url': 'http://teamcity.zazu.technology:8111/'
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
@@ -43,6 +43,7 @@ def repo_with_jira(git_repo):
         'issueTracker': {
             'type': 'Jira',
             'url': 'https://zazu.atlassian.net/',
+            'project': 'TEST',
             'component': 'Zazu'
         }
     }
