@@ -1,7 +1,12 @@
 Zazu (at your service)
 ======================
-.. image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
-:target: https://coveralls.io/github/stopthatcow/zazu
+|buildBadge| |coverageBadge|
+
+.. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
+    :target: https://travis-ci.org/stopthatcow/zazu
 
 .. image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
    :height: 150 px
@@ -148,7 +153,7 @@ goals and architectures to be run. In addition it describes the
 requirements for each goal.
 
 ::
-
+  
     components:
       - name: networkInterface
         goals:
