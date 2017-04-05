@@ -19,7 +19,7 @@ except IOError:
         version_file.write(version)
 
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
-pytest_runner = ['pytest-runner==2.11.1'] if needs_pytest else []
+pytest_runner = ['pytest-runner>=2.0'] if needs_pytest else []
 
 setuptools.setup(
     name='zazu',
@@ -45,27 +45,27 @@ setuptools.setup(
     keywords='teamcity, jira, git, github',
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'version.txt']},
-    install_requires=['click==6.6',
-                      'requests==2.10.0',
-                      'PyGithub==1.26.0',
-                      'jira==1.0.7.dev20160607111203',
-                      'GitPython==2.0.7',
-                      'pyteamcity==0.1.1',
-                      'pyyaml==3.11',
-                      'keyring==8.7',
-                      'autopep8==1.2.4',
-                      'semantic_version==2.5.0',
-                      'gcovr==3.2',
-                      'teamcity-messages==1.19',
-                      'futures==3.0.5',
-                      'inquirer==2.1.7',
-                      'straight.plugin==1.4.1'],
+    install_requires=['click>=6.6',
+                      'requests>=2.10.0',
+                      'PyGithub>=1.26.0',
+                      'jira>=1.0.10',
+                      'GitPython>=2.0.7',
+                      'pyteamcity>=0.1.1',
+                      'pyyaml>=3.11',
+                      'keyring>=8.7',
+                      'autopep8>=1.2.4',
+                      'semantic_version>=2.5.0',
+                      'gcovr>=3.2',
+                      'teamcity-messages>=1.19',
+                      'futures>=3.0.5',
+                      'inquirer>=2.1.7',
+                      'straight.plugin<=1.4.1'],
     extras_require={
         ':sys_platform == "win32"': [
-            'pyreadline==2.1'
+            'pyreadline>=2.1'
         ],
         ':sys_platform != "win32"': [
-            'gnureadline==6.3.3'
+            'gnureadline>=6.3.3'
         ]
     },
     entry_points='''
@@ -73,9 +73,9 @@ setuptools.setup(
         zazu=zazu.cli:cli
         ''',
     setup_requires=[]+pytest_runner,
-    tests_require=['pytest-cov==2.4.0',
-                   'pytest-mock==1.6.0',
-                   'pytest==3.0.7'],
+    tests_require=['pytest-cov>=2.4.0',
+                   'pytest-mock>=1.6.0',
+                   'pytest>=3.0.7'],
 
 
 )
