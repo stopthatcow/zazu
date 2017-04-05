@@ -73,9 +73,9 @@ setuptools.setup(
         zazu=zazu.cli:cli
         ''',
     setup_requires=[]+pytest_runner,
-    tests_require=['pytest==3.0.7',
-                   'pytest-cov==2.4.0',
-                   'pytest-mock==1.5.0'],
+    tests_require=['pytest-cov==2.4.0',
+                   'pytest-mock==1.6.0',
+                   'pytest==3.0.7'],
 
 
 )
