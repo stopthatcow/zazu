@@ -182,6 +182,22 @@ def get_tool_registry():
     }
     return tools
 
+def get_specs(**kwargs):
+    specs = []
+    for name,versions in get_tool_registry().items():
+        specs += ['{}=={}'.format(name, v) for v in versions]
+    return sorted(specs)
+
+
+def spec_is_installed(spec):
+    name, version = parse_install_spec(spec)
+    enforcer = get_enforcer(name, version)
+    return enforcer.check()
+
+
+def get_installed_specs(**kwargs):
+    return [s for s in get_specs() if spec_is_installed(s)]
+
 
 def get_enforcer(name, version):
     """Gets a specific tool enforcer"""

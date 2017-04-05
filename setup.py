@@ -42,7 +42,7 @@ setuptools.setup(
     keywords='teamcity, jira, git, github',
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'version.txt']},
-    install_requires=['click==6.6',
+    install_requires=['click',
                       'requests==2.10.0',
                       'PyGithub==1.26.0',
                       'jira==1.0.7.dev20160607111203',

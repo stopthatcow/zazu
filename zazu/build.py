@@ -281,6 +281,10 @@ def add_version_args(repo_root, build_num, args):
     args["ZAZU_BUILD_NUMBER"] = str(build_num)
     args['ZAZU_BUILD_VERSION_PEP440'] = pep440_from_semver(semver)
 
+def list_goals(**kwargs):
+    config = zazu.config.Config(os.getcwd())
+    component = ComponentConfiguration(config.project_config()['components'][0])
+    return component.goals().keys()
 
 @click.command()
 @click.pass_context
@@ -289,7 +293,7 @@ def add_version_args(repo_root, build_num, args):
               help='defaults to what is specified in the config file, or release if unspecified there')
 @click.option('-n', '--build_num', help='build number', default=os.environ.get('BUILD_NUMBER', 0))
 @click.option('-v', '--verbose', is_flag=True, help='generates verbose output from the build')
-@click.argument('goal')
+@click.argument('goal', autocompletion=list_goals)
 @click.argument('extra_args_str', nargs=-1)
 def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target,

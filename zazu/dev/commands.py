@@ -5,6 +5,7 @@ import webbrowser
 import urllib
 import textwrap
 import git
+import os
 import zazu.github_helper
 import zazu.config
 import zazu.util
@@ -127,9 +128,12 @@ def rename_branch(repo, old_branch, new_branch):
         pass
     repo.git.push(['-u'])
 
+def list_branch_names(ctx, **kwargs):
+    repo = git.Repo(os.getcwd())
+    return [b.name for b in repo.branches]
 
 @dev.command()
-@click.argument('name')
+@click.argument('name', autocompletion=list_branch_names)
 @click.pass_context
 def rename(ctx, name):
     """Renames the current branch, locally and remotely"""

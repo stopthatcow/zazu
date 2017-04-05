@@ -14,7 +14,7 @@ def tool():
 
 @tool.command()
 @click.option('--force-reinstall', help='forces reinstallation', is_flag=True)
-@click.argument('spec')
+@click.argument('spec', autocompletion=tool_helper.get_specs)
 def install(spec, force_reinstall):
     """Install tools that zazu is familiar with"""
     tool_helper.install_spec(spec, force_reinstall, click.echo)
