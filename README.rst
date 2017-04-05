@@ -1,5 +1,8 @@
 Zazu (at your service)
 ======================
+.. image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
+:target: https://coveralls.io/github/stopthatcow/zazu
+
 .. image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
    :height: 150 px
    :width: 150 px
