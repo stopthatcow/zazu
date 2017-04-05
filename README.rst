@@ -1,6 +1,6 @@
 Zazu (at your service)
 ======================
-|buildBadge| |coverageBadge|
+|logo| |buildBadge| |coverageBadge|
 
 .. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
@@ -8,18 +8,19 @@ Zazu (at your service)
 .. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
     :target: https://travis-ci.org/stopthatcow/zazu
 
-.. image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
-   :height: 150 px
-   :width: 150 px
+.. |logo| image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
+   :height: 50 px
+   :width: 50 px
    :align: center
 
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
-    "Zazu" -> "TeamCity"
-    "Zazu" -> "GitHub"
-    "Zazu" -> "Jira"}
+    "Zazu" -> "Continuous Integration"
+    "Zazu" -> "Source Control"
+    "Zazu" -> "Issue Tracker"}
+    :align: center
 
 Zazu is implemented in Python and is a
 `Click <http://click.pocoo.org/5/>`__ based CLI. If you're wondering why
@@ -81,8 +82,8 @@ Note: dashed lines are not yet implemented
 Repo management
 ---------------
 
--  ``zazu repo clone <name>`` clones repo from github and installs GIT
-   hooks (Unimplemented)
+-  ``zazu repo clone <name>`` clones repo and installs GIT
+   hooks
 -  ``zazu repo init <name>`` initializes repo to default project
    structure (Unimplemented)
 -  ``zazu repo setup hooks`` installs default GIT hooks to the repo
@@ -153,7 +154,7 @@ goals and architectures to be run. In addition it describes the
 requirements for each goal.
 
 ::
-  
+
     components:
       - name: networkInterface
         goals:
