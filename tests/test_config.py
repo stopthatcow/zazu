@@ -42,8 +42,7 @@ def repo_with_jira(git_repo):
     jira_config = {
         'issueTracker': {
             'type': 'Jira',
-            'url': 'https://lily-robotics.atlassian.net/',
-            'project': 'STI',
+            'url': 'https://zazu.atlassian.net/',
             'component': 'Zazu'
         }
     }
