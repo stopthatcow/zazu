@@ -17,6 +17,8 @@ except IOError:
     with open(version_file_path, 'w') as version_file:
         version_file.write(version)
 
+needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
+pytest_runner = ['pytest-runner==2.11.1'] if needs_pytest else []
 
 setuptools.setup(
     name='zazu',
@@ -69,7 +71,7 @@ setuptools.setup(
         [console_scripts]
         zazu=zazu.cli:cli
         ''',
-    setup_requires=['pytest-runner'],
+    setup_requires=[]+pytest_runner,
     tests_require=['pytest==3.0.5',
                    'pytest-cov==2.4.0',
                    'pytest-mock==1.5.0'],

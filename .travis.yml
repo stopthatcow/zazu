@@ -8,6 +8,6 @@ install:
   - pip install coveralls
 # command to run tests
 script:
-  coverage run --source=zazu setup.py test
+  coverage run --source=zazu setup.py pytest
 after_success:
   coveralls
