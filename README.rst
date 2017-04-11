@@ -1,5 +1,6 @@
 Zazu (at your service)
 ======================
+
 |zazuLogo| |buildBadge| |coverageBadge|
 
 .. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
