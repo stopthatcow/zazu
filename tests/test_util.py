@@ -4,7 +4,10 @@ import os
 import pytest
 import tempfile
 import zazu.util
-import __builtin__
+try:
+    import __builtin__ as builtins
+except ImportError:
+    import builtins
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -45,20 +48,20 @@ def test_raise_uninstalled():
 
 
 def test_prompt_default(monkeypatch):
-    monkeypatch.setattr(__builtin__, 'raw_input', lambda x: '')
+    monkeypatch.setattr(builtins, 'raw_input', lambda x: '')
     expected = 'bar'
     assert zazu.util.prompt('foo', expected) == expected
 
 
 def test_prompt_overide_default(monkeypatch):
     expected2 = 'baz'
-    monkeypatch.setattr(__builtin__, 'raw_input', lambda x: expected2)
+    monkeypatch.setattr(builtins, 'raw_input', lambda x: expected2)
     assert zazu.util.prompt('foo', 'bar') == expected2
 
 
 def test_prompt(monkeypatch):
     expected2 = 'baz'
-    monkeypatch.setattr(__builtin__, 'raw_input', lambda x: expected2)
+    monkeypatch.setattr(builtins, 'raw_input', lambda x: expected2)
     assert zazu.util.prompt('foo') == expected2
     with pytest.raises(ValueError):
         zazu.util.prompt('foo', expected_type=int)
