@@ -48,20 +48,20 @@ def test_raise_uninstalled():
 
 
 def test_prompt_default(monkeypatch):
-    monkeypatch.setattr(builtins, 'raw_input', lambda x: '')
+    monkeypatch.setattr('builtins.input', lambda x: '')
     expected = 'bar'
     assert zazu.util.prompt('foo', expected) == expected
 
 
 def test_prompt_overide_default(monkeypatch):
     expected2 = 'baz'
-    monkeypatch.setattr(builtins, 'raw_input', lambda x: expected2)
+    monkeypatch.setattr('builtins.input', lambda x: expected2)
     assert zazu.util.prompt('foo', 'bar') == expected2
 
 
 def test_prompt(monkeypatch):
     expected2 = 'baz'
-    monkeypatch.setattr(builtins, 'raw_input', lambda x: expected2)
+    monkeypatch.setattr('builtins.input', lambda x: expected2)
     assert zazu.util.prompt('foo') == expected2
     with pytest.raises(ValueError):
         zazu.util.prompt('foo', expected_type=int)
