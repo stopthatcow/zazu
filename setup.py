@@ -57,6 +57,7 @@ setuptools.setup(
                       'semantic_version>=2.5.0',
                       'gcovr>=3.2',
                       'teamcity-messages>=1.19',
+                      'future>=0.16.0',
                       'futures>=3.0.5',
                       'inquirer>=2.1.7',
                       'straight.plugin<=1.4.1'],

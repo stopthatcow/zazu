@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
+import future.utils
 import pytest
 import zazu.build
 
@@ -10,7 +11,7 @@ __copyright__ = "Copyright 2016"
 def test_parse_key_value_pairs():
     expected = {'foo': '1',
                 'bar': '2'}
-    args = ['{}={}'.format(k, v) for k, v in expected.iteritems()]
+    args = ['{}={}'.format(k, v) for k, v in future.utils.iteritems(expected)]
     print(args)
     parsed = zazu.build.parse_key_value_pairs(args)
     assert expected == parsed
