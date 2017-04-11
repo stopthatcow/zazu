@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
-import conftest
+import tests.conftest
 import distutils
 import pytest
 import zazu.cli
@@ -13,7 +13,7 @@ def write_file_with_bad_style(file):
 @pytest.fixture()
 def repo_with_style_errors(repo_with_style):
     dir = repo_with_style.working_tree_dir
-    with conftest.working_directory(dir):
+    with tests.conftest.working_directory(dir):
         write_file_with_bad_style('temp.c')
         write_file_with_bad_style('temp.cc')
         write_file_with_bad_style('temp.cpp')
@@ -26,7 +26,7 @@ def repo_with_style_errors(repo_with_style):
                     reason="requires astyle")
 def test_astyle(git_repo):
     dir = git_repo.working_tree_dir
-    with conftest.working_directory(dir):
+    with tests.conftest.working_directory(dir):
         bad_file_name = 'temp.c'
         write_file_with_bad_style(bad_file_name)
         ret = zazu.style.astyle([bad_file_name], {}, check=True, working_dir=dir)
@@ -38,7 +38,7 @@ def test_astyle(git_repo):
 
 def test_autopep8(git_repo):
     dir = git_repo.working_tree_dir
-    with conftest.working_directory(dir):
+    with tests.conftest.working_directory(dir):
         bad_file_name = 'temp.py'
         write_file_with_bad_style(bad_file_name)
         ret = zazu.style.autopep8([bad_file_name], {}, check=True, working_dir=dir)
@@ -52,7 +52,7 @@ def test_autopep8(git_repo):
                     reason="requires astyle")
 def test_bad_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
-    with conftest.working_directory(dir):
+    with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check'])
         assert result.exit_code == 1
@@ -67,7 +67,7 @@ def test_bad_style(repo_with_style_errors):
                     reason="requires astyle")
 def test_dirty_style(repo_with_style_errors, monkeypatch):
     dir = repo_with_style_errors.working_tree_dir
-    with conftest.working_directory(dir):
+    with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty'])
         assert result.exit_code == 0
@@ -81,7 +81,7 @@ def test_dirty_style(repo_with_style_errors, monkeypatch):
                     reason="requires astyle")
 def test_style_no_config(repo_with_no_zazu_file):
     dir = repo_with_no_zazu_file.working_tree_dir
-    with conftest.working_directory(dir):
+    with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.output == 'Error: unable to parse config file\n'
@@ -91,7 +91,7 @@ def test_style_no_config(repo_with_no_zazu_file):
                     reason="requires astyle")
 def test_style_no_config(repo_with_missing_style):
     dir = repo_with_missing_style.working_tree_dir
-    with conftest.working_directory(dir):
+    with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.output == 'no style settings found\n'
