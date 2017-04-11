@@ -3,11 +3,7 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  - pip install .
-  - pip install pytest==3.0.7
-  - pip install coveralls
+  - pip install tox
 # command to run tests
 script:
-  coverage run --source=zazu setup.py pytest
-after_success:
-  coveralls
+  tox

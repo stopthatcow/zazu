@@ -6,10 +6,21 @@ import pytest
 import zazu.cli
 import zazu.style
 
-
-def write_bad_file(file):
+def write_file_with_bad_style(file):
     with open(file, 'w') as f:
         f.write('\n ')
+
+@pytest.fixture()
+def repo_with_style_errors(repo_with_style):
+    dir = repo_with_style.working_tree_dir
+    with conftest.working_directory(dir):
+        write_file_with_bad_style('temp.c')
+        write_file_with_bad_style('temp.cc')
+        write_file_with_bad_style('temp.cpp')
+        write_file_with_bad_style('temp.hpp')
+        write_file_with_bad_style('temp.h')
+        write_file_with_bad_style('temp.py')
+    return repo_with_style
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
                     reason="requires astyle")
@@ -17,7 +28,7 @@ def test_astyle(git_repo):
     dir = git_repo.working_tree_dir
     with conftest.working_directory(dir):
         bad_file_name = 'temp.c'
-        write_bad_file(bad_file_name)
+        write_file_with_bad_style(bad_file_name)
         ret = zazu.style.astyle([bad_file_name], {}, check=True, working_dir=dir)
         assert bad_file_name in ret
         ret = zazu.style.astyle([bad_file_name], {}, check=False, working_dir=dir)
@@ -25,30 +36,17 @@ def test_astyle(git_repo):
         ret = zazu.style.astyle([bad_file_name], {}, check=True, working_dir=dir)
         assert not ret
 
-
 def test_autopep8(git_repo):
     dir = git_repo.working_tree_dir
     with conftest.working_directory(dir):
         bad_file_name = 'temp.py'
-        write_bad_file(bad_file_name)
+        write_file_with_bad_style(bad_file_name)
         ret = zazu.style.autopep8([bad_file_name], {}, check=True, working_dir=dir)
         assert bad_file_name in ret
         ret = zazu.style.autopep8([bad_file_name], {}, check=False, working_dir=dir)
         assert bad_file_name in ret
         ret = zazu.style.autopep8([bad_file_name], {}, check=True, working_dir=dir)
         assert not ret
-
-
-@pytest.fixture()
-def repo_with_style_errors(repo_with_style):
-    dir = repo_with_style.working_tree_dir
-    with conftest.working_directory(dir):
-        write_bad_file('temp.c')
-        write_bad_file('temp.cpp')
-        write_bad_file('temp.hpp')
-        write_bad_file('temp.h')
-        write_bad_file('temp.py')
-    return repo_with_style
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
                     reason="requires astyle")

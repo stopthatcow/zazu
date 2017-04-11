@@ -19,7 +19,6 @@ def test_tool(git_repo, monkeypatch):
             zazu.tool.tool_helper.uninstall_spec('{}=={}'.format(tool, ver))
             assert not enforcer.check()
 
-
 def test_parse_install_spec():
     name, ver = zazu.tool.tool_helper.parse_install_spec('foo==1.2.3')
     assert name == 'foo'
