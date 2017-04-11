@@ -1,19 +1,12 @@
 Zazu (at your service)
 ======================
-
- |zazuLogo| |buildBadge| |coverageBadge|
+|buildBadge| |coverageBadge|
 
 .. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
 
 .. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
     :target: https://travis-ci.org/stopthatcow/zazu
-
-.. |zazuLogo| image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
-   :target: https://www.github.com/stopthatcow/zazu
-   :height: 50 px
-   :width: 50 px
-   :align: center
 
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
