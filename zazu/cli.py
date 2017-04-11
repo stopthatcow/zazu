@@ -2,10 +2,10 @@
 """entry point for zazu"""
 import click
 import os
-import git_helper
 import zazu.build
 import zazu.config
 import zazu.dev.commands
+import zazu.git_helper
 import zazu.repo.commands
 import zazu.style
 import zazu.tool.commands
