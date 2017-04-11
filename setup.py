@@ -72,7 +72,7 @@ setuptools.setup(
         [console_scripts]
         zazu=zazu.cli:cli
         ''',
-    setup_requires=[]+pytest_runner,
+    setup_requires=[] + pytest_runner,
     tests_require=['pytest',
                    'pytest-cov',
                    'pytest-mock'],
