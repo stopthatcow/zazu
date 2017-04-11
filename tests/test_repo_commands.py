@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import click.testing
-import conftest
 import zazu.cli
+import tests.conftest
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
