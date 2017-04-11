@@ -1,6 +1,6 @@
 Zazu (at your service)
 ======================
-|logo| |buildBadge| |coverageBadge|
+|zazuLogo| |buildBadge| |coverageBadge|
 
 .. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
@@ -8,7 +8,8 @@ Zazu (at your service)
 .. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
     :target: https://travis-ci.org/stopthatcow/zazu
 
-.. |logo| image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
+.. |zazuLogo| image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
+   :target: https://www.github.com/stopthatcow/zazu
    :height: 50 px
    :width: 50 px
    :align: center
