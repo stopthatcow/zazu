@@ -6,8 +6,8 @@ python:
   - "2.7"
   - "3.6"
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y astyle
+  - curl -L https://downloads.sourceforge.net/project/astyle/astyle/astyle%203.0/astyle_3.0_linux.tar.gz?r=&ts=1492151403&use_mirror=pilotfiber | tar xvz
+  - cd astyle/build/gcc && make -j$(getconf _NPROCESSORS_ONLN) all && sudo make install
 # command to install dependencies
 install: pip install tox-travis
 # command to run tests
