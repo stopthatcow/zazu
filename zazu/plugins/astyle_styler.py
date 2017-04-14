@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""style functions for zazu"""
+"""astyle plugin for zazu"""
 import os
 import subprocess
 import zazu.styler
@@ -10,6 +10,7 @@ __copyright__ = "Copyright 2017"
 
 
 class AstyleStyler(zazu.styler.Styler):
+    """Astyle plugin for code styling"""
     def run(self, files, check, working_dir):
         """Run astyle on a set of files"""
         ret = []

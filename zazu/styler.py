@@ -14,7 +14,7 @@ class Styler(object):
         self.includes = includes
 
     def run(self, files, config, check, working_dir):
-        raise NotImplementedError('All style plugins should implement run()')
+        raise NotImplementedError('All style plugins must implement run()')
 
     @classmethod
     def from_config(cls, config, excludes, includes):

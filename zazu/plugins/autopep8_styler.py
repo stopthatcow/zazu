@@ -11,6 +11,7 @@ __copyright__ = "Copyright 2016"
 
 
 class Autopep8Styler(zazu.styler.Styler):
+    """Autopep8 plugin for code styling. Executes in calls to autopep8 in parallel for speed"""
     def run(self, files, check, working_dir):
         """Concurrently dispatches multiple workers to perform autopep8"""
         abs_files = [os.path.join(working_dir, f) for f in files]
