@@ -62,7 +62,7 @@ def test_bad_style(repo_with_style_errors):
     with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check'])
-        assert result.exit_code == 1
+        assert result.exit_code
         assert result.output.endswith('5 files with violations in 5 files\n')
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.exit_code == 0
@@ -82,7 +82,7 @@ def test_dirty_style(repo_with_style_errors, monkeypatch):
         assert result.output == '0 files with violations in 0 files\n'
         monkeypatch.setattr('zazu.git_helper.get_touched_files', lambda x: ['temp.c'])
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty'])
-        assert result.exit_code == 1
+        assert result.exit_code
         assert result.output.endswith('1 files with violations in 1 files\n')
 
 
@@ -94,7 +94,7 @@ def test_style_no_config(repo_with_no_zazu_file):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.output == 'Error: unable to parse config file\n'
-        assert result.exit_code == 1
+        assert result.exit_code
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
