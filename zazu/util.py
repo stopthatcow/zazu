@@ -51,7 +51,7 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
     for dirName, subdirList, fileList in os.walk(base_path):
         for i in builtins.range(len(subdirList) - 1, -1, -1):
             sub = os.path.relpath(os.path.join(dirName, subdirList[i]), base_path)
-            if sub in exclude_dirs:
+            if sub in exclude_dirs or (exclude_hidden and sub[0] == '.'):
                 del subdirList[i]
         for f in fileList:
             if (not exclude_hidden) or (f[0] != '.'):

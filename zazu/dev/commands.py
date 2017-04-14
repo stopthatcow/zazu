@@ -125,7 +125,7 @@ def rename_branch(repo, old_branch, new_branch):
         repo.git.push(['origin', ':{}'.format(old_branch)])
     except git.exc.GitCommandError:
         pass
-    repo.git.push(['-u'])
+    repo.git.push(['--set-upstream', 'origin', new_branch])
 
 
 @dev.command()

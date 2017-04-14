@@ -5,6 +5,7 @@ import os
 import pytest
 import yaml
 
+
 @pytest.fixture
 def git_repo():
     dir = tempfile.mkdtemp()
@@ -16,6 +17,7 @@ def git_repo():
     repo.index.add([readme])
     repo.index.commit('initial readme')
     return repo
+
 
 @pytest.fixture()
 def repo_with_style(git_repo):
@@ -34,6 +36,7 @@ def repo_with_style(git_repo):
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
         file.write(yaml.dump(style_config))
     return git_repo
+
 
 @pytest.fixture()
 def repo_with_empty_zazu_file(git_repo):

@@ -46,6 +46,24 @@ def continuous_integration_factory(config):
         raise zazu.ZazuException('CI config requires a "type" field')
 
 
+def styler_factory(config):
+    """A factory function that makes and initializes the stylers from the config"""
+    stylers = []
+    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
+    known_types = {p.type().lower(): p for p in plugins}
+    WELL_KNOWN_KEYS = ['exclude', 'include']
+    excludes = config.get('exclude', [])
+    for k in config.keys():
+        if k not in WELL_KNOWN_KEYS:
+            if k in known_types:
+                includes = config.get('include', known_types[k].default_extensions())
+                stylers.append(known_types[k].from_config(config[k], excludes, includes))
+            else:
+                raise zazu.ZazuException('{} is not a known styler, please choose from {}'.format(type,
+                                                                                                  known_types.keys()))
+    return stylers
+
+
 def path_gen(search_paths, file_names):
     """Generates full paths given a list of directories and list of file names"""
     for p in search_paths:
@@ -119,8 +137,8 @@ class Config(object):
                             'Use "zazu upgrade" to fix this'.format(required_zazu_version, zazu.__version__), fg='red')
         return self._project_config
 
-    def style_config(self):
-        return self.project_config().get('style', {})
+    def stylers(self):
+        return styler_factory(self.project_config().get('style', {}))
 
     def zazu_version_required(self):
         return self.project_config().get('zazu', '')
