@@ -47,7 +47,7 @@ def continuous_integration_factory(config):
 
 
 def styler_factory(config):
-    """A factory function that makes and initializes a styler from a config"""
+    """A factory function that makes and initializes the stylers from the config"""
     stylers = []
     plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
     known_types = {p.type().lower(): p for p in plugins}

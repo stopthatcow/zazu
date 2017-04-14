@@ -63,10 +63,10 @@ def test_bad_style(repo_with_style_errors):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check'])
         assert result.exit_code
-        assert result.output.endswith('5 files with violations in 5 files\n')
+        assert result.output.endswith('6 files with violations in 6 files\n')
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.exit_code == 0
-        assert result.output.endswith('5 files fixed in 5 files\n')
+        assert result.output.endswith('6 files fixed in 6 files\n')
         result = runner.invoke(zazu.cli.cli, ['style', '--check'])
         assert result.exit_code == 0
 
