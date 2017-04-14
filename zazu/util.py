@@ -8,10 +8,11 @@ except ImportError:
         import pyreadline
         assert pyreadline
     except ImportError:
-        # Fall back to regular raw_input
+        # Fall back to regular input
         pass
-import inquirer
+import builtins
 import click
+import inquirer
 import os
 import fnmatch
 
@@ -21,9 +22,9 @@ __copyright__ = "Copyright 2016"
 
 def prompt(text, default=None, expected_type=str):
     if default is not None:
-        result = raw_input('{} [{}]: '.format(text, default)) or default
+        result = builtins.input('{} [{}]: '.format(text, default)) or default
     else:
-        result = raw_input('{}: '.format(text))
+        result = builtins.input('{}: '.format(text))
     return expected_type(result)
 
 
@@ -48,13 +49,13 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
     files = []
     exclude_dirs = set([os.path.normpath(e) for e in exclude_patterns])
     for dirName, subdirList, fileList in os.walk(base_path):
-        for i in xrange(len(subdirList) - 1, -1, -1):
-            sub = os.path.relpath(os.path.join(dirName, subdirList[i]))
+        for i in builtins.range(len(subdirList) - 1, -1, -1):
+            sub = os.path.relpath(os.path.join(dirName, subdirList[i]), base_path)
             if sub in exclude_dirs:
                 del subdirList[i]
         for f in fileList:
             if (not exclude_hidden) or (f[0] != '.'):
-                file = os.path.relpath(os.path.join(dirName, f))
+                file = os.path.relpath(os.path.join(dirName, f), base_path)
                 if any(fnmatch.fnmatch(file, i) for i in include_patterns):
                     if all(not fnmatch.fnmatch(file, e) for e in exclude_patterns):
                         files.append(file)
@@ -64,3 +65,8 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
 def pprint_list(data):
     """Formats list as a bulleted list string"""
     return '\n  - {}'.format('\n  - '.join(data))
+
+
+def raise_uninstalled(pkg_name):
+    """Prints a warning to std error for a missing package"""
+    raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))

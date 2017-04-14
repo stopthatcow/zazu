@@ -6,6 +6,7 @@ import multiprocessing
 import os
 import subprocess
 import zazu.git_helper
+import zazu.util
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -20,7 +21,10 @@ def autopep8_file(file, config, check):
     check_args = args + ['--diff', file]
     fix_args = args + ['--in-place', file]
 
-    output = subprocess.check_output(check_args)
+    try:
+        output = subprocess.check_output(check_args)
+    except OSError:
+        zazu.util.raise_uninstalled(args[0])
     if len(output):
         if not check:
             subprocess.check_output(fix_args)
@@ -28,17 +32,18 @@ def autopep8_file(file, config, check):
     return ret
 
 
-def autopep8(files, config, check):
+def autopep8(files, config, check, working_dir):
     """Concurrently dispatches multiple workers to perform autopep8"""
+    abs_files = [os.path.join(working_dir, f) for f in files]
     ret = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-        futures = {executor.submit(autopep8_file, f, config, check): f for f in files}
+        futures = {executor.submit(autopep8_file, f, config, check): f for f in abs_files}
         for future in concurrent.futures.as_completed(futures):
-            ret += future.result()
+            ret += [os.path.relpath(f, working_dir) for f in future.result()]
     return ret
 
 
-def astyle(files, config, check):
+def astyle(files, config, check, working_dir):
     """Run astyle on a set of files"""
     ret = []
     if len(files):
@@ -46,18 +51,19 @@ def astyle(files, config, check):
         args += config.get('options', [])
         if check:
             args.append('--dry-run')
-        args += files
+        args += [os.path.join(working_dir, f) for f in files]
         try:
             output = subprocess.check_output(args)
         except OSError:
-            raise click.ClickException('astyle not found, please install it with brew or apt-get and ensure it is on your path')
+            zazu.util.raise_uninstalled(args[0])
         needle = 'Formatted  '
         for l in output.split('\n'):
             if l.startswith(needle):
-                ret.append(l[len(needle):])
+                ret.append(os.path.relpath(l[len(needle):], working_dir))
     return ret
 
-default_astyle_paths = ['*.cpp',
+default_astyle_paths = ['*.cc',
+                        '*.cpp',
                         '*.hpp',
                         '*.c',
                         '*.h']
@@ -69,13 +75,11 @@ default_exclude_paths = ['build',
 
 @click.command()
 @click.pass_context
-@click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them (exit with the number of violations)')
+@click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them')
 @click.option('--dirty', is_flag=True, help='only examine files that are staged for CI commit')
 def style(ctx, check, dirty):
     """Style repo files or check that they are valid style"""
-    # options are specified with respect to the repo root
     ctx.obj.check_repo()
-    os.chdir(ctx.obj.repo_root)
     violations = []
     file_count = 0
     style_config = ctx.obj.style_config()
@@ -91,7 +95,7 @@ def style(ctx, check, dirty):
             if dirty:
                 files = set(files).intersection(dirty_files)
             file_count += len(files)
-            violations += astyle(files, astyle_config, check)
+            violations += astyle(files, astyle_config, check, ctx.obj.repo_root)
 
         # autopep8
         autopep8_config = style_config.get('autopep8', None)
@@ -101,12 +105,12 @@ def style(ctx, check, dirty):
             if dirty:
                 files = set(files).intersection(dirty_files)
             file_count += len(files)
-            violations += autopep8(files, autopep8_config, check)
+            violations += autopep8(files, autopep8_config, check, ctx.obj.repo_root)
         if check:
             for v in violations:
                 click.echo("Violation in: {}".format(v))
             click.echo('{} files with violations in {} files'.format(len(violations), file_count))
-            ctx.exit(len(violations))
+            ctx.exit(-1 if violations else 0)
         else:
             for v in violations:
                 click.echo("Formatted: {}".format(v))

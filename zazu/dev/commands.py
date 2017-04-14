@@ -259,8 +259,7 @@ def ticket(ctx, ticket):
     if ticket:
         issue_id = ticket
     else:
-        descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
-        issue_id = descriptor.id
+        issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id
     if not issue_id:
         raise click.ClickException('The current branch does not contain a ticket ID')
     else:

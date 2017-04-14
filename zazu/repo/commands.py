@@ -3,6 +3,7 @@ import click
 import git
 import os
 import zazu.git_helper
+import zazu.github_helper
 import zazu.build
 import zazu.util
 
@@ -32,12 +33,6 @@ def hooks(ctx):
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
-def get_git_hub_name(url):
-    name = url.rsplit('/', 1)[-1]
-    name = name.replace('.git', '')
-    return name
-
-
 @setup.command()
 @click.pass_context
 def ci(ctx):
@@ -47,7 +42,7 @@ def ci(ctx):
     project_config = ctx.obj.project_config()
     if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
         scm_url = ctx.obj.repo.remotes.origin.url
-        scm_name = get_git_hub_name(scm_url)
+        scm_org, scm_name = zazu.github_helper.parse_github_url(scm_url)
         components = project_config['components']
         for c in components:
             component = zazu.build.ComponentConfiguration(c)
@@ -94,10 +89,13 @@ def init(ctx):
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
 @click.pass_context
 def cleanup(ctx, remote, target_branch):
-    """Clean up merged branches that have been merged or are associated with cloded/resolved tickets"""
+    """Clean up merged branches that have been merged or are associated with closed/resolved tickets"""
     ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
-    repo_obj.git.checkout('develop')
+    try:
+        repo_obj.git.checkout('develop')
+    except git.exc.GitCommandError:
+        raise click.ClickException('unable to checkout "develop"')
     issue_tracker = ctx.obj.issue_tracker()
     closed_branches = set([])
     if remote:

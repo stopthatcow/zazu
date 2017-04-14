@@ -15,6 +15,3 @@ except IOError:
 
 class ZazuException(Exception):
     """Parent of all Zazu errors"""
-
-    def __init___(self, error):
-        Exception.__init__("Error: {}".format(error))
