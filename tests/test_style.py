@@ -33,13 +33,12 @@ def test_astyle(git_repo):
         bad_file_name = 'temp.c'
         write_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.astyle_styler.AstyleStyler()
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
+        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=False, working_dir=dir)
+        ret = styler.run([bad_file_name], verbose=False, dry_run=False, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
-        for r in ret:
-            assert False
+        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
+        assert not any(dict(ret).values())
 
 
 def test_autopep8(git_repo):
