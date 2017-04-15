@@ -77,7 +77,7 @@ def test_bad_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
     with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['style', '--check'])
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '-v'])
         assert result.exit_code
         assert result.output.endswith('6 files with violations in 6 files\n')
         result = runner.invoke(zazu.cli.cli, ['style'])
@@ -93,7 +93,7 @@ def test_dirty_style(repo_with_style_errors, monkeypatch):
     dir = repo_with_style_errors.working_tree_dir
     with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty'])
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty', '-v'])
         assert result.exit_code == 0
         assert result.output == '0 files with violations in 0 files\n'
         monkeypatch.setattr('zazu.git_helper.get_touched_files', lambda x: ['temp.c'])
