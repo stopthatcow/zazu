@@ -32,7 +32,7 @@ class Autopep8Styler(zazu.styler.Styler):
         fix_args = args + ['--in-place', file]
 
         fix_needed = True
-        if verbose or dry_run:
+        if dry_run or verbose:
             output = zazu.util.check_output(check_args)
             if not output:
                 fix_needed = False

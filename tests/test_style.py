@@ -9,7 +9,7 @@ import zazu.style
 
 def write_file_with_bad_style(file):
     with open(file, 'w') as f:
-        f.write('\n ')
+        f.write('\n \n ')
 
 
 @pytest.fixture()
@@ -80,7 +80,7 @@ def test_bad_style(repo_with_style_errors):
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '-v'])
         assert result.exit_code
         assert result.output.endswith('6 files with violations in 6 files\n')
-        result = runner.invoke(zazu.cli.cli, ['style'])
+        result = runner.invoke(zazu.cli.cli, ['style' '-v'])
         assert result.exit_code == 0
         assert result.output.endswith('6 files fixed in 6 files\n')
         result = runner.invoke(zazu.cli.cli, ['style', '--check'])
@@ -97,7 +97,7 @@ def test_dirty_style(repo_with_style_errors, monkeypatch):
         assert result.exit_code == 0
         assert result.output == '0 files with violations in 0 files\n'
         monkeypatch.setattr('zazu.git_helper.get_touched_files', lambda x: ['temp.c'])
-        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty'])
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty', '-v'])
         assert result.exit_code
         assert result.output.endswith('1 files with violations in 1 files\n')
 

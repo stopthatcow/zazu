@@ -30,6 +30,7 @@ class ClangFormatStyler(zazu.styler.Styler):
 
         check_args = args + ['--output-replacements-xml', file]
         fix_args = args + ['-i', file]
+
         fix_needed = True
         if dry_run or verbose:
             output = zazu.util.check_output(check_args)
