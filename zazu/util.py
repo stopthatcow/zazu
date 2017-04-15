@@ -12,12 +12,27 @@ except ImportError:
         pass
 import builtins
 import click
+import fnmatch
 import inquirer
 import os
-import fnmatch
+import subprocess
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
+
+
+def check_output(*args, **kwargs):
+    try:
+        return subprocess.check_output(*args, **kwargs)
+    except OSError:
+        raise_uninstalled(args[0][0])
+
+
+FAIL_OK = [click.style('FAIL', fg='red', bold=True), click.style(' OK ', fg='green', bold=True)]
+
+
+def format_checklist_item(tag, text, tag_formats=FAIL_OK):
+    return '[{}] {}'.format(tag_formats[tag], text)
 
 
 def prompt(text, default=None, expected_type=str):

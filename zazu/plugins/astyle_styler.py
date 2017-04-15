@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """astyle plugin for zazu"""
 import os
-import subprocess
 import zazu.styler
 import zazu.util
 
@@ -11,32 +10,33 @@ __copyright__ = "Copyright 2017"
 
 class AstyleStyler(zazu.styler.Styler):
     """Astyle plugin for code styling"""
-    def run(self, files, check, working_dir):
+
+    def run(self, files, verbose, dry_run, working_dir):
         """Run astyle on a set of files"""
-        ret = []
-        if len(files):
+        violations = []
+        if files:
             args = ['astyle', '-v']
             args += self.options
-            if check:
+            if dry_run:
                 args.append('--dry-run')
             args += [os.path.join(working_dir, f) for f in files]
-            try:
-                output = subprocess.check_output(args)
-            except OSError:
-                zazu.util.raise_uninstalled(args[0])
+            output = zazu.util.check_output(args)
             needle = 'Formatted  '
             for l in output.split('\n'):
                 if l.startswith(needle):
-                    ret.append(os.path.relpath(l[len(needle):], working_dir))
-        return ret
+                    violations.append(os.path.relpath(l[len(needle):], working_dir))
+        for f in files:
+            yield f, f in violations
+
 
     @staticmethod
     def default_extensions():
-        return ['*.cc',
+        return ['*.c',
+                '*.cc',
                 '*.cpp',
+                '*.h',
                 '*.hpp',
-                '*.c',
-                '*.h']
+                '*.java']
 
     @staticmethod
     def type():

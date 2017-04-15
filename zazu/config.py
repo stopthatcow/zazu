@@ -40,17 +40,17 @@ def continuous_integration_factory(config):
         if type in known_types:
             return known_types[type](config)
         else:
-            raise zazu.ZazuException('{} is not a known CI service, please choose from {}'.format(type,
-                                                                                                  known_types.keys()))
+            raise click.ClickException('{} is not a known CI service, please choose from {}'.format(type,
+                                                                                                    known_types.keys()))
     else:
-        raise zazu.ZazuException('CI config requires a "type" field')
+        raise click.ClickException('CI config requires a "type" field')
 
 
 def styler_factory(config):
     """A factory function that makes and initializes the stylers from the config"""
     stylers = []
     plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
-    known_types = {p.type().lower(): p for p in plugins}
+    known_types = {p.type(): p for p in plugins}
     WELL_KNOWN_KEYS = ['exclude', 'include']
     excludes = config.get('exclude', [])
     for k in config.keys():
@@ -59,8 +59,8 @@ def styler_factory(config):
                 includes = config.get('include', known_types[k].default_extensions())
                 stylers.append(known_types[k].from_config(config[k], excludes, includes))
             else:
-                raise zazu.ZazuException('{} is not a known styler, please choose from {}'.format(type,
-                                                                                                  known_types.keys()))
+                raise click.ClickException('{} is not a known styler, please choose from {}'.format(k,
+                                                                                                    known_types.keys()))
     return stylers
 
 
@@ -105,24 +105,18 @@ class Config(object):
 
     def issue_tracker(self):
         if self._issue_tracker is None:
-            try:
-                self._issue_tracker = issue_tracker_factory(self.issue_tracker_config())
-            except zazu.ZazuException as e:
-                raise click.ClickException(str(e))
+            self._issue_tracker = issue_tracker_factory(self.issue_tracker_config())
         return self._issue_tracker
 
     def issue_tracker_config(self):
         try:
             return self.project_config()['issueTracker']
         except KeyError:
-            raise zazu.ZazuException("no issueTracker config found")
+            raise click.ClickException("no issueTracker config found")
 
     def continuous_integration(self):
         if self._continuous_integration is None:
-            try:
-                self._continuous_integration = continuous_integration_factory(self.ci_config())
-            except zazu.ZazuException as e:
-                raise click.ClickException(str(e))
+            self._continuous_integration = continuous_integration_factory(self.ci_config())
         return self._continuous_integration
 
     def ci_config(self):
