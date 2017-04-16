@@ -12,13 +12,12 @@ class AstyleStyler(zazu.styler.Styler):
 
     def style_file(self, file, verbose, dry_run):
         """Run astyle on a file"""
-        args = ['astyle', '-v'] + self.options
+        args = ['astyle', '--formatted'] + self.options
         if dry_run:
             args.append('--dry-run')
         args.append(file)
         output = zazu.util.check_output(args)
-        fix_needed = output.startswith('Formatted  ')
-        return file, fix_needed
+        return file, bool(output)
 
     @staticmethod
     def default_extensions():
