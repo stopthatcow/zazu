@@ -62,7 +62,7 @@ def test_clang_format(git_repo):
     with tests.conftest.working_directory(dir):
         bad_file_name = 'temp.c'
         write_file_with_bad_style(bad_file_name)
-        styler = zazu.plugins.clang_format_styler.ClangFormatStyler()
+        styler = zazu.plugins.clang_format_styler.ClangFormatStyler(['-style=google'])
         ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
         ret = styler.run([bad_file_name], verbose=True, dry_run=False, working_dir=dir)
