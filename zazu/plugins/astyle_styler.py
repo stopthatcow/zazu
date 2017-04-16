@@ -17,7 +17,7 @@ class AstyleStyler(zazu.styler.Styler):
             args.append('--dry-run')
         args.append(file)
         output = zazu.util.check_output(args)
-        fix_needed = not output.startswith('Formatted  ')
+        fix_needed = output.startswith('Formatted  ')
         return file, fix_needed
 
     @staticmethod
