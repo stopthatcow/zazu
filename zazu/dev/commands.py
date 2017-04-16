@@ -46,19 +46,17 @@ def make_ticket(issue_tracker):
     issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
     component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
     click.echo('Making a new {} in the "{}" project, "{}" component...'.format(issue_type.lower(), project, component))
-    summary = zazu.util.prompt('Enter a title')
+    summary = zazu.util.prompt('Enter a name')
     description = zazu.util.prompt('Enter a description')
-    issue = issue_tracker.create_issue(project, issue_type, summary, description, component)
-    # Self assign the new ticket
-    issue_tracker.assign_issue(issue, issue.fields.reporter.name)
-    return issue
+    return issue_tracker.create_issue(project, issue_type, summary, description, component)
+
 
 
 def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists"""
     try:
         issue = issue_tracker.issue(ticket_id)
-        click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
+        click.echo("Found ticket {}: {}".format(ticket_id, issue.name))
     except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket named "{}"'.format(ticket_id))
 
@@ -78,8 +76,8 @@ def make_issue_descriptor(name):
     known_types = set(['hotfix', 'release', 'feature'])
     type = None
     description = None
-    if '-' not in name:
-        raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
+    #if '-' not in name:
+    #    raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
     if len(components) > 1:
         type = components[-2]
@@ -213,11 +211,11 @@ def status(ctx):
             click.echo(click.style('Ticket info:', bg='white', fg='black'))
             try:
                 issue = issue_future.result()
-                type = issue.fields.issuetype.name
-                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green'), nl=False)
-                click.echo(issue.fields.summary)
+                type = issue.type
+                click.echo(click.style('    {} ({}): '.format(type, issue.status), fg='green'), nl=False)
+                click.echo(issue.name)
                 click.echo(click.style('    Description:\n', fg='green'), nl=False)
-                click.echo(wrap_text(issue.fields.description))
+                click.echo(wrap_text(issue.description))
             except zazu.issue_tracker.IssueTrackerError:
                 click.echo("    No ticket found")
 
@@ -226,11 +224,15 @@ def status(ctx):
             click.echo('    {} matching PRs'.format(len(matches)))
             if matches:
                 for p in matches:
-                    click.echo(click.style('    PR Name:  ', fg='green') + p.title)
+                    click.echo(click.style('    PR Name:  ', fg='green') + p.name)
                     click.echo(click.style('    PR State: ', fg='green') + p.state)
                     click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
 
                     # TODO: build status from TC
+
+
+
+
 
 
 @dev.command()

@@ -14,6 +14,9 @@ components:
             script:
               - pytest --cov-report html --cov=zazu
 
+issueTracker:
+    type: github
+
 style:
   exclude:
     - dependency/
