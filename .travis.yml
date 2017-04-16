@@ -9,6 +9,8 @@ python:
 before_install:
   - curl -L "https://downloads.sourceforge.net/project/astyle/astyle/astyle%203.0/astyle_3.0_linux.tar.gz?r=&ts=1492151403&use_mirror=pilotfiber" | tar xvz
   - pushd astyle/build/gcc && make -j$(getconf _NPROCESSORS_ONLN) all && sudo make install && popd
+  - astyle --version
+  - clang-format --version
 # command to install dependencies
 install: pip install tox-travis
 # command to run tests
