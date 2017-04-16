@@ -13,7 +13,7 @@ class Styler(object):
         self.excludes = excludes
         self.includes = includes
 
-    def run(self, files, check, working_dir):
+    def run(self, files, verbose, dry_run, working_dir):
         raise NotImplementedError('All style plugins must implement run()')
 
     @classmethod
