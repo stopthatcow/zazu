@@ -22,7 +22,7 @@ class AstyleStyler(zazu.styler.Styler):
             args += [os.path.join(working_dir, f) for f in files]
             output = zazu.util.check_output(args)
             needle = b'Formatted  '
-            for l in output.split(u'\n'):
+            for l in output.split(b'\n'):
                 if l.startswith(needle):
                     violations.append(os.path.relpath(l[len(needle):], working_dir))
         for f in files:
