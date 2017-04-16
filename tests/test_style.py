@@ -80,7 +80,7 @@ def test_bad_style(repo_with_style_errors):
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '-v'])
         assert result.exit_code
         assert result.output.endswith('6 files with violations in 6 files\n')
-        result = runner.invoke(zazu.cli.cli, ['style' '-v'])
+        result = runner.invoke(zazu.cli.cli, ['style', '-v'])
         assert result.exit_code == 0
         assert result.output.endswith('6 files fixed in 6 files\n')
         result = runner.invoke(zazu.cli.cli, ['style', '--check'])

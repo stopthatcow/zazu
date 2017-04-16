@@ -28,7 +28,6 @@ class AstyleStyler(zazu.styler.Styler):
         for f in files:
             yield f, f in violations
 
-
     @staticmethod
     def default_extensions():
         return ['*.c',
