@@ -21,8 +21,8 @@ class AstyleStyler(zazu.styler.Styler):
                 args.append('--dry-run')
             args += [os.path.join(working_dir, f) for f in files]
             output = zazu.util.check_output(args)
-            needle = 'Formatted  '
-            for l in output.split('\n'):
+            needle = b'Formatted  '
+            for l in output.split(u'\n'):
                 if l.startswith(needle):
                     violations.append(os.path.relpath(l[len(needle):], working_dir))
         for f in files:
