@@ -7,21 +7,25 @@ import zazu.cli
 import zazu.style
 
 
-def write_file_with_bad_style(file):
+def write_c_file_with_bad_style(file):
     with open(file, 'w') as f:
-        f.write('\n \n ')
+        f.write('void main(){\n\n}\n ')
+
+def write_py_file_with_bad_style(file):
+    with open(file, 'w') as f:
+        f.write('def main():\tpass\n\n\n ')
 
 
 @pytest.fixture()
 def repo_with_style_errors(repo_with_style):
     dir = repo_with_style.working_tree_dir
     with tests.conftest.working_directory(dir):
-        write_file_with_bad_style('temp.c')
-        write_file_with_bad_style('temp.cc')
-        write_file_with_bad_style('temp.cpp')
-        write_file_with_bad_style('temp.hpp')
-        write_file_with_bad_style('temp.h')
-        write_file_with_bad_style('temp.py')
+        write_c_file_with_bad_style('temp.c')
+        write_c_file_with_bad_style('temp.cc')
+        write_c_file_with_bad_style('temp.cpp')
+        write_c_file_with_bad_style('temp.hpp')
+        write_c_file_with_bad_style('temp.h')
+        write_py_file_with_bad_style('temp.py')
     return repo_with_style
 
 
@@ -31,7 +35,7 @@ def test_astyle(git_repo):
     dir = git_repo.working_tree_dir
     with tests.conftest.working_directory(dir):
         bad_file_name = 'temp.c'
-        write_file_with_bad_style(bad_file_name)
+        write_c_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.astyle_styler.AstyleStyler()
         ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
@@ -45,7 +49,7 @@ def test_autopep8(git_repo):
     dir = git_repo.working_tree_dir
     with tests.conftest.working_directory(dir):
         bad_file_name = 'temp.py'
-        write_file_with_bad_style(bad_file_name)
+        write_py_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.autopep8_styler.Autopep8Styler()
         ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
@@ -61,7 +65,7 @@ def test_clang_format(git_repo):
     dir = git_repo.working_tree_dir
     with tests.conftest.working_directory(dir):
         bad_file_name = 'temp.c'
-        write_file_with_bad_style(bad_file_name)
+        write_c_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.clang_format_styler.ClangFormatStyler(['-style=google'])
         ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
