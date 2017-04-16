@@ -10,7 +10,7 @@ __copyright__ = "Copyright 2017"
 class ClangFormatStyler(zazu.styler.Styler):
     """ClangFormat plugin for code styling."""
 
-    def clang_format_file(self, file, verbose, dry_run):
+    def style_file(self, file, verbose, dry_run):
         """checks a single file to see if it is within style guidelines and optionally fixes it"""
         args = ['clang-format'] + self. options
 
