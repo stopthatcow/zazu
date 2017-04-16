@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """astyle plugin for zazu"""
-import os
 import zazu.styler
 import zazu.util
 
