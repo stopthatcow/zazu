@@ -11,22 +11,15 @@ __copyright__ = "Copyright 2017"
 class AstyleStyler(zazu.styler.Styler):
     """Astyle plugin for code styling"""
 
-    def run(self, files, verbose, dry_run, working_dir):
-        """Run astyle on a set of files"""
-        violations = []
-        if files:
-            args = ['astyle', '-v']
-            args += self.options
-            if dry_run:
-                args.append('--dry-run')
-            args += [os.path.join(working_dir, f) for f in files]
-            output = zazu.util.check_output(args)
-            needle = 'Formatted  '
-            for l in output.split('\n'):
-                if l.startswith(needle):
-                    violations.append(os.path.relpath(l[len(needle):], working_dir))
-        for f in files:
-            yield f, f in violations
+    def style_file(self, file, verbose, dry_run):
+        """Run astyle on a file"""
+        args = ['astyle', '-v'] + self.options
+        if dry_run:
+            args.append('--dry-run')
+        args.append(file)
+        output = zazu.util.check_output(args)
+        fix_needed = not output.startswith('Formatted  ')
+        return file, fix_needed
 
     @staticmethod
     def default_extensions():

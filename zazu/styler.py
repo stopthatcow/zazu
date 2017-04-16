@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Styler class for zazu"""
+import functools
+import os
+import zazu.util
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -14,7 +17,14 @@ class Styler(object):
         self.includes = includes
 
     def run(self, files, verbose, dry_run, working_dir):
-        raise NotImplementedError('All style plugins must implement run()')
+        """Concurrently dispatches multiple workers to perform style_file."""
+        abs_files = [os.path.join(working_dir, f) for f in files]
+        work = [functools.partial(self.style_file, f, verbose, dry_run) for f in abs_files]
+        for file_path, violation in zazu.util.dispatch(work):
+            yield os.path.relpath(file_path, working_dir), violation
+
+    def style_file(self, file, verbose, dry_run):
+        raise NotImplementedError('All style plugins must implement style_file()')
 
     @classmethod
     def from_config(cls, config, excludes, includes):

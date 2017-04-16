@@ -12,8 +12,10 @@ except ImportError:
         pass
 import builtins
 import click
+import concurrent.futures
 import fnmatch
 import inquirer
+import multiprocessing
 import os
 import subprocess
 
@@ -26,6 +28,14 @@ def check_output(*args, **kwargs):
         return subprocess.check_output(*args, **kwargs)
     except OSError:
         raise_uninstalled(args[0][0])
+
+
+def dispatch(work):
+    """Dispatches a list of callables in multiple threads and yields their returns"""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        futures = {executor.submit(w): w for w in work}
+        for future in concurrent.futures.as_completed(futures):
+            yield future.result()
 
 
 FAIL_OK = [click.style('FAIL', fg='red', bold=True), click.style(' OK ', fg='green', bold=True)]
