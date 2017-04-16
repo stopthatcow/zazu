@@ -11,6 +11,7 @@ def write_c_file_with_bad_style(file):
     with open(file, 'w') as f:
         f.write('void main(){\n\n}\n ')
 
+
 def write_py_file_with_bad_style(file):
     with open(file, 'w') as f:
         f.write('def main():\tpass\n\n\n ')

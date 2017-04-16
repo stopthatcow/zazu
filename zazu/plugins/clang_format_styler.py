@@ -34,7 +34,7 @@ class ClangFormatStyler(zazu.styler.Styler):
         fix_needed = True
         if dry_run or verbose:
             output = zazu.util.check_output(check_args)
-            replacements_indicator = b'</replacement>'
+            replacements_indicator = '</replacement>'
             if replacements_indicator not in output:
                 fix_needed = False
         if not dry_run and fix_needed:
