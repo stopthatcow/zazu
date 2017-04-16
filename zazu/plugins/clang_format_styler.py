@@ -28,7 +28,7 @@ class ClangFormatStyler(zazu.styler.Styler):
         args = ['clang-format']
         args += options
 
-        check_args = args + ['--output-replacements-xml', file]
+        check_args = args + ['-output-replacements-xml', file]
         fix_args = args + ['-i', file]
 
         fix_needed = True
