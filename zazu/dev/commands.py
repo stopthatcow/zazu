@@ -51,7 +51,6 @@ def make_ticket(issue_tracker):
     return issue_tracker.create_issue(project, issue_type, summary, description, component)
 
 
-
 def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists"""
     try:
@@ -76,7 +75,7 @@ def make_issue_descriptor(name):
     known_types = set(['hotfix', 'release', 'feature'])
     type = None
     description = None
-    #if '-' not in name:
+    # if '-' not in name:
     #    raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
     if len(components) > 1:
@@ -229,10 +228,6 @@ def status(ctx):
                     click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
 
                     # TODO: build status from TC
-
-
-
-
 
 
 @dev.command()
