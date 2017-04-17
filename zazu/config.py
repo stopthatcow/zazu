@@ -25,7 +25,7 @@ def issue_tracker_factory(config):
             return known_types[type](config)
         else:
             raise zazu.ZazuException('{} is not a known issueTracker, please choose from {}'.format(type,
-                                                                                                    known_types.keys()))
+                                                                                                    sorted(known_types.keys())))
     else:
         raise zazu.ZazuException('IssueTracker config requires a "type" field')
 
@@ -41,7 +41,7 @@ def continuous_integration_factory(config):
             return known_types[type](config)
         else:
             raise click.ClickException('{} is not a known CI service, please choose from {}'.format(type,
-                                                                                                    known_types.keys()))
+                                                                                                    sorted(known_types.keys())))
     else:
         raise click.ClickException('CI config requires a "type" field')
 
@@ -60,7 +60,7 @@ def styler_factory(config):
                 stylers.append(known_types[k].from_config(config[k], excludes, includes))
             else:
                 raise click.ClickException('{} is not a known styler, please choose from {}'.format(k,
-                                                                                                    known_types.keys()))
+                                                                                                    sorted(known_types.keys())))
     return stylers
 
 

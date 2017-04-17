@@ -25,12 +25,8 @@ def repo_with_style(git_repo):
     style_config = {
         'style': {
             'exclude': ['dependency'],
-            'autopep8': {
-                'options': ''
-            },
-            'astyle': {
-                'options': ''
-            }
+            'autopep8': {},
+            'astyle': {}
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
