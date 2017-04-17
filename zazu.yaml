@@ -12,7 +12,7 @@ components:
         builds:
           - arch: python
             script:
-              - pytest --cov-report html --cov=zazu
+              - tox
 
 style:
   exclude:

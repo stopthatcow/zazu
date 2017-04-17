@@ -51,10 +51,9 @@ def styler_factory(config):
     stylers = []
     plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
     known_types = {p.type(): p for p in plugins}
-    WELL_KNOWN_KEYS = ['exclude', 'include']
     excludes = config.get('exclude', [])
     for k in config.keys():
-        if k not in WELL_KNOWN_KEYS:
+        if k not in ['exclude', 'include']:
             if k in known_types:
                 includes = config.get('include', known_types[k].default_extensions())
                 stylers.append(known_types[k].from_config(config[k], excludes, includes))
