@@ -310,4 +310,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
-    ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
+    try:
+        ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
+    except click.ClickException:
+        pass

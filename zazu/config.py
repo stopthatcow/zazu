@@ -25,7 +25,7 @@ def issue_tracker_factory(config):
             return known_types[type](config)
         else:
             raise zazu.ZazuException('{} is not a known issueTracker, please choose from {}'.format(type,
-                                                                                                    known_types.keys()))
+                                                                                                    sorted(known_types.keys())))
     else:
         raise zazu.ZazuException('IssueTracker config requires a "type" field')
 
@@ -40,10 +40,27 @@ def continuous_integration_factory(config):
         if type in known_types:
             return known_types[type](config)
         else:
-            raise zazu.ZazuException('{} is not a known CI service, please choose from {}'.format(type,
-                                                                                                  known_types.keys()))
+            raise click.ClickException('{} is not a known CI service, please choose from {}'.format(type,
+                                                                                                    sorted(known_types.keys())))
     else:
-        raise zazu.ZazuException('CI config requires a "type" field')
+        raise click.ClickException('CI config requires a "type" field')
+
+
+def styler_factory(config):
+    """A factory function that makes and initializes the stylers from the config"""
+    stylers = []
+    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
+    known_types = {p.type(): p for p in plugins}
+    excludes = config.get('exclude', [])
+    for k in config.keys():
+        if k not in ['exclude', 'include']:
+            if k in known_types:
+                includes = config.get('include', known_types[k].default_extensions())
+                stylers.append(known_types[k].from_config(config[k], excludes, includes))
+            else:
+                raise click.ClickException('{} is not a known styler, please choose from {}'.format(k,
+                                                                                                    sorted(known_types.keys())))
+    return stylers
 
 
 def path_gen(search_paths, file_names):
@@ -87,24 +104,18 @@ class Config(object):
 
     def issue_tracker(self):
         if self._issue_tracker is None:
-            try:
-                self._issue_tracker = issue_tracker_factory(self.issue_tracker_config())
-            except zazu.ZazuException as e:
-                raise click.ClickException(str(e))
+            self._issue_tracker = issue_tracker_factory(self.issue_tracker_config())
         return self._issue_tracker
 
     def issue_tracker_config(self):
         try:
             return self.project_config()['issueTracker']
         except KeyError:
-            raise zazu.ZazuException("no issueTracker config found")
+            raise click.ClickException("no issueTracker config found")
 
     def continuous_integration(self):
         if self._continuous_integration is None:
-            try:
-                self._continuous_integration = continuous_integration_factory(self.ci_config())
-            except zazu.ZazuException as e:
-                raise click.ClickException(str(e))
+            self._continuous_integration = continuous_integration_factory(self.ci_config())
         return self._continuous_integration
 
     def ci_config(self):
@@ -119,8 +130,8 @@ class Config(object):
                             'Use "zazu upgrade" to fix this'.format(required_zazu_version, zazu.__version__), fg='red')
         return self._project_config
 
-    def style_config(self):
-        return self.project_config().get('style', {})
+    def stylers(self):
+        return styler_factory(self.project_config().get('style', {}))
 
     def zazu_version_required(self):
         return self.project_config().get('zazu', '')

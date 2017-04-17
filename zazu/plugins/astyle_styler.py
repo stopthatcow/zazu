@@ -1,0 +1,33 @@
+# -*- coding: utf-8 -*-
+"""astyle plugin for zazu"""
+import zazu.styler
+import zazu.util
+
+__author__ = "Nicholas Wiles"
+__copyright__ = "Copyright 2017"
+
+
+class AstyleStyler(zazu.styler.Styler):
+    """Astyle plugin for code styling"""
+
+    def style_file(self, file, verbose, dry_run):
+        """Run astyle on a file"""
+        args = ['astyle', '--formatted'] + self.options
+        if dry_run:
+            args.append('--dry-run')
+        args.append(file)
+        output = zazu.util.check_output(args)
+        return file, bool(output)
+
+    @staticmethod
+    def default_extensions():
+        return ['*.c',
+                '*.cc',
+                '*.cpp',
+                '*.h',
+                '*.hpp',
+                '*.java']
+
+    @staticmethod
+    def type():
+        return 'astyle'

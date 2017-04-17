@@ -7,4 +7,4 @@ __copyright__ = "Copyright 2016"
 
 
 def test_teamcity_build_server():
-    tc = zazu.plugins.teamcity_build_server.TeamCityBuildServer('teamcity')
+    zazu.plugins.teamcity_build_server.TeamCityBuildServer('teamcity')

@@ -5,9 +5,9 @@ import pytest
 import tempfile
 import zazu.util
 try:
-    import __builtin__ as builtins
+    import __builtin__ as builtins  # NOQA
 except ImportError:
-    import builtins
+    import builtins  # NOQA
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
