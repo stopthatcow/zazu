@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for cmake interaction"""
-import subprocess
-import multiprocessing
-import os
-import pkg_resources
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'multiprocessing',
+    'os',
+    'pkg_resources',
+    'subprocess'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

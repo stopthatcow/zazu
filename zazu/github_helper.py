@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
-import click
-import getpass
-import github
-import keyring
-import re
-import requests
-import socket
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'getpass',
+    'github',
+    'keyring',
+    're',
+    'requests',
+    'socket'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -46,7 +48,7 @@ def get_gh_token():
 
 
 def make_gh():
-    token = keyring.get_password('https://api.github.com', 'token')
+    token = '80fa911ab6337aaa2e166939951786a008d45b4d'  # keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")
         token = get_gh_token()
