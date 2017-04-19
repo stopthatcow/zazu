@@ -3,6 +3,7 @@
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
+
 class LazyVersion():
     def __str__(self):
         import pkg_resources
@@ -14,7 +15,9 @@ class LazyVersion():
             version = "unknown"
         return version
 
+
 __version__ = LazyVersion()
+
 
 class ZazuException(Exception):
     """Parent of all Zazu errors"""
