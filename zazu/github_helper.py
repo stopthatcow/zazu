@@ -48,7 +48,7 @@ def get_gh_token():
 
 
 def make_gh():
-    token = '80fa911ab6337aaa2e166939951786a008d45b4d'  # keyring.get_password('https://api.github.com', 'token')
+    token =  keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")
         token = get_gh_token()
