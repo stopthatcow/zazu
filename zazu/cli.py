@@ -21,6 +21,7 @@ __copyright__ = "Copyright 2016"
 def cli(ctx):
     ctx.obj = zazu.config.Config(zazu.git_helper.get_repo_root(os.getcwd()))
 
+
 cli.add_command(zazu.upgrade.upgrade)
 cli.add_command(zazu.style.style)
 cli.add_command(zazu.build.build)

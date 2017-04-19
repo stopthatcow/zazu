@@ -100,4 +100,5 @@ def build(build_dir, build_type, target, verbose):
         zazu.util.raise_uninstalled(build_args[0])
     return ret
 
+
 build_types = ['release', 'debug', 'minSizeRel', 'relWithDebInfo', 'coverage']
