@@ -45,8 +45,8 @@ def make_ticket(issue_tracker):
     project = issue_tracker.default_project()
     issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
     component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
-    click.echo('Making a new {} in the "{}" project, "{}" component...'.format(issue_type.lower(), project, component))
-    summary = zazu.util.prompt('Enter a name')
+    click.echo('Making a new {} on {}...'.format(issue_type.lower(), issue_tracker.type()))
+    summary = zazu.util.prompt('Enter a title')
     description = zazu.util.prompt('Enter a description')
     return issue_tracker.create_issue(project, issue_type, summary, description, component)
 
