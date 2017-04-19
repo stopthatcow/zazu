@@ -79,8 +79,12 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
     def from_config(config):
         """Makes a GithubIssueTracker from a config"""
         # Get URL from current git repo:
-        repo = git.Repo(os.getcwd())
-        org, repo = zazu.github_helper.parse_github_url(repo.remotes.origin.url)
+        repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
+        try:
+            remote = repo.remotes.origin
+        except AttributeError:
+            raise zazu.issue_tracker.IssueTrackerError('No "origin" remote specified for this repo')
+        org, repo = zazu.github_helper.parse_github_url(remote.url)
         return GithubIssueTracker(org, repo)
 
     @staticmethod
