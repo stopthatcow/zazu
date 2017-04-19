@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
-import concurrent.futures
 import platform
 try:
     if platform.system() == 'Windows':
@@ -36,6 +35,7 @@ def lazy_import(scope, imports):
 lazy_import(locals(), [
     'builtins',
     'click',
+    'concurrent.futures',
     'fnmatch',
     'inquirer',
     'multiprocessing',

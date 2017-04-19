@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for teamcity interaction"""
-import teamcity.messages
 import zazu.build_server
 import zazu.credential_helper
 import zazu.util
@@ -8,7 +7,8 @@ zazu.util.lazy_import(locals(), [
     'click',
     'json',
     'pyteamcity',
-    'requests'
+    'requests',
+    'teamcity.messages'
 ])
 
 __author__ = "Nicholas Wiles"
