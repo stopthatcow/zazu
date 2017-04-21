@@ -50,7 +50,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         try:
             ret = self.jira_handle().issue(issue_id)
             # Only show description up to the separator
-            ret.fields.description = ret.fields.description.split('\n\n----')[0]
+            if ret.fields.description is None:
+                ret.fields.description = ''
+            ret.fields.description = ret.fields.description.split('\n\n----', 1)[0]
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
         return ret

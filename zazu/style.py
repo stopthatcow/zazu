@@ -62,6 +62,7 @@ def astyle(files, config, check, working_dir):
                 ret.append(os.path.relpath(l[len(needle):], working_dir))
     return ret
 
+
 default_astyle_paths = ['*.cc',
                         '*.cpp',
                         '*.hpp',
