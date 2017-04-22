@@ -53,7 +53,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         try:
             ret = self.jira_handle().issue(issue_id)
             # Only show description up to the separator
-            ret.fields.description = ret.fields.description.split('\n\n----')[0]
+            if ret.fields.description is None:
+                ret.fields.description = ''
+            ret.fields.description = ret.fields.description.split('\n\n----', 1)[0]
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
         return JiraIssueAdaptor(ret)
@@ -135,3 +137,6 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     @property
     def assignee(self):
         return self._jira_issue.fields.assignee.name
+
+    def __str__(self):
+        return str(self._jira_issue)
