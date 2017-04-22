@@ -223,7 +223,7 @@ def status(ctx):
             click.echo('    {} matching PRs'.format(len(matches)))
             if matches:
                 for p in matches:
-                    click.echo(click.style('    PR Name:  ', fg='green') + p.name)
+                    click.echo(click.style('    PR Name:  ', fg='green') + p.title)
                     click.echo(click.style('    PR State: ', fg='green') + p.state)
                     click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
 
