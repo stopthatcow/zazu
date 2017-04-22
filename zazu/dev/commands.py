@@ -72,11 +72,9 @@ def offer_to_stash_changes(repo):
 
 def make_issue_descriptor(name):
     """Splits input into type, id and description"""
-    known_types = set(['hotfix', 'release', 'feature'])
+    known_types = set(['hotfix', 'release', 'feature', 'bug'])
     type = None
     description = None
-    # if '-' not in name:
-    #    raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
     if len(components) > 1:
         type = components[-2]
