@@ -1,12 +1,27 @@
 Zazu (at your service)
 ======================
 |buildBadge| |coverageBadge|
+|ReleaseBadge| |DownloadsBadge|
+|LicenseBadge| |PythonVersionBadge|
 
 .. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
 
 .. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
     :target: https://travis-ci.org/stopthatcow/zazu
+
+.. |ReleaseBadge| image:: https://img.shields.io/pypi/v/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |DownloadsBadge| image:: https://img.shields.io/pypi/dm/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |LicenseBadge| image:: https://img.shields.io/pypi/l/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |PythonVersionBadge| image:: https://img.shields.io/pypi/pyversions/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
 
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
