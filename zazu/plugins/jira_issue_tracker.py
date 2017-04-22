@@ -55,7 +55,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             ret.fields.description = ret.fields.description.split('\n\n----', 1)[0]
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
-        return ret
+        return JiraIssueAdaptor(ret)
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
@@ -67,13 +67,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             }
             if component is not None:
                 issue_dict['components'] = [{'name': component}]
-            return self.jira_handle().create_issue(issue_dict)
-        except jira.exceptions.JIRAError as e:
-            raise zazu.issue_tracker.IssueTrackerError(str(e))
-
-    def assign_issue(self, issue, assignee):
-        try:
-            self.jira_handle().assign_issue(issue, assignee)
+            issue = self.jira_handle().create_issue(issue_dict)
+            self.jira_handle().assign_issue(issue, issue.fields.reporter.name)
+            return JiraIssueAdaptor(issue)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
@@ -109,3 +105,35 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 # Some ideas for APIs
 # list work assigned to me in this sprint
 # update ticket progress (transition states)
+
+
+class JiraIssueAdaptor(zazu.issue_tracker.Issue):
+    def __init__(self, jira_issue):
+        self._jira_issue = jira_issue
+
+    @property
+    def name(self):
+        return self._jira_issue.fields.summary
+
+    @property
+    def status(self):
+        return self._jira_issue.fields.status.name
+
+    @property
+    def description(self):
+        return self._jira_issue.fields.description
+
+    @property
+    def type(self):
+        return self._jira_issue.fields.issuetype.name
+
+    @property
+    def reporter(self):
+        return self._jira_issue.fields.reporter.name
+
+    @property
+    def assignee(self):
+        return self._jira_issue.fields.assignee.name
+
+    def __str__(self):
+        return str(self._jira_issue)

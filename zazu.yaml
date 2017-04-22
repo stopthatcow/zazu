@@ -14,6 +14,11 @@ components:
             script:
               - tox
 
+issueTracker:
+    type: github
+    owner: stopthatcow
+    repo: zazu
+
 style:
   exclude:
     - dependency/
