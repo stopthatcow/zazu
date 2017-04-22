@@ -12,12 +12,37 @@ except ImportError:
         pass
 import builtins
 import click
-import inquirer
-import os
+import concurrent.futures
 import fnmatch
+import inquirer
+import multiprocessing
+import os
+import subprocess
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
+
+
+def check_output(*args, **kwargs):
+    try:
+        return subprocess.check_output(*args, **kwargs)
+    except OSError:
+        raise_uninstalled(args[0][0])
+
+
+def dispatch(work):
+    """Dispatches a list of callables in multiple threads and yields their returns"""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        futures = {executor.submit(w): w for w in work}
+        for future in concurrent.futures.as_completed(futures):
+            yield future.result()
+
+
+FAIL_OK = [click.style('FAIL', fg='red', bold=True), click.style(' OK ', fg='green', bold=True)]
+
+
+def format_checklist_item(tag, text, tag_formats=FAIL_OK):
+    return '[{}] {}'.format(tag_formats[tag], text)
 
 
 def prompt(text, default=None, expected_type=str):
@@ -51,7 +76,7 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
     for dirName, subdirList, fileList in os.walk(base_path):
         for i in builtins.range(len(subdirList) - 1, -1, -1):
             sub = os.path.relpath(os.path.join(dirName, subdirList[i]), base_path)
-            if sub in exclude_dirs:
+            if sub in exclude_dirs or (exclude_hidden and sub[0] == '.'):
                 del subdirList[i]
         for f in fileList:
             if (not exclude_hidden) or (f[0] != '.'):
@@ -68,5 +93,5 @@ def pprint_list(data):
 
 
 def raise_uninstalled(pkg_name):
-    """Prints a warning to std error for a missing package"""
+    """Raises a exception for a missing package"""
     raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
