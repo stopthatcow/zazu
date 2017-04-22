@@ -10,14 +10,14 @@ __copyright__ = "Copyright 2017"
 class AstyleStyler(zazu.styler.Styler):
     """Astyle plugin for code styling"""
 
-    def style_file(self, file, verbose, dry_run):
+    def style_file(self, path, verbose, dry_run):
         """Run astyle on a file"""
         args = ['astyle', '--formatted'] + self.options
         if dry_run:
             args.append('--dry-run')
-        args.append(file)
+        args.append(path)
         output = zazu.util.check_output(args)
-        return file, bool(output)
+        return path, bool(output)
 
     @staticmethod
     def default_extensions():
