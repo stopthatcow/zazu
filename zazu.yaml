@@ -15,12 +15,9 @@ components:
               - tox
 
 issueTracker:
-    type: jira
-    url: https://zazucli.atlassian.net
-    project: ZZ
-    component:
-      - CI
-      - Ticketing
+    type: github
+    owner: stopthatcow
+    repo: zazu
 
 style:
   exclude:
