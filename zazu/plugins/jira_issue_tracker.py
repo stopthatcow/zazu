@@ -134,3 +134,6 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     @property
     def assignee(self):
         return self._jira_issue.fields.assignee.name
+
+    def __str__(self):
+        return str(self._jira_issue)
