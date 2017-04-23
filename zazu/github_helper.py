@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
 import zazu.util
+
 zazu.util.lazy_import(locals(), [
     'click',
     'getpass',
     'github',
-    'keyring',
     're',
     'requests',
     'socket'
@@ -48,6 +48,7 @@ def get_gh_token():
 
 
 def make_gh():
+    import keyring
     token = keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")

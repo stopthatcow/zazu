@@ -30,14 +30,6 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         """Get handle to ensure that JIRA credentials are in place"""
         self.jira_handle()
 
-    @staticmethod
-    def closed(issue):
-        return str(issue.fields.status) == 'Closed'
-
-    @staticmethod
-    def resolved(issue):
-        return str(issue.fields.status) == 'Resolved'
-
     def jira_handle(self):
         if self._jira_handle is None:
             username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
@@ -137,6 +129,10 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     @property
     def assignee(self):
         return self._jira_issue.fields.assignee.name
+
+    @property
+    def closed(self):
+        return str(self._jira_issue.fields.status) == 'Closed'
 
     def __str__(self):
         return str(self._jira_issue)
