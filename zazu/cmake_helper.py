@@ -34,7 +34,7 @@ def get_toolchain_file_from_arch(arch):
 
 def known_arches():
     """Lists arches that zazu is familiar with"""
-    return ['local',
+    return ['host',
             'arm32-linux-gnueabihf',
             'arm32-none-eabi',
             'x86_64-linux-gcc',

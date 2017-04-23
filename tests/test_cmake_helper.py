@@ -19,12 +19,12 @@ def test_get_toolchain_file_from_arch():
 def test_configure_cmake(tmp_dir, mocker):
     mocker.patch('zazu.util.call', return_value=0)
     args = {'ZAZU_BUILD_VERSION': '0.0.0.dev'}
-    zazu.cmake_helper.configure(tmp_dir, tmp_dir, 'local', 'release', args, echo=lambda x: x)
+    zazu.cmake_helper.configure(tmp_dir, tmp_dir, 'host', 'release', args, echo=lambda x: x)
     expected_call = [
         'cmake',
         tmp_dir,
         '-G', 'Unix Makefiles', '-DCMAKE_BUILD_TYPE=Release',
-        '-DCPACK_SYSTEM_NAME=local', '-DCPACK_PACKAGE_VERSION=0.0.0.dev',
+        '-DCPACK_SYSTEM_NAME=host', '-DCPACK_PACKAGE_VERSION=0.0.0.dev',
         '-DZAZU_TOOL_PATH={}'.format(zazu.tool.tool_helper.package_path),
         '-DZAZU_BUILD_VERSION=0.0.0.dev'
     ]

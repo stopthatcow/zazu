@@ -54,7 +54,7 @@ class BuildGoal(object):
     def __init__(self, goal):
         self._name = goal.get('name', '')
         self._description = goal.get('description', '')
-        self._build_type = goal.get('buildType', None)
+        self._build_type = goal.get('buildType', 'minSizeRel')
         self._build_vars = goal.get('buildVars', {})
         self._build_goal = goal.get('buildGoal', self._name)
         self._requires = goal.get('requires', {})
@@ -137,7 +137,7 @@ class BuildSpec(object):
 def cmake_build(repo_root, arch, type, goal, verbose, vars):
     """Build using cmake"""
     if arch not in zazu.cmake_helper.known_arches():
-        raise click.BadParameter("Arch not recognized, choose from:\n    - {}".format('\n    - '.join(zazu.cmake_helper.known_arches())))
+        raise click.BadParameter('Arch "{}" not recognized, choose from:\n'.format(arch, zazu.util.pprint_list(zazu.cmake_helper.known_arches())))
 
     build_dir = os.path.join(repo_root, 'build', '{}-{}'.format(arch, type))
     ret = 0
@@ -283,7 +283,7 @@ def add_version_args(repo_root, build_num, args):
 
 @click.command()
 @click.pass_context
-@click.option('-a', '--arch', default='local', help='the desired architecture to build for')
+@click.option('-a', '--arch', help='the desired architecture to build for')
 @click.option('-t', '--type', type=click.Choice(zazu.cmake_helper.build_types),
               help='defaults to what is specified in the config file, or release if unspecified there')
 @click.option('-n', '--build_num', help='build number', default=os.environ.get('BUILD_NUMBER', 0))
@@ -306,7 +306,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     build_args.update(extra_args)
     add_version_args(ctx.obj.repo_root, build_num, build_args)
     if spec.build_script() is None:
-        cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
+        cmake_build(ctx.obj.repo_root, spec.build_arch(), spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
     try:

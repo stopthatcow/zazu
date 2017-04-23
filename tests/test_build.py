@@ -3,7 +3,11 @@ import click
 import future.utils
 import pytest
 import re
+import os
+import tests.conftest
 import zazu.build
+import subprocess
+import zazu.cmake_helper
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -47,3 +51,31 @@ def test_make_semver(git_repo):
     zazu.build.add_version_args(git_repo.working_tree_dir, 4, args)
     assert args['ZAZU_BUILD_VERSION'] == str(version)
     assert args['ZAZU_BUILD_VERSION_PEP440'] == pep440_version
+
+
+def test_build(repo_with_build_config, mocker):
+    mocker.patch('subprocess.call', return_value=0)
+    dir = repo_with_build_config.working_tree_dir
+    with tests.conftest.working_directory(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['build', 'echo_foobar'])
+        assert not result.exit_code
+    assert subprocess.call.call_args[0][0] == 'echo "foobar"'
+
+
+def test_cmake_build(repo_with_build_config, mocker):
+    mocker.patch('zazu.cmake_helper.configure', return_value=0)
+    mocker.patch('zazu.cmake_helper.build', return_value=0)
+    dir = repo_with_build_config.working_tree_dir
+    with tests.conftest.working_directory(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
+        print result.output
+        assert not result.exit_code
+        zazu.cmake_helper.configure.assert_called()
+        assert dir in zazu.cmake_helper.configure.call_args[0][0]
+        assert str(os.path.join(dir, 'build')) in zazu.cmake_helper.configure.call_args[0][1]
+        zazu.cmake_helper.build.assert_called()
+        assert dir in zazu.cmake_helper.build.call_args[0][0]
+        assert 'minSizeRel' in zazu.cmake_helper.build.call_args[0][1]
+        assert 'cmake_build' in zazu.cmake_helper.build.call_args[0][2]
