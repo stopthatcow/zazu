@@ -47,7 +47,7 @@ def get_gh_token():
 
 
 def make_gh():
-    import keyring
+    import keyring  # For some reason this doesn't play nicely with threads on lazy import.
     token = keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")
