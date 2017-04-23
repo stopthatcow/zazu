@@ -4,8 +4,8 @@ Zazu (at your service)
 |ReleaseBadge|  |FormatBadge|
 |LicenseBadge| |PythonVersionBadge|
 
-.. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
-    :target: https://coveralls.io/github/stopthatcow/zazu
+.. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg?branch=develop
+    :target: https://coveralls.io/github/stopthatcow/zazu?branch=develop
 
 .. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
     :target: https://travis-ci.org/stopthatcow/zazu
