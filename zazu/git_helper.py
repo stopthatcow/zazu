@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """git functions for zazu"""
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'filecmp',
+    'git',
+    'os',
+    'pkg_resources',
+    'shutil'
+])
 
-import os
-import filecmp
-import pkg_resources
-import shutil
-import git
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -28,6 +31,7 @@ def get_hooks_path(repo_base):
 
 def get_default_git_hooks():
     """gets list of get hooks to install"""
+
     return {
         "pre-commit": pkg_resources.resource_filename('zazu', 'githooks/pre-commit'),
         "post-checkout": pkg_resources.resource_filename('zazu', 'githooks/post-checkout'),

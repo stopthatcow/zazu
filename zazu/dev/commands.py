@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import click
 import concurrent.futures
-import webbrowser
-import urllib
-import textwrap
-import git
 import zazu.github_helper
 import zazu.config
 import zazu.util
-
+zazu.util.lazy_import(locals(), [
+    'click',
+    'git',
+    'webbrowser',
+    'textwrap',
+])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
@@ -232,6 +232,7 @@ def status(ctx):
 @click.pass_context
 def review(ctx):
     """Create or display pull request"""
+    import urllib
     encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
     url = ctx.obj.repo.remotes.origin.url
     start = 'github.com'

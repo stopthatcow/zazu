@@ -2,11 +2,14 @@
 """The goal of the GITHUB issue tracker is to expose a simple interface that will allow us to collect ticket information
  pertaining to the current branch based on ticket ID. Additionally we can integrate with GITHUB to create new tickets
  for bug fixes and features"""
-import git
-import github
-import os
 import zazu.github_helper
 import zazu.issue_tracker
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'git',
+    'github',
+    'os'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
