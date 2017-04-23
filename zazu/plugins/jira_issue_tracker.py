@@ -111,6 +111,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
+
     def __init__(self, jira_issue):
         self._jira_issue = jira_issue
 

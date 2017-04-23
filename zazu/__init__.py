@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2016"
 
 
 class LazyVersion():
+
     def __str__(self):
         import pkg_resources
         version_file_path = pkg_resources.resource_filename('zazu', 'version.txt')

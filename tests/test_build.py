@@ -47,4 +47,3 @@ def test_make_semver(git_repo):
     zazu.build.add_version_args(git_repo.working_tree_dir, 4, args)
     assert args['ZAZU_BUILD_VERSION'] == str(version)
     assert args['ZAZU_BUILD_VERSION_PEP440'] == pep440_version
-
