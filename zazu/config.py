@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """config classes and methods for zazu"""
-import os
-import click
-import git
-import straight.plugin
-import yaml
 import zazu.build_server
 import zazu.issue_tracker
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'git',
+    'os',
+    'straight.plugin',
+    'yaml'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

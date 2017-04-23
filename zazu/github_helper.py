@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
-import click
-import getpass
-import github
-import keyring
-import re
-import requests
-import socket
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'getpass',
+    'github',
+    'keyring',
+    're',
+    'requests',
+    'socket'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

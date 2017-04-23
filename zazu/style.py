@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """style functions for zazu"""
-import click
 import zazu.git_helper
 import zazu.styler
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

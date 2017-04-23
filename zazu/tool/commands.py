@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-import click
 import zazu.tool.tool_helper
-
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click'
+])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
