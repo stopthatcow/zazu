@@ -1,7 +1,7 @@
 Zazu (at your service)
 ======================
 |buildBadge| |coverageBadge|
-|ReleaseBadge| |DownloadsBadge|
+|ReleaseBadge|  |FormatBadge|
 |LicenseBadge| |PythonVersionBadge|
 
 .. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
@@ -13,15 +13,14 @@ Zazu (at your service)
 .. |ReleaseBadge| image:: https://img.shields.io/pypi/v/zazu.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
 
-.. |DownloadsBadge| image:: https://img.shields.io/pypi/dm/zazu.svg
-    :target: https://coveralls.io/github/stopthatcow/zazu
-
 .. |LicenseBadge| image:: https://img.shields.io/pypi/l/zazu.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
 
 .. |PythonVersionBadge| image:: https://img.shields.io/pypi/pyversions/zazu.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
 
+.. |FormatBadge| image:: https://img.shields.io/pypi/format/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
 
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
@@ -45,7 +44,7 @@ Pre-requsites (linux)
 
 ::
 
-    sudo apt-get install libncurses-dev python-dev libssl-dev libffi-dev
+    sudo apt-get install python-dev libssl-dev libffi-dev
     sudo pip install keyrings.alt
 
 All platforms
