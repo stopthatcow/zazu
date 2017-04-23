@@ -2,11 +2,14 @@
 """The goal of the GITHUB issue tracker is to expose a simple interface that will allow us to collect ticket information
  pertaining to the current branch based on ticket ID. Additionally we can integrate with GITHUB to create new tickets
  for bug fixes and features"""
-import git
-import github
-import os
 import zazu.github_helper
 import zazu.issue_tracker
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'git',
+    'github',
+    'os'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -79,13 +82,16 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
     def from_config(config):
         """Makes a GithubIssueTracker from a config"""
         # Get URL from current git repo:
-        repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
-        try:
-            remote = repo.remotes.origin
-        except AttributeError:
-            raise zazu.issue_tracker.IssueTrackerError('No "origin" remote specified for this repo')
-        org, repo = zazu.github_helper.parse_github_url(remote.url)
-        return GithubIssueTracker(org, repo)
+        owner = config.get('owner', None)
+        repo_name = config.get('repo', None)
+        if owner is None or repo_name is None:
+            repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
+            try:
+                remote = repo.remotes.origin
+            except AttributeError:
+                raise zazu.issue_tracker.IssueTrackerError('No "origin" remote specified for this repo')
+            owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
+        return GithubIssueTracker(owner, repo_name)
 
     @staticmethod
     def type():

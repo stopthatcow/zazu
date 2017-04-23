@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Styler class for zazu"""
-import functools
-import os
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'functools',
+    'os'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

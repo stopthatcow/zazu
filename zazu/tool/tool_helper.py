@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for tool install/uninstall"""
-import click
-import io
-import os
-import platform
-import requests
-import shutil
-import tarfile
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'io',
+    'os',
+    'platform',
+    'requests',
+    'shutil',
+    'tarfile'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

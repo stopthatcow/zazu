@@ -1,23 +1,47 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
+import platform
 try:
-    import gnureadline
-    assert gnureadline
-except ImportError:
-    try:
+    if platform.system() == 'Windows':
         import pyreadline
         assert pyreadline
-    except ImportError:
-        # Fall back to regular input
-        pass
-import builtins
-import click
-import concurrent.futures
-import fnmatch
-import inquirer
-import multiprocessing
-import os
-import subprocess
+    else:
+        import readline
+        assert readline
+except ImportError:
+    # Fall back to regular input
+    pass
+
+
+def lazy_import(scope, imports):
+    """Imports modules when they are used"""
+    class LazyImport(object):
+        def __init__(self, **entries):
+            self.__dict__.update(entries)
+    import peak.util.imports
+    assert peak.util.imports
+    for i in imports:
+        modules = i.split('.')
+        import_mock = peak.util.imports.lazyModule(i)
+        if len(modules) > 1:
+            d = import_mock
+            while len(modules) > 1:
+                d = {modules.pop(): d}
+            scope[modules[0]] = LazyImport(**d)
+        else:
+            scope[modules[0]] = import_mock
+
+
+lazy_import(locals(), [
+    'builtins',
+    'click',
+    'concurrent.futures',
+    'fnmatch',
+    'inquirer',
+    'multiprocessing',
+    'os',
+    'subprocess'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

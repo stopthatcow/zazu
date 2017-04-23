@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import click
 import concurrent.futures
-import webbrowser
-import urllib
-import textwrap
-import git
 import zazu.github_helper
 import zazu.config
 import zazu.util
-
+zazu.util.lazy_import(locals(), [
+    'click',
+    'git',
+    'webbrowser',
+    'textwrap',
+])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
@@ -72,11 +72,9 @@ def offer_to_stash_changes(repo):
 
 def make_issue_descriptor(name):
     """Splits input into type, id and description"""
-    known_types = set(['hotfix', 'release', 'feature'])
+    known_types = set(['hotfix', 'release', 'feature', 'bug'])
     type = None
     description = None
-    # if '-' not in name:
-    #    raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
     if len(components) > 1:
         type = components[-2]
@@ -223,7 +221,7 @@ def status(ctx):
             click.echo('    {} matching PRs'.format(len(matches)))
             if matches:
                 for p in matches:
-                    click.echo(click.style('    PR Name:  ', fg='green') + p.name)
+                    click.echo(click.style('    PR Name:  ', fg='green') + p.title)
                     click.echo(click.style('    PR State: ', fg='green') + p.state)
                     click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
 
@@ -234,6 +232,7 @@ def status(ctx):
 @click.pass_context
 def review(ctx):
     """Create or display pull request"""
+    import urllib
     encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
     url = ctx.obj.repo.remotes.origin.url
     start = 'github.com'

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-import click
-import git
-import os
+import zazu.build
 import zazu.git_helper
 import zazu.github_helper
-import zazu.build
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'git',
+    'os'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

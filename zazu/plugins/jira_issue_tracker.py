@@ -2,9 +2,12 @@
 """The goal of the JIRA issue tracker is to expose a simple interface that will allow us to collect ticket information
  pertaining to the current branch based on ticket ID. Additionally we can integrate with JIRA to create new tickets
  for bug fixes and features"""
-import jira
 import zazu.credential_helper
 import zazu.issue_tracker
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'jira'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -134,3 +137,6 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     @property
     def assignee(self):
         return self._jira_issue.fields.assignee.name
+
+    def __str__(self):
+        return str(self._jira_issue)
