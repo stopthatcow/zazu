@@ -40,11 +40,10 @@ def style(ctx, verbose, check, dirty):
                 files = set(files).intersection(dirty_files)
             file_count += len(files)
             checked_files = s.run(files, verbose, check, ctx.obj.repo_root)
-            if check or verbose:
-                for file, violation in checked_files:
-                    if verbose:
-                        click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), file)))
-                    violation_count += violation
+            for f, violation in checked_files:
+                if verbose:
+                    click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), f)))
+                violation_count += violation
         if verbose:
             if check:
                 click.echo('{} files with violations in {} files'.format(violation_count, file_count))
