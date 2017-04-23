@@ -52,10 +52,8 @@ All platforms
 
 ::
 
-    git clone git@github.com:stopthatcow/zazu.git
-    cd zazu
     sudo pip install --upgrade pip
-    sudo pip install --upgrade .
+    sudo pip install zazu
 
 If you get an error about a package called "six" use the following
 command instead: ``sudo pip install --upgrade --ignore-installed six .``
