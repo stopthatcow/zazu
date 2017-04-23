@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
 import zazu.util
-
 zazu.util.lazy_import(locals(), [
     'click',
     'getpass',
