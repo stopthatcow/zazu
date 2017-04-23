@@ -3,11 +3,16 @@ import zazu.build
 import zazu.git_helper
 import zazu.github_helper
 import zazu.util
+import zazu.config
+import zazu.plugins
+import inquirer
+import straight
 zazu.util.lazy_import(locals(), [
     'click',
     'functools',
     'git',
-    'os'
+    'os',
+    'yaml'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -81,11 +86,37 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 
 
 @repo.command()
+@click.option('-i', 'interactive', is_flag=True, help='starts interactive repo init')
 @click.pass_context
-def init(ctx):
+def init(ctx, interactive):
     """Initialize repo directory structure"""
-    raise NotImplementedError
 
+    def get_plugin_list(plugin_subclass):
+        """helper function to pull lists of plugins"""
+        plugins = straight.plugin.load('zazu.plugins', subclasses=plugin_subclass)
+        known_types = {p.type().lower(): p.from_config for p in plugins}
+        return known_types.keys()
+
+    if interactive: 
+        click.echo('Interactive Repo Design, by zazu')
+        trackers = get_plugin_list(zazu.issue_tracker.IssueTracker)
+        trackers.append('None')
+
+        issue_tracker_prompt=[
+            inquirer.List('Issue_Trackers',
+                         message = 'Pick an Issue Tracker',
+                         choices = trackers,
+                         ),
+        ]
+        issue_tracker = inquirer.prompt(issue_tracker_prompt)
+        stylers = get_plugin_list(zazu.styler.Styler)
+        styler_prompt=[
+            inquirer.Checkbox('Stylers',
+                              message = 'Pick some stylers',
+                              choices = stylers,
+                              ),
+        ]
+        styler = inquirer.prompt(styler_prompt)
 
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
