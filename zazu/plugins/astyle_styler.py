@@ -23,6 +23,7 @@ class AstyleStyler(zazu.styler.Styler):
     def default_extensions():
         return ['*.c',
                 '*.cc',
+                '*.cs',
                 '*.cpp',
                 '*.h',
                 '*.hpp',
