@@ -45,28 +45,26 @@ setuptools.setup(
     keywords='teamcity, jira, git, github',
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'version.txt']},
-    install_requires=['click>=6.6',
-                      'requests>=2.10.0',
-                      'PyGithub>=1.26.0',
-                      'jira>=1.0.10',
-                      'GitPython>=2.0.7',
-                      'pyteamcity>=0.1.1',
-                      'pyyaml>=3.11',
-                      'keyring>=8.7',
-                      'autopep8>=1.2.4',
-                      'semantic_version>=2.5.0',
-                      'gcovr>=3.2',
-                      'teamcity-messages>=1.19',
-                      'future>=0.16.0',
-                      'futures>=3.0.5',
-                      'inquirer>=2.1.7',
-                      'straight.plugin<=1.4.1'],
+    install_requires=['click>=6.6',               # BSD
+                      'requests>=2.10.0',         # Apache 2.0
+                      'PyGithub>=1.26.0',         # LGPL 3
+                      'jira>=1.0.10',             # BSD
+                      'GitPython>=2.0.7',         # BSD
+                      'pyteamcity>=0.1.1',        # MIT
+                      'pyyaml>=3.11',             # MIT
+                      'keyring>=8.7',             # MIT
+                      'autopep8>=1.2.4',          # MIT
+                      'semantic_version>=2.5.0',  # BSD
+                      'gcovr>=3.2',               # BSD
+                      'teamcity-messages>=1.19',  # Apache 2.0
+                      'future>=0.16.0',           # MIT
+                      'futures>=3.0.5',           # PSF
+                      'inquirer>=2.1.7',          # MIT
+                      'Importing>=1.10',          # PSF
+                      'straight.plugin<=1.4.1'],  # MIT
     extras_require={
         ':sys_platform == "win32"': [
-            'pyreadline>=2.1'
-        ],
-        ':sys_platform != "win32"': [
-            'gnureadline>=6.3.3'
+            'pyreadline>=2.1'                     # BSD
         ]
     },
     entry_points='''

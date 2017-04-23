@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 """build command for zazu"""
-import click
-import shutil
-import subprocess
-import semantic_version
-import os
-import zazu.tool.tool_helper
+
 import zazu.cmake_helper
 import zazu.config
+import zazu.tool.tool_helper
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'os',
+    'shutil',
+    'semantic_version',
+    'subprocess'
+])
+
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
