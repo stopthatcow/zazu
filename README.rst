@@ -56,7 +56,7 @@ All platforms
     sudo pip install zazu
 
 If you get an error about a package called "six" use the following
-command instead: ``sudo pip install --upgrade --ignore-installed six .``
+command instead: ``sudo pip install --upgrade --ignore-installed zazu``
 
 Command overview
 ----------------
