@@ -141,12 +141,16 @@ def tickets_from_branches(branches):
 
 def get_closed_branches(issue_tracker, branches):
     """get descriptors of branches that refer to closed branches"""
-    def ticket_name_if_closed(issue_tracker, ticket):
-        return ticket if ticket_is_closed(issue_tracker, ticket) else None
+    def ticket_if_closed(issue_tracker, ticket):
+        try:
+            if issue_tracker.issue(ticket.id).closed:
+             yield ticket
+        except zazu.issue_tracker.IssueTrackerError:
+            pass
 
-    work = [functools.partial(ticket_name_if_closed, issue_tracker, t) for t in tickets_from_branches(branches)]
+    work = [functools.partial(ticket_if_closed, issue_tracker, t) for t in tickets_from_branches(branches)]
     closed_tickets = zazu.util.dispatch(work)
-    return [t.get_branch_name() for t in closed_tickets if t is not None]
+    return [t.get_branch_name() for t in closed_tickets]
 
 
 def ticket_is_closed(issue_tracker, descriptor):
