@@ -60,12 +60,6 @@ class BuildGoal(object):
         self._requires = goal.get('requires', {})
         self._artifacts = goal.get('artifacts', [])
         self._builds = {}
-        self._default_spec = BuildSpec(goal=self._build_goal,
-                                       type=self._build_type,
-                                       vars=self._build_vars,
-                                       requires=self._requires,
-                                       description=self._description,
-                                       artifacts=self._artifacts)
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
@@ -98,7 +92,9 @@ class BuildGoal(object):
         return self._builds
 
     def get_build(self, arch):
-        return self._builds.get(arch, self._default_spec)
+        if arch is None and len(self._builds) == 1:
+            return self._builds[self._builds.keys()[0]]
+        return self._builds[arch]
 
 
 class BuildSpec(object):
@@ -208,9 +204,7 @@ def parse_describe(repo_root):
 
 def sanitize_branch_name(branch_name):
     """replaces punctuation that cannot be in semantic version from a branch name and replaces them with dashes"""
-    branch_name_sanitized = branch_name.replace('/', '-')
-    branch_name_sanitized = branch_name_sanitized.replace('_', '-')
-    return branch_name_sanitized
+    return branch_name.replace('/', '-').replace('_', '-')
 
 
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):

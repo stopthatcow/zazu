@@ -44,7 +44,7 @@ def style(ctx, verbose, check, dirty):
                 for file, violation in checked_files:
                     if verbose:
                         click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), file)))
-                    violation_count += 1 if violation else 0
+                    violation_count += violation
         if verbose:
             if check:
                 click.echo('{} files with violations in {} files'.format(violation_count, file_count))

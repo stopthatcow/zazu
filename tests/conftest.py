@@ -7,11 +7,15 @@ import yaml
 
 
 @pytest.fixture
-def git_repo():
-    dir = tempfile.mkdtemp()
-    print('Tmpdir: {}'.format(dir))
-    repo = git.Repo.init(dir)
-    readme = os.path.join(dir, 'README.md')
+def tmp_dir():
+    return tempfile.mkdtemp()
+
+
+@pytest.fixture
+def git_repo(tmp_dir):
+    print('Tmpdir: {}'.format(tmp_dir))
+    repo = git.Repo.init(tmp_dir)
+    readme = os.path.join(tmp_dir, 'README.md')
     with open(readme, 'w'):
         pass
     repo.index.add([readme])
