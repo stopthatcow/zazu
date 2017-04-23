@@ -5,6 +5,7 @@ import zazu.github_helper
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
+    'functools',
     'git',
     'os'
 ])
@@ -140,15 +141,22 @@ def tickets_from_branches(branches):
 
 def get_closed_branches(issue_tracker, branches):
     """get descriptors of branches that refer to closed branches"""
-    return [t.get_branch_name() for t in tickets_from_branches(branches) if ticket_is_closed(issue_tracker, t)]
+    def ticket_if_closed(tracker, ticket):
+        try:
+            if tracker.issue(ticket.id).closed:
+                return ticket
+        except zazu.issue_tracker.IssueTrackerError:
+            pass
+        return None
+
+    work = [functools.partial(ticket_if_closed, issue_tracker, t) for t in tickets_from_branches(branches)]
+    closed_tickets = zazu.util.dispatch(work)
+    return [t.get_branch_name() for t in closed_tickets if t is not None]
 
 
 def ticket_is_closed(issue_tracker, descriptor):
     """determines if a ticket is closed or not, defaults to false in case the ticket isn't found by the issue tracker"""
-    ret = False
     try:
-        issue = issue_tracker.issue(descriptor.id)
-        ret = issue_tracker.resolved(issue) or issue_tracker.closed(issue)
+        return issue_tracker.issue(descriptor.id).closed
     except zazu.issue_tracker.IssueTrackerError:
-        pass
-    return ret
+        return False

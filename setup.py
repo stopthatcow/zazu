@@ -61,7 +61,7 @@ setuptools.setup(
                       'futures>=3.0.5',           # PSF
                       'inquirer>=2.1.7',          # MIT
                       'Importing>=1.10',          # PSF
-                      'straight.plugin<=1.4.1'],  # MIT
+                      'straight.plugin>=1.4.1'],  # MIT
     extras_require={
         ':sys_platform == "win32"': [
             'pyreadline>=2.1'                     # BSD

@@ -32,14 +32,6 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
         """Get handle to ensure that github credentials are in place"""
         self.github_handle()
 
-    @staticmethod
-    def closed(issue):
-        return str(issue.fields.status) == 'Closed'
-
-    @staticmethod
-    def resolved(issue):
-        return str(issue.fields.status) == 'Resolved'
-
     def github_handle(self):
         if self._github_handle is None:
             self._github_handle = zazu.github_helper.make_gh()
@@ -56,6 +48,8 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
             return GitHubIssueAdaptor(self.github_repo().get_issue(int(issue_id)))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
+        except ValueError:
+            raise zazu.issue_tracker.IssueTrackerError('Invalid issue id {}'.format(issue_id))
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
@@ -125,6 +119,10 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
     @property
     def assignee(self):
         return self._github_issue.assignees[0].login
+
+    @property
+    def closed(self):
+        return str(self._github_issue.state) == 'closed'
 
     def __str__(self):
         return str(self._github_issue.number)
