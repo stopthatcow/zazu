@@ -88,34 +88,48 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 @click.option('-i', 'interactive', is_flag=True, help='starts interactive repo init')
 @click.pass_context
 def init(ctx, interactive):
-    """Initialize repo directory structure"""
+    """Initialize repo directory structure
+    TODo:
+    -if not git repo offer to make one
+    -if git repo, assume user wants current repo to use zazu
+    """
+    if not os.path.isdir('.git') and os.path.isfile('.git/config'):
+        """check for git repo in cwd"""
+        pass
 
-    def get_plugin_list(plugin_subclass):
+    def _get_plugin_list(plugin_subclass):
         """helper function to pull lists of plugins"""
         plugins = straight.plugin.load('zazu.plugins', subclasses=plugin_subclass)
         known_types = {p.type().lower(): p.from_config for p in plugins}
         return known_types.keys()
 
+    def _build_inquiry(name, message, choices=[], checkbox=False):
+        """helper function to build an inquiry"""
+        if not checkbox:
+            inquiry = [
+                inquirer.List(str(name),
+                             message = str(message),
+                             choices = trackers,
+                             ),
+            ]
+
+        else:
+            inquiry = [
+                inquirer.Checkbox(str(name),
+                             message = str(message),
+                             choices = choices,
+                             ),
+            ]
+        
+        return inquirer.prompt(inquiry)
+
     if interactive: 
         click.echo('Interactive Repo Design, by zazu')
-        trackers = get_plugin_list(zazu.issue_tracker.IssueTracker)
-        trackers.append('None')
-
-        issue_tracker_prompt=[
-            inquirer.List('Issue_Trackers',
-                         message = 'Pick an Issue Tracker',
-                         choices = trackers,
-                         ),
-        ]
-        issue_tracker = inquirer.prompt(issue_tracker_prompt)
-        stylers = get_plugin_list(zazu.styler.Styler)
-        styler_prompt=[
-            inquirer.Checkbox('Stylers',
-                              message = 'Pick some stylers',
-                              choices = stylers,
-                              ),
-        ]
-        styler = inquirer.prompt(styler_prompt)
+        trackers = _get_plugin_list(zazu.issue_tracker.IssueTracker)
+        tracker_list = trackers.append('None')
+        stylers = _get_plugin_list(zazu.styler.Styler)
+        _build_inquiry('trackers', 'Pick an Issue Tracker', choices=tracker_list)
+        _build_inquiry('stylers', 'Pick one or more stylers', choices=stylers, checkbox=True)
 
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
