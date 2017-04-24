@@ -12,7 +12,8 @@ zazu.util.lazy_import(locals(), [
     'functools',
     'git',
     'os',
-    'yaml'
+    'yaml',
+    'time'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -94,9 +95,19 @@ def init(ctx, interactive):
     -if not git repo offer to make one
     -if git repo, assume user wants current repo to use zazu
     """
-    if not os.path.isdir('.git') and os.path.isfile('.git/config'):
-        """check for git repo in cwd"""
-        pass
+    click.echo('Interactive Repo Design, by zazu')
+
+    # check for git repo in cwd
+    if not os.path.isdir('.git'):
+        event_time = time.gmtime()
+        default_name = time.mktime(event_time)
+
+        # click does not play well with py format
+        repo_name = click.prompt('No existing git repo found, Name your new repo:', default='zazuRepoCreated_'+str(default_name))
+        
+        if not os.path.exists(repo_name):
+            os.mkdir(repo_name)
+            bare_repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'),bare=True)
 
     def _get_plugin_list(plugin_subclass):
         """helper function to pull lists of plugins"""
@@ -125,7 +136,6 @@ def init(ctx, interactive):
         return inquirer.prompt(inquiry)
 
     if interactive: 
-        click.echo('Interactive Repo Design, by zazu')
         trackers = _get_plugin_list(zazu.issue_tracker.IssueTracker)
         tracker_list = trackers.append('None')
         stylers = _get_plugin_list(zazu.styler.Styler)
