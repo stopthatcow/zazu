@@ -12,7 +12,8 @@ zazu.util.lazy_import(locals(), [
     'git',
     'os',
     'yaml',
-    'time'
+    'time',
+    'socket'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -122,12 +123,20 @@ def init(ctx, interactive):
         
         return inquirer.prompt(inquiry)
 
+    def _build_zazu(issue_tracker={}, stylers={}):
+        """builds zazu.yml file"""
+        zazu_yaml_obj = []
+        zazu_yaml_obj.append(issue_tracker)
+        zazu_yaml_obj.append(stylers)
+        yaml.dump_all(zazu_yaml_obj, file('zazu.yaml','w'))
+
+            
     # check for git repo in cwd
     if not os.path.isdir('.git'):
         event_time = time.gmtime()
         default_name = time.mktime(event_time)
 
-        # click does not play well with py format
+        # click.prompt does not play well with py format
         repo_name = click.prompt('No existing git repo found, Name your new repo:', default='zazuRepoCreated_'+str(default_name))
         
         if not os.path.exists(repo_name):
@@ -135,16 +144,22 @@ def init(ctx, interactive):
             bare_repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'),bare=True)
     
     if click.confirm("We are Currently in a git repo, configure zazu.yml?", abort=True):
-        click.echo("Configuring Zazu for: "+os.getcwd())
+        click.echo("Configuring Zazu for: " + os.getcwd())
+        repo_name = os.path.basename(os.path.normpath(os.getcwd()))
 
     if interactive: 
         trackers = _get_plugin_list(zazu.issue_tracker.IssueTracker)
         tracker_list = trackers.append('None')
         stylers = _get_plugin_list(zazu.styler.Styler)
-        _build_inquiry('trackers', 'Pick an Issue Tracker', choices=tracker_list)
-        _build_inquiry('stylers', 'Pick one or more stylers', choices=stylers, checkbox=True)
+        tracker_choice =  _build_inquiry('trackers', 'Pick an Issue Tracker', choices=tracker_list)
+        if not tracker_choice['trackers'] == 'None':
+            owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
+        tracker_choice['owner'] = owner
+        tracker_choice['repo'] = repo_name
+        styler_choice = _build_inquiry('stylers', 'Pick one or more stylers', choices=stylers, checkbox=True)
+        _build_zazu(tracker_choice, styler_choice)
 
-
+        
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
