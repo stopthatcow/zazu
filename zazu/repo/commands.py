@@ -11,9 +11,9 @@ zazu.util.lazy_import(locals(), [
     'click',
     'git',
     'os',
-    'yaml',
     'time',
-    'socket'
+    'socket',
+    'yaml'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -123,13 +123,13 @@ def init(ctx, interactive):
         
         return inquirer.prompt(inquiry)
 
-    def _build_zazu(issue_tracker={}, stylers={}):
+    def _zazu_yaml(issue_tracker={}, stylers={}):
         """builds zazu.yml file"""
-        zazu_yaml_obj = []
-        zazu_yaml_obj.append(issue_tracker)
-        zazu_yaml_obj.append(stylers)
-        yaml.dump_all(zazu_yaml_obj, file('zazu.yaml','w'))
-
+        zazu_yaml_obj = {}
+        zazu_yaml_obj['issueTracker'] = issue_tracker
+        if stylers:
+            zazu_yaml_obj['style'] = stylers['style']
+        yaml.dump(zazu_yaml_obj, file('zazu.yaml','w'), default_flow_style=False)
             
     # check for git repo in cwd
     if not os.path.isdir('.git'):
@@ -151,13 +151,14 @@ def init(ctx, interactive):
         trackers = _get_plugin_list(zazu.issue_tracker.IssueTracker)
         tracker_list = trackers.append('None')
         stylers = _get_plugin_list(zazu.styler.Styler)
-        tracker_choice =  _build_inquiry('trackers', 'Pick an Issue Tracker', choices=tracker_list)
-        if not tracker_choice['trackers'] == 'None':
+        tracker_choice =  _build_inquiry('type', 'Pick an Issue Tracker', choices=tracker_list)
+
+        if not tracker_choice['type'] is 'None':
             owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
         tracker_choice['owner'] = owner
         tracker_choice['repo'] = repo_name
-        styler_choice = _build_inquiry('stylers', 'Pick one or more stylers', choices=stylers, checkbox=True)
-        _build_zazu(tracker_choice, styler_choice)
+        styler_choice = _build_inquiry('style', 'Pick one or more stylers', choices=stylers, checkbox=True)
+        _zazu_yaml(tracker_choice, styler_choice)
 
         
 @repo.command()
