@@ -45,7 +45,6 @@ Pre-requsites (linux)
 ::
 
     sudo apt-get install python-dev libssl-dev libffi-dev
-    sudo pip install keyrings.alt
 
 All platforms
 ~~~~~~~~~~~~~
