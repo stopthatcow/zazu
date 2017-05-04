@@ -4,7 +4,7 @@ import zazu.config
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
-    'concurrent.futures'
+    'concurrent.futures',
     'git',
     'webbrowser',
     'textwrap',
