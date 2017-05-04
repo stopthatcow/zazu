@@ -230,14 +230,7 @@ Add the following to your
 
 ::
 
-    _zazu_completion() {
-        COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
-                       COMP_CWORD=$COMP_CWORD \
-                       _ZAZU_COMPLETE=complete $1 ) )
-        return 0
-    }
-
-    complete -F _zazu_completion -o default zazu;
+    eval "$(_ZAZU_COMPLETE=source zazu)"
 
 ZSH users
 ~~~~~~~~~
@@ -248,14 +241,7 @@ Add the following to your ``~/.zshrc`` file
 
     autoload bashcompinit
     bashcompinit
-    _zazu_completion() {
-        COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
-                       COMP_CWORD=$COMP_CWORD \
-                       _ZAZU_COMPLETE=complete $1 ) )
-        return 0
-    }
-
-    complete -F _zazu_completion -o default zazu;
+    eval "$(_ZAZU_COMPLETE=source zazu)"
 
 Handy aliases
 -------------
