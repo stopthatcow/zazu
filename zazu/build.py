@@ -92,8 +92,13 @@ class BuildGoal(object):
         return self._builds
 
     def get_build(self, arch):
-        if arch is None and len(self._builds) == 1:
-            return self._builds[self._builds.keys()[0]]
+        if arch is None:
+            if len(self._builds) == 1:
+                only_arch = self._builds.keys()[0]
+                click.echo("No arch specified, but there is only one ({})".format(only_arch))
+                return self._builds[only_arch]
+            else:
+                raise click.ClickException("No arch specified, but there are multiple arches available")
         return self._builds[arch]
 
 
