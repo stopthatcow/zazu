@@ -7,11 +7,15 @@ import yaml
 
 
 @pytest.fixture
-def git_repo():
-    dir = tempfile.mkdtemp()
-    print('Tmpdir: {}'.format(dir))
-    repo = git.Repo.init(dir)
-    readme = os.path.join(dir, 'README.md')
+def tmp_dir():
+    return tempfile.mkdtemp()
+
+
+@pytest.fixture
+def git_repo(tmp_dir):
+    print('Tmpdir: {}'.format(tmp_dir))
+    repo = git.Repo.init(tmp_dir)
+    readme = os.path.join(tmp_dir, 'README.md')
     with open(readme, 'w'):
         pass
     repo.index.add([readme])
@@ -28,6 +32,40 @@ def repo_with_style(git_repo):
             'autopep8': {},
             'astyle': {}
         }
+    }
+    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
+        file.write(yaml.dump(style_config))
+    return git_repo
+
+
+@pytest.fixture()
+def repo_with_build_config(git_repo):
+    root = git_repo.working_tree_dir
+    style_config = {
+        'components': [
+            {
+                'name': 'zazu',
+                'goals': [
+                    {
+                        'name': 'echo_foobar',
+                        'builds': [
+                            {
+                                'arch': 'python',
+                                'script': ['echo "foobar"']
+                            }
+                        ]
+                    },
+                    {
+                        'name': 'cmake_build',
+                        'builds': [
+                            {
+                                'arch': 'host'
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
         file.write(yaml.dump(style_config))

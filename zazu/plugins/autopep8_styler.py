@@ -10,12 +10,12 @@ __copyright__ = "Copyright 2016"
 class Autopep8Styler(zazu.styler.Styler):
     """Autopep8 plugin for code styling."""
 
-    def style_file(self, file, verbose, dry_run):
+    def style_file(self, path, verbose, dry_run):
         """checks a single file to see if it is within style guidelines and optionally fixes it"""
         args = ['autopep8'] + self.options
 
-        check_args = args + ['--diff', file]
-        fix_args = args + ['--in-place', file]
+        check_args = args + ['--diff', path]
+        fix_args = args + ['--in-place', path]
 
         fix_needed = True
         if dry_run or verbose:
@@ -24,7 +24,7 @@ class Autopep8Styler(zazu.styler.Styler):
                 fix_needed = False
         if not dry_run and fix_needed:
             zazu.util.check_output(fix_args)
-        return file, fix_needed
+        return path, fix_needed
 
     @staticmethod
     def default_extensions():

@@ -13,6 +13,7 @@ class IssueTrackerError(Exception):
 
 
 class Issue:
+
     @property
     def name(self):
         raise NotImplementedError('Must implement name')
