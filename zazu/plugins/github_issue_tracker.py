@@ -93,6 +93,7 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
+
     def __init__(self, github_issue):
         self._github_issue = github_issue
 
