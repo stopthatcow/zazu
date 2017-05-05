@@ -230,28 +230,31 @@ def status(ctx):
 
 @dev.command()
 @click.pass_context
-def review(ctx):
+@click.option('--base', default='develop', help='The base branch to target')
+@click.option('--head', default='', help='The head branch (defaults to current branch)')
+def review(ctx, base, head):
     """Create or display pull request"""
-    import urllib
-    encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
+    # TODO(nwiles): Refactor this into a plugin.
     url = ctx.obj.repo.remotes.origin.url
-    # TODO(nwiles): As part of code review refactor, push this check to that plugin.
-    start = 'github.com'
-    if start in url:
+    if 'github.com' in url:
+        if not head:
+            head = ctx.obj.repo.active_branch.name
         gh = zazu.github_helper.make_gh()
         owner, repo_name = zazu.github_helper.parse_github_url(url)
         repo = gh.get_user(owner).get_repo(repo_name)
-        #pr = repo.create_pull(title='Foo', base='develop', head=ctx.obj.repo.active_branch.name, body='body')
-        # print(pr)
-        # Check if there is an existing review
-        # Open existing review
-        # Make a new review
-        base_url = url[url.find(start):].replace('.git', '').replace(':', '/')
-        url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
-        click.echo('Opening "{}"'.format(url))
-        webbrowser.open_new(url)
-        # TODO: add link to ticket in the PR, zazu logo
-        # <img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=50"/>
+        existing_pulls = repo.get_pulls(state='open', base=base, head=head)
+        if existing_pulls.totalCount:
+            pr = existing_pulls[0]
+        else:
+            descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
+            issue_id = descriptor.id
+            body = "Fixes #{}".format(issue_id)
+            pr = repo.create_pull(title='Pull request for issue #{}'.format(issue_id),
+                                  base=base,
+                                  head=head,
+                                  body=body)
+        click.echo('Opening "{}"'.format(pr.html_url))
+        webbrowser.open_new(pr.html_url)
     else:
         raise click.UsageError("Can't open a PR for a non-github repo")
 
