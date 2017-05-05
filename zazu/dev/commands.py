@@ -243,13 +243,15 @@ def review(ctx, base, head):
         owner, repo_name = zazu.github_helper.parse_github_url(url)
         repo = gh.get_user(owner).get_repo(repo_name)
         existing_pulls = repo.get_pulls(state='open', base=base, head=head)
-        if existing_pulls.totalCount:
+        try:
             pr = existing_pulls[0]
-        else:
+        except IndexError:
+            click.echo('No existing review found, creating one...')
             descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
             issue_id = descriptor.id
-            body = "Fixes #{}".format(issue_id)
-            pr = repo.create_pull(title='Pull request for issue #{}'.format(issue_id),
+            title = zazu.util.prompt('Title')
+            body = '{}\nFixes #{}'.format(zazu.util.prompt('Summary'), issue_id)
+            pr = repo.create_pull(title=title,
                                   base=base,
                                   head=head,
                                   body=body)

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The goal of the GITHUB issue tracker is to expose a simple interface that will allow us to collect ticket information
- pertaining to the current branch based on ticket ID. Additionally we can integrate with GITHUB to create new tickets
- for bug fixes and features"""
+"""The GithubIssueTracker implements the zazu.issue_tracker.IssueTracker plugin interface for manageing tickets on github"""
 import zazu.github_helper
 import zazu.issue_tracker
 import zazu.util
@@ -13,10 +11,6 @@ zazu.util.lazy_import(locals(), [
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
-
-ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
-ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
-GITHUB_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
 
 
 class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
