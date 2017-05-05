@@ -37,6 +37,9 @@ class IssueDescriptor(object):
             ret = '{}_{}'.format(ret, sanitized_description)
         return ret
 
+    def readable_description(self):
+        return self.description.replace('_', ' ').capitalize()
+
 
 def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
@@ -249,8 +252,8 @@ def review(ctx, base, head):
             click.echo('No existing review found, creating one...')
             descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
             issue_id = descriptor.id
-            title = zazu.util.prompt('Title')
-            body = '{}\nFixes #{}'.format(zazu.util.prompt('Summary'), issue_id)
+            title = zazu.util.prompt('Title', default=descriptor.readable_description())
+            body = '{}\n\nFixes #{}'.format(zazu.util.prompt('Summary'), issue_id)
             pr = repo.create_pull(title=title,
                                   base=base,
                                   head=head,
