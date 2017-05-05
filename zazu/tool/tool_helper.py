@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for tool install/uninstall"""
-import click
-import io
-import os
-import platform
-import requests
-import shutil
-import tarfile
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'io',
+    'os',
+    'platform',
+    'requests',
+    'shutil',
+    'tarfile'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
+
+package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
 
 
 class ToolInstallFunctions:
@@ -38,9 +42,6 @@ class ToolEnforcer:
 
     def uninstall(self):
         return self.functions.uninstall_fn(self.name, self.version)
-
-
-package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
 
 
 def get_install_path(name, version):
