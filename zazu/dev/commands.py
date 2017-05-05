@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import click
 import concurrent.futures
-import webbrowser
-import urllib
-import textwrap
-import git
 import zazu.github_helper
 import zazu.config
 import zazu.util
-
+zazu.util.lazy_import(locals(), [
+    'click',
+    'git',
+    'webbrowser',
+    'textwrap',
+])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
@@ -45,20 +45,17 @@ def make_ticket(issue_tracker):
     project = issue_tracker.default_project()
     issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
     component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
-    click.echo('Making a new {} in the "{}" project, "{}" component...'.format(issue_type.lower(), project, component))
+    click.echo('Making a new {} on {}...'.format(issue_type.lower(), issue_tracker.type()))
     summary = zazu.util.prompt('Enter a title')
     description = zazu.util.prompt('Enter a description')
-    issue = issue_tracker.create_issue(project, issue_type, summary, description, component)
-    # Self assign the new ticket
-    issue_tracker.assign_issue(issue, issue.fields.reporter.name)
-    return issue
+    return issue_tracker.create_issue(project, issue_type, summary, description, component)
 
 
 def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists"""
     try:
         issue = issue_tracker.issue(ticket_id)
-        click.echo("Found ticket {}: {}".format(ticket_id, issue.fields.summary))
+        click.echo("Found ticket {}: {}".format(ticket_id, issue.name))
     except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket named "{}"'.format(ticket_id))
 
@@ -75,11 +72,9 @@ def offer_to_stash_changes(repo):
 
 def make_issue_descriptor(name):
     """Splits input into type, id and description"""
-    known_types = set(['hotfix', 'release', 'feature'])
+    known_types = set(['hotfix', 'release', 'feature', 'bug'])
     type = None
     description = None
-    if '-' not in name:
-        raise click.ClickException("Branch name must be in the form PROJECT-NUMBER, type/PROJECT-NUMBER, or type/PROJECT_NUMBER_description")
     components = name.split('/')
     if len(components) > 1:
         type = components[-2]
@@ -125,7 +120,7 @@ def rename_branch(repo, old_branch, new_branch):
         repo.git.push(['origin', ':{}'.format(old_branch)])
     except git.exc.GitCommandError:
         pass
-    repo.git.push(['-u'])
+    repo.git.push(['--set-upstream', 'origin', new_branch])
 
 
 @dev.command()
@@ -213,11 +208,11 @@ def status(ctx):
             click.echo(click.style('Ticket info:', bg='white', fg='black'))
             try:
                 issue = issue_future.result()
-                type = issue.fields.issuetype.name
-                click.echo(click.style('    {} ({}): '.format(type, issue.fields.status.name), fg='green'), nl=False)
-                click.echo(issue.fields.summary)
+                type = issue.type
+                click.echo(click.style('    {} ({}): '.format(type, issue.status), fg='green'), nl=False)
+                click.echo(issue.name)
                 click.echo(click.style('    Description:\n', fg='green'), nl=False)
-                click.echo(wrap_text(issue.fields.description))
+                click.echo(wrap_text(issue.description))
             except zazu.issue_tracker.IssueTrackerError:
                 click.echo("    No ticket found")
 
@@ -237,10 +232,20 @@ def status(ctx):
 @click.pass_context
 def review(ctx):
     """Create or display pull request"""
+    import urllib
     encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
     url = ctx.obj.repo.remotes.origin.url
+    # TODO(nwiles): As part of code review refactor, push this check to that plugin.
     start = 'github.com'
     if start in url:
+        gh = zazu.github_helper.make_gh()
+        owner, repo_name = zazu.github_helper.parse_github_url(url)
+        repo = gh.get_user(owner).get_repo(repo_name)
+        #pr = repo.create_pull(title='Foo', base='develop', head=ctx.obj.repo.active_branch.name, body='body')
+        # print(pr)
+        # Check if there is an existing review
+        # Open existing review
+        # Make a new review
         base_url = url[url.find(start):].replace('.git', '').replace(':', '/')
         url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
         click.echo('Opening "{}"'.format(url))
@@ -259,8 +264,7 @@ def ticket(ctx, ticket):
     if ticket:
         issue_id = ticket
     else:
-        descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
-        issue_id = descriptor.id
+        issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id
     if not issue_id:
         raise click.ClickException('The current branch does not contain a ticket ID')
     else:

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for teamcity interaction"""
-import click
-import json
-import pyteamcity
-import requests
-import teamcity.messages
 import zazu.build_server
 import zazu.credential_helper
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'json',
+    'pyteamcity',
+    'requests',
+    'teamcity.messages'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -225,7 +228,7 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
         except KeyError:
             raise zazu.ZazuException('TeamCity config requires a "url" field')
 
-        from urlparse import urlparse
+        from future.moves.urllib.parse import urlparse
         parsed = urlparse(url)
         if parsed.netloc:
             components = parsed.netloc.split(':')

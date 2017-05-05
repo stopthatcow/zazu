@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
-import pkg_resources
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
-version_file_path = pkg_resources.resource_filename('zazu', 'version.txt')
 
-try:
-    with open(version_file_path, 'r') as version_file:
-        __version__ = version_file.readline().rstrip()
-except IOError:
-    __version__ = "unknown"
+class LazyVersion():
+
+    def __str__(self):
+        import pkg_resources
+        version_file_path = pkg_resources.resource_filename('zazu', 'version.txt')
+        try:
+            with open(version_file_path, 'r') as version_file:
+                version = version_file.readline().rstrip()
+        except IOError:
+            version = "unknown"
+        return version
+
+
+__version__ = LazyVersion()
 
 
 class ZazuException(Exception):
     """Parent of all Zazu errors"""
-
-    def __init___(self, error):
-        Exception.__init__("Error: {}".format(error))

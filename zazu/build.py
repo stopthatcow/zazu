@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 """build command for zazu"""
-import click
-import shutil
-import subprocess
-import semantic_version
-import os
-import zazu.tool.tool_helper
+
 import zazu.cmake_helper
 import zazu.config
+import zazu.tool.tool_helper
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'os',
+    'shutil',
+    'semantic_version',
+    'subprocess'
+])
+
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -202,7 +207,7 @@ def parse_describe(repo_root):
 
 
 def sanitize_branch_name(branch_name):
-    """replaces punctuation that cannot be in semantic version from a branch name and replaces them with decimals"""
+    """replaces punctuation that cannot be in semantic version from a branch name and replaces them with dashes"""
     branch_name_sanitized = branch_name.replace('/', '-')
     branch_name_sanitized = branch_name_sanitized.replace('_', '-')
     return branch_name_sanitized
@@ -301,7 +306,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
     install_requirements(requirements, verbose)
-    build_args = {"ZAZU_TOOL_DIR": os.path.expanduser('~/.zazu/tools')}
+    build_args = {"ZAZU_TOOL_DIR": zazu.tool.tool_helper.package_path}
     extra_args = parse_key_value_pairs(extra_args_str)
     build_args.update(spec.build_vars())
     build_args.update(extra_args)
@@ -310,4 +315,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
         cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
-    ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
+    try:
+        ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
+    except click.ClickException:
+        pass

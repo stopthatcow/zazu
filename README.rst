@@ -1,22 +1,35 @@
 Zazu (at your service)
 ======================
-.. image:: http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png
-   :height: 150 px
-   :width: 150 px
-   :align: center
+|buildBadge| |coverageBadge|
+|ReleaseBadge|  |FormatBadge|
+|LicenseBadge| |PythonVersionBadge|
+
+.. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg?branch=develop
+    :target: https://coveralls.io/github/stopthatcow/zazu?branch=develop
+
+.. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
+    :target: https://travis-ci.org/stopthatcow/zazu
+
+.. |ReleaseBadge| image:: https://img.shields.io/pypi/v/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |LicenseBadge| image:: https://img.shields.io/pypi/l/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |PythonVersionBadge| image:: https://img.shields.io/pypi/pyversions/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |FormatBadge| image:: https://img.shields.io/pypi/format/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
 
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
 
-..
-  digraph G {
-    "Zazu" -> "TeamCity"
-    "Zazu" -> "GitHub"
-    "Zazu" -> "Jira"
-  }
-
-.. image:: https://github.com/stopthatcow/zazu/raw/9357ae070b6277ad59579e95e036c264ba63086f/doc/services.png
-   :align: center
+.. image:: https://g.gravizo.com/svg?digraph%20G%20{
+    "Zazu" -> "Continuous Integration"
+    "Zazu" -> "Source Control"
+    "Zazu" -> "Issue Tracker"}
+    :align: center
 
 Zazu is implemented in Python and is a
 `Click <http://click.pocoo.org/5/>`__ based CLI. If you're wondering why
@@ -31,61 +44,52 @@ Pre-requsites (linux)
 
 ::
 
-    sudo apt-get install libncurses-dev python-dev libssl-dev libffi-dev
-    sudo pip install keyrings.alt
+    sudo apt-get install python-dev libssl-dev libffi-dev
 
 All platforms
 ~~~~~~~~~~~~~
 
 ::
 
-    git clone git@github.com:stopthatcow/zazu.git
-    cd zazu
     sudo pip install --upgrade pip
-    sudo pip install --upgrade .
+    sudo pip install zazu
 
 If you get an error about a package called "six" use the following
-command instead: ``sudo pip install --upgrade --ignore-installed six .``
+command instead: ``sudo pip install --upgrade --ignore-installed zazu``
 
 Command overview
 ----------------
 The following diagram shows the available subcommands of zazu.
 
-..
-  digraph G {
-    "zazu" -> "build"
-    "zazu" -> "tool"
-    "tool" -> "install"
-    "tool" -> "uninstall"
-    "zazu" -> "style"
-    "zazu" -> "repo"
-    "repo" -> "setup"
-    "setup" -> "hooks"
-    "setup" -> "ci"
-    "repo" -> "cleanup"
-    "repo" -> "repo_init"
-    repo_init [label=init, style=dashed]
-    "repo" -> "repo_clone"
-    repo_clone [label=clone, style=dashed]
-    "zazu" -> "dev"
-    "dev" -> "start"
-    "dev" -> "status"
-    dev_builds [label=builds, style=dashed]
-    "dev" -> "dev_builds"
-    "dev" -> "review"
-    "dev" -> "ticket"
-  }
-
-.. image:: https://github.com/stopthatcow/zazu/raw/9357ae070b6277ad59579e95e036c264ba63086f/doc/cmds.png
-   :align: center
+.. image:: https://g.gravizo.com/svg?digraph%20G%20{
+      "zazu" -> "build"
+      "zazu" -> "tool"
+      "tool" -> "install"
+      "tool" -> "uninstall"
+      "zazu" -> "style"
+      "zazu" -> "repo"
+      "repo" -> "setup"
+      "setup" -> "hooks"
+      "setup" -> "ci"
+      "repo" -> "cleanup"
+      "repo" -> "repo_init"
+      repo_init [label=init, style=dashed]
+      "repo" -> "clone"
+      "zazu" -> "dev"
+      "dev" -> "start"
+      "dev" -> "status"
+      dev_builds [label=builds, style=dashed]
+      "dev" -> "dev_builds"
+      "dev" -> "review"
+      "dev" -> "ticket"}
 
 Note: dashed lines are not yet implemented
 
 Repo management
 ---------------
 
--  ``zazu repo clone <name>`` clones repo from github and installs GIT
-   hooks (Unimplemented)
+-  ``zazu repo clone <name>`` clones repo and installs GIT
+   hooks
 -  ``zazu repo init <name>`` initializes repo to default project
    structure (Unimplemented)
 -  ``zazu repo setup hooks`` installs default GIT hooks to the repo
@@ -216,19 +220,17 @@ Command autocompletion
 ----------------------
 
 Note that autocompletion currently only works for commands and
-subcommands (not arguments) ###BASH users Add the following to your
+subcommands (not arguments).
+
+BASH users
+~~~~~~~~~~
+
+Add the following to your
 ``~/.bashrc`` file:
 
 ::
 
-    _zazu_completion() {
-        COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
-                       COMP_CWORD=$COMP_CWORD \
-                       _ZAZU_COMPLETE=complete $1 ) )
-        return 0
-    }
-
-    complete -F _zazu_completion -o default zazu;
+    eval "$(_ZAZU_COMPLETE=source zazu)"
 
 ZSH users
 ~~~~~~~~~
@@ -239,14 +241,7 @@ Add the following to your ``~/.zshrc`` file
 
     autoload bashcompinit
     bashcompinit
-    _zazu_completion() {
-        COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
-                       COMP_CWORD=$COMP_CWORD \
-                       _ZAZU_COMPLETE=complete $1 ) )
-        return 0
-    }
-
-    complete -F _zazu_completion -o default zazu;
+    eval "$(_ZAZU_COMPLETE=source zazu)"
 
 Handy aliases
 -------------
