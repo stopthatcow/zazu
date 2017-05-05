@@ -235,8 +235,17 @@ def review(ctx):
     import urllib
     encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
     url = ctx.obj.repo.remotes.origin.url
+    # TODO(nwiles): As part of code review refactor, push this check to that plugin.
     start = 'github.com'
     if start in url:
+        gh = zazu.github_helper.make_gh()
+        owner, repo_name = zazu.github_helper.parse_github_url(url)
+        repo = gh.get_user(owner).get_repo(repo_name)
+        #pr = repo.create_pull(title='Foo', base='develop', head=ctx.obj.repo.active_branch.name, body='body')
+        # print(pr)
+        # Check if there is an existing review
+        # Open existing review
+        # Make a new review
         base_url = url[url.find(start):].replace('.git', '').replace(':', '/')
         url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
         click.echo('Opening "{}"'.format(url))
