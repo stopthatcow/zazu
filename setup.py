@@ -53,6 +53,7 @@ setuptools.setup(
                       'pyteamcity>=0.1.1',        # MIT
                       'pyyaml>=3.11',             # MIT
                       'keyring>=8.7',             # MIT
+                      'keyrings.alt>=2.2',        # MIT
                       'autopep8>=1.2.4',          # MIT
                       'semantic_version>=2.5.0',  # BSD
                       'gcovr>=3.2',               # BSD
