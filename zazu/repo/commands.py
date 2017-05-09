@@ -144,7 +144,7 @@ def init(ctx, interactive):
             os.mkdir(repo_name)
             bare_repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'),bare=True)
     
-    if click.confirm("We are Currently in a git repo, configure zazu.yml?", abort=True):
+    if click.confirm("We are currently in a git repo, configure zazu.yml?", abort=True):
         click.echo("Configuring Zazu for: " + os.getcwd())
         repo_name = os.path.basename(os.path.normpath(os.getcwd()))
 
@@ -156,11 +156,12 @@ def init(ctx, interactive):
 
         if not tracker_choice['type'] is 'None':
             owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
-        tracker_choice['owner'] = owner
-        tracker_choice['repo'] = repo_name
+            tracker_choice['owner'] = owner
+            tracker_choice['repo'] = repo_name
+
         styler_choice = _build_inquiry('style', 'Pick one or more stylers', choices=stylers, checkbox=True)
         _zazu_yaml(tracker_choice, styler_choice)
-
+        click.echo('Creating zazu.yaml')
         
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
