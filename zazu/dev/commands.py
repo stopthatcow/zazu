@@ -234,18 +234,21 @@ def status(ctx):
 @dev.command()
 @click.pass_context
 @click.option('--base', default='develop', help='The base branch to target')
-@click.option('--head', default='', help='The head branch (defaults to current branch)')
+@click.option('--head', default='', help='The head branch (defaults to current branch and origin organization)')
 def review(ctx, base, head):
     """Create or display pull request"""
     # TODO(nwiles): Refactor this into a plugin.
     url = ctx.obj.repo.remotes.origin.url
     if 'github.com' in url:
-        if not head:
-            head = ctx.obj.repo.active_branch.name
         gh = zazu.github_helper.make_gh()
         owner, repo_name = zazu.github_helper.parse_github_url(url)
         repo = gh.get_user(owner).get_repo(repo_name)
-        existing_pulls = repo.get_pulls(state='open', base=base, head=head)
+        if head:
+            if ':' not in head:
+                head = '{}:{}'.format(owner, head)
+        else:
+            head = '{}:{}'.format(owner, ctx.obj.repo.active_branch.name)
+        existing_pulls = repo.get_pulls(state='open', head=head, base=base)
         try:
             pr = existing_pulls[0]
         except IndexError:
