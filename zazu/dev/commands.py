@@ -37,6 +37,9 @@ class IssueDescriptor(object):
             ret = '{}_{}'.format(ret, sanitized_description)
         return ret
 
+    def readable_description(self):
+        return self.description.replace('_', ' ').capitalize()
+
 
 def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
@@ -230,19 +233,36 @@ def status(ctx):
 
 @dev.command()
 @click.pass_context
-def review(ctx):
+@click.option('--base', default='develop', help='The base branch to target')
+@click.option('--head', default='', help='The head branch (defaults to current branch and origin organization)')
+def review(ctx, base, head):
     """Create or display pull request"""
-    import urllib
-    encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
+    # TODO(nwiles): Refactor this into a plugin.
     url = ctx.obj.repo.remotes.origin.url
-    start = 'github.com'
-    if start in url:
-        base_url = url[url.find(start):].replace('.git', '').replace(':', '/')
-        url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
-        click.echo('Opening "{}"'.format(url))
-        webbrowser.open_new(url)
-        # TODO: add link to ticket in the PR, zazu logo
-        # <img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=50"/>
+    if 'github.com' in url:
+        gh = zazu.github_helper.make_gh()
+        owner, repo_name = zazu.github_helper.parse_github_url(url)
+        repo = gh.get_user(owner).get_repo(repo_name)
+        if head:
+            if ':' not in head:
+                head = '{}:{}'.format(owner, head)
+        else:
+            head = '{}:{}'.format(owner, ctx.obj.repo.active_branch.name)
+        existing_pulls = repo.get_pulls(state='open', head=head, base=base)
+        try:
+            pr = existing_pulls[0]
+        except IndexError:
+            click.echo('No existing review found, creating one...')
+            descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
+            issue_id = descriptor.id
+            title = zazu.util.prompt('Title', default=descriptor.readable_description())
+            body = '{}\n\nFixes #{}'.format(zazu.util.prompt('Summary'), issue_id)
+            pr = repo.create_pull(title=title,
+                                  base=base,
+                                  head=head,
+                                  body=body)
+        click.echo('Opening "{}"'.format(pr.html_url))
+        webbrowser.open_new(pr.html_url)
     else:
         raise click.UsageError("Can't open a PR for a non-github repo")
 
