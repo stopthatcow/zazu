@@ -196,61 +196,56 @@ def status(ctx):
     if not issue_id:
         raise click.ClickException('The current branch does not contain a ticket ID')
     else:
-        gh = zazu.github_helper.make_gh()
-
-        def get_pulls_for_branch(branch):
-            org, repo = zazu.github_helper.parse_github_url(ctx.obj.repo.remotes.origin.url)
-            pulls = gh.get_user(org).get_repo(repo).get_pulls()
-            return [p for p in pulls if p.head.ref == branch]
-
         # Dispatch REST calls asynchronously
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
-            pulls_future = executor.submit(get_pulls_for_branch, ctx.obj.repo.active_branch.name)
+            pulls_future = executor.submit(ctx.obj.code_reviewer().review, status='all', head=ctx.obj.repo.active_branch.name)
 
             click.echo(click.style('Ticket info:', bg='white', fg='black'))
             try:
                 issue = issue_future.result()
                 type = issue.type
-                click.echo(click.style('    {} ({}): '.format(type, issue.status), fg='green'), nl=False)
-                click.echo(issue.name)
+                click.echo('{} {}'.format(click.style('    {}: '.format(type.capitalize()), fg='green'), issue.name))
+                click.echo('{} {}'.format(click.style('    Status:', fg='green'), issue.status))
                 click.echo(click.style('    Description:\n', fg='green'), nl=False)
                 click.echo(wrap_text(issue.description))
             except zazu.issue_tracker.IssueTrackerError:
                 click.echo("    No ticket found")
 
             matches = pulls_future.result()
-            click.secho('Pull request info:', bg='white', fg='black')
-            click.echo('    {} matching PRs'.format(len(matches)))
+            click.secho('Review info:', bg='white', fg='black')
+            click.echo('    {} matching reviews'.format(len(matches)))
             if matches:
                 for p in matches:
-                    click.echo(click.style('    PR Name:  ', fg='green') + p.title)
-                    click.echo(click.style('    PR State: ', fg='green') + p.state)
-                    click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
+                    click.echo('{} {}'.format(click.style('    Review: '.format(type.capitalize()), fg='green'), p.name))
+                    click.echo('{} {}, {}'.format(click.style('    Status:', fg='green'), p.status, 'merged' if p.merged else 'unmerged'))
+                    click.echo('{} {} -> {}'.format(click.style('    Branches:', fg='green'), p.head, p.base))
+                    click.echo(click.style('    Description:\n', fg='green') + wrap_text(p.description))
 
                     # TODO: build status from TC
 
 
 @dev.command()
 @click.pass_context
-@click.option('--base', default='develop', help='The base branch to target')
-@click.option('--head', default='', help='The head branch (defaults to current branch and origin organization)')
+@click.option('--base', help='The base branch to target')
+@click.option('--head', help='The head branch (defaults to current branch and origin organization)')
 def review(ctx, base, head):
     """Create or display pull request"""
-    # TODO(nwiles): Refactor this into a plugin.
     code_reviewer = ctx.obj.code_reviewer()
-    if not head:
-        head = ctx.obj.repo.active_branch.name
-    pr = code_reviewer.get_review(state='open', head=head, base=base)
-    if pr is None:
+    head = ctx.obj.repo.active_branch.name if head is None else head
+    existing_reviews = code_reviewer.review(status='open', head=head, base=base)
+    try:
+        pr = zazu.util.pick(existing_reviews, 'Multiple reviews found, pick one')
+    except IndexError:
+        base = 'develop' if base is None else base
         click.echo('No existing review found, creating one...')
         descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
         issue_id = descriptor.id
         title = zazu.util.prompt('Title', default=descriptor.readable_description())
         body = '{}\n\nFixes #{}'.format(zazu.util.prompt('Summary'), issue_id)
-        pr = code_reviewer.create_pull(title=title, base=base, head=head, body=body)
-    click.echo('Opening "{}"'.format(pr.html_url))
-    webbrowser.open_new(pr.html_url)
+        pr = code_reviewer.create_review(title=title, base=base, head=head, body=body)
+    click.echo('Opening "{}"'.format(pr.browse_url))
+    webbrowser.open_new(pr.browse_url)
 
 
 @dev.command()

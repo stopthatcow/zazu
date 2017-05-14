@@ -33,23 +33,20 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     def github_repo(self):
         return self.github_handle().get_user(self._org).get_repo(self._repo)
 
-    def browse_url(self, issue_id):
-        return '{}/issues/{}'.format(self._base_url, issue_id)
-
-    def get_review(self, state, base, head):
+    def review(self, status=github.GithubObject.NotSet, head=github.GithubObject.NotSet, base=github.GithubObject.NotSet):
+        head = github.GithubObject.NotSet if head is None else head
+        base = github.GithubObject.NotSet if base is None else base
+        status = github.GithubObject.NotSet if status is None else status
         if ':' not in head:
             head = '{}:{}'.format(self._org, head)
-        existing_pulls = self.github_repo().get_pulls(state=state, head=head, base=base)
-        try:
-            return existing_pulls[0]
-        except IndexError:
-            return None
+        matches = self.github_repo().get_pulls(state=status, head=head, base=base)
+        return [GitHubCodeReview(m) for m in matches]
 
     def create_review(self, title, base, head, body):
         if ':' not in head:
             head = '{}:{}'.format(self._org, head)
         # TODO(nwiles): Make adaptor class for PR.
-        return self.github_repo().create_pull(title=title, base=base, head=head, body=body)
+        return GitHubCodeReview(self.github_repo().create_pull(title=title, base=base, head=head, body=body))
 
     @staticmethod
     def from_config(config):
@@ -69,3 +66,44 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     @staticmethod
     def type():
         return 'github'
+
+
+class GitHubCodeReview(zazu.code_reviewer.CodeReview):
+
+    def __init__(self, github_pull_request):
+        self._pr = github_pull_request
+
+    @property
+    def name(self):
+        return self._pr.title
+
+    @property
+    def status(self):
+        return self._pr.state
+
+    @property
+    def description(self):
+        return self._pr.body
+
+    @property
+    def assignee(self):
+        return self._pr.assignee.login
+
+    @property
+    def head(self):
+        return self._pr.head.ref
+
+    @property
+    def base(self):
+        return self._pr.base.ref
+
+    @property
+    def browse_url(self):
+        return self._pr.html_url
+
+    @property
+    def merged(self):
+        return self._pr.merged
+
+    def __str__(self):
+        return '#{} ({}, {}) {} -> {}'.format(self._pr.number, self.status, 'merged' if self.merged else 'unmerged', self.head, self.base)
