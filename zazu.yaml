@@ -19,6 +19,9 @@ issueTracker:
     owner: stopthatcow
     repo: zazu
 
+codeReviewer:
+    type: github
+
 style:
   exclude:
     - dependency/
