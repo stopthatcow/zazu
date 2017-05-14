@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 __author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__copyright__ = "Copyright 2017"
 
 
-class IssueTracker(object):
-    """Parent of all IssueTracker objects"""
+class CodeReviewer(object):
+    """Parent of all CodeReview objects"""
     pass
 
 
-class IssueTrackerError(Exception):
-    """Parent of all IssueTracker errors"""
+class CodeReviewError(Exception):
+    """Parent of all CodeReview errors"""
 
 
-class Issue:
+class CodeReview:
 
     @property
     def name(self):

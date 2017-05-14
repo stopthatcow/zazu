@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """update command for zazu"""
-
-import click
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
