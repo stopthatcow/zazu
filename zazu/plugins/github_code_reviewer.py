@@ -33,18 +33,21 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     def _github_repo(self):
         return self._github_handle().get_user(self._org).get_repo(self._repo)
 
+    def _normalize_head(self, head):
+        if ':' not in head:
+            head = '{}:{}'.format(self._org, head)
+        return head
+
     def review(self, status=github.GithubObject.NotSet, head=github.GithubObject.NotSet, base=github.GithubObject.NotSet):
         head = github.GithubObject.NotSet if head is None else head
         base = github.GithubObject.NotSet if base is None else base
         status = github.GithubObject.NotSet if status is None else status
-        if ':' not in head:
-            head = '{}:{}'.format(self._org, head)
+        head = self._normalize_head(head)
         matches = self._github_repo().get_pulls(state=status, head=head, base=base)
         return [GitHubCodeReview(m) for m in matches]
 
     def create_review(self, title, base, head, body):
-        if ':' not in head:
-            head = '{}:{}'.format(self._org, head)
+        head = self._normalize_head(head)
         return GitHubCodeReview(self._github_repo().create_pull(title=title, base=base, head=head, body=body))
 
     @staticmethod
