@@ -45,7 +45,6 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     def create_review(self, title, base, head, body):
         if ':' not in head:
             head = '{}:{}'.format(self._org, head)
-        # TODO(nwiles): Make adaptor class for PR.
         return GitHubCodeReview(self._github_repo().create_pull(title=title, base=base, head=head, body=body))
 
     @staticmethod

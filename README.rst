@@ -180,6 +180,16 @@ requirements for each goal.
                     - gcc-linaro-arm-linux-gnueabihf==4.9
               - arch: x86_64-linux-gcc
 
+    issueTracker:
+        type: github
+        owner: stopthatcow
+        repo: zazu
+
+    codeReviewer:
+        type: github
+        owner: stopthatcow
+        repo: zazu
+
     style:
       exclude:
         - dependencies/ #list path prefixes here to exclude from style

@@ -21,6 +21,8 @@ issueTracker:
 
 codeReviewer:
     type: github
+    owner: stopthatcow
+    repo: zazu
 
 style:
   exclude:
