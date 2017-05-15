@@ -19,19 +19,19 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         self._base_url = 'https://github.com/{}/{}'.format(org, repo)
         self._org = org
         self._repo = repo
-        self._github_handle = None
+        self._github = None
 
     def connect(self):
         """Get handle to ensure that github credentials are in place"""
-        self.github_handle()
+        self._github_handle()
 
-    def github_handle(self):
-        if self._github_handle is None:
-            self._github_handle = zazu.github_helper.make_gh()
-        return self._github_handle
+    def _github_handle(self):
+        if self._github is None:
+            self._github = zazu.github_helper.make_gh()
+        return self._github
 
-    def github_repo(self):
-        return self.github_handle().get_user(self._org).get_repo(self._repo)
+    def _github_repo(self):
+        return self._github_handle().get_user(self._org).get_repo(self._repo)
 
     def review(self, status=github.GithubObject.NotSet, head=github.GithubObject.NotSet, base=github.GithubObject.NotSet):
         head = github.GithubObject.NotSet if head is None else head
@@ -39,14 +39,14 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         status = github.GithubObject.NotSet if status is None else status
         if ':' not in head:
             head = '{}:{}'.format(self._org, head)
-        matches = self.github_repo().get_pulls(state=status, head=head, base=base)
+        matches = self._github_repo().get_pulls(state=status, head=head, base=base)
         return [GitHubCodeReview(m) for m in matches]
 
     def create_review(self, title, base, head, body):
         if ':' not in head:
             head = '{}:{}'.format(self._org, head)
         # TODO(nwiles): Make adaptor class for PR.
-        return GitHubCodeReview(self.github_repo().create_pull(title=title, base=base, head=head, body=body))
+        return GitHubCodeReview(self._github_repo().create_pull(title=title, base=base, head=head, body=body))
 
     @staticmethod
     def from_config(config):
@@ -69,6 +69,7 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
 
 
 class GitHubCodeReview(zazu.code_reviewer.CodeReview):
+    """Adapts a github pull request object into a zazu CodeReview object"""
 
     def __init__(self, github_pull_request):
         self._pr = github_pull_request
@@ -106,4 +107,5 @@ class GitHubCodeReview(zazu.code_reviewer.CodeReview):
         return self._pr.merged
 
     def __str__(self):
-        return '#{} ({}, {}) {} -> {}'.format(self._pr.number, self.status, 'merged' if self.merged else 'unmerged', self.head, self.base)
+        return '#{} ({}, {}) {} -> {}'.format(self._pr.number, self.status, 'merged' if self.merged else 'unmerged',
+                                              self.head, self.base)
