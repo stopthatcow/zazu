@@ -35,8 +35,8 @@ elements of git flow with CI and issue tracking.
     "Code Review" -> "GitHub"
     "Zazu" -> "Code Style"
     "Code Style" -> "AStyle"
-    "Code Style" -> "Clang Format"
-    "Code Style" -> "Autopep8"}
+    "Code Style" -> "ClangFormat"
+    "Code Style" -> "autopep8"}
     :align: center
 
 Zazu is implemented in Python and is a
