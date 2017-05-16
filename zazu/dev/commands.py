@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-import concurrent.futures
 import zazu.github_helper
 import zazu.config
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
+    'concurrent.futures',
     'git',
     'webbrowser',
     'textwrap',
+    'urllib'
+
 ])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

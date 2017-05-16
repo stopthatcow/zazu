@@ -37,13 +37,13 @@ lazy_import(locals(), [
     'builtins',
     'click',
     'concurrent.futures',
+    'contextlib',
     'fnmatch',
     'inquirer',
     'multiprocessing',
     'os',
     'subprocess'
 ])
-
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
@@ -53,6 +53,23 @@ def check_output(*args, **kwargs):
         return subprocess.check_output(*args, **kwargs)
     except OSError:
         raise_uninstalled(args[0][0])
+
+
+def call(*args, **kwargs):
+    try:
+        return subprocess.call(*args, **kwargs)
+    except OSError:
+        raise_uninstalled(args[0][0])
+
+
+@contextlib.contextmanager
+def cd(path):
+    prev_dir = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_dir)
 
 
 def dispatch(work):
