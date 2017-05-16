@@ -35,15 +35,15 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
         return self._github_handle().get_user(self._owner).get_repo(self._repo)
 
     def browse_url(self, issue_id):
+        self.validate_id_format(issue_id)
         return '{}/issues/{}'.format(self._base_url, issue_id)
 
     def issue(self, issue_id):
+        self.validate_id_format(issue_id)
         try:
             return GitHubIssueAdaptor(self._github_repo().get_issue(int(issue_id)))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
-        except ValueError:
-            raise zazu.issue_tracker.IssueTrackerError('Invalid issue id {}'.format(issue_id))
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
@@ -65,6 +65,11 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def issue_components(self):
         return ['']
+
+    @staticmethod
+    def validate_id_format(id):
+        if not id.isdigit():
+            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" must be numeric'.format(id))
 
     @staticmethod
     def from_config(config):
