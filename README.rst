@@ -34,7 +34,7 @@ elements of git flow with CI and issue tracking.
     "Zazu" -> "Code Review"
     "Code Review" -> "GitHub"
     "Zazu" -> "Code Style"
-    "Code Style" -> "AStyle"
+    "Code Style" -> "Artistic Style"
     "Code Style" -> "ClangFormat"
     "Code Style" -> "autopep8"}
     :align: center
