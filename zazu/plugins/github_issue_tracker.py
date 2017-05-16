@@ -20,26 +20,26 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
         self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
         self._owner = owner
         self._repo = repo
-        self._github_handle = None
+        self._github = None
 
     def connect(self):
         """Get handle to ensure that github credentials are in place"""
-        self.github_handle()
+        self._github_handle()
 
-    def github_handle(self):
-        if self._github_handle is None:
-            self._github_handle = zazu.github_helper.make_gh()
-        return self._github_handle
+    def _github_handle(self):
+        if self._github is None:
+            self._github = zazu.github_helper.make_gh()
+        return self._github
 
-    def github_repo(self):
-        return self.github_handle().get_user(self._owner).get_repo(self._repo)
+    def _github_repo(self):
+        return self._github_handle().get_user(self._owner).get_repo(self._repo)
 
     def browse_url(self, issue_id):
         return '{}/issues/{}'.format(self._base_url, issue_id)
 
     def issue(self, issue_id):
         try:
-            return GitHubIssueAdaptor(self.github_repo().get_issue(int(issue_id)))
+            return GitHubIssueAdaptor(self._github_repo().get_issue(int(issue_id)))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
         except ValueError:
@@ -47,7 +47,7 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
-            return GitHubIssueAdaptor(self.github_repo().create_issue(title=summary, body=description))
+            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
