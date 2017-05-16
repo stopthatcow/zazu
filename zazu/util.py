@@ -16,6 +16,7 @@ except ImportError:
 def lazy_import(scope, imports):
     """Imports modules when they are used"""
     class LazyImport(object):
+
         def __init__(self, **entries):
             self.__dict__.update(entries)
     import peak.util.imports

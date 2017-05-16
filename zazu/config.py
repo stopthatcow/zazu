@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """config classes and methods for zazu"""
 import zazu.build_server
+import zazu.code_reviewer
 import zazu.issue_tracker
 import zazu.util
 zazu.util.lazy_import(locals(), [
@@ -31,6 +32,22 @@ def issue_tracker_factory(config):
                                                                                                     sorted(known_types.keys())))
     else:
         raise zazu.ZazuException('IssueTracker config requires a "type" field')
+
+
+def code_reviewer_factory(config):
+    """A factory function that makes and initializes a CodeReviewer object from a config"""
+    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.code_reviewer.CodeReviewer)
+    known_types = {p.type().lower(): p.from_config for p in plugins}
+    if 'type' in config:
+        type = config['type']
+        type = type.lower()
+        if type in known_types:
+            return known_types[type](config)
+        else:
+            raise zazu.ZazuException('{} is not a known CodeReviewer, please choose from {}'.format(type,
+                                                                                                    sorted(known_types.keys())))
+    else:
+        raise zazu.ZazuException('CodeReviewer config requires a "type" field')
 
 
 def continuous_integration_factory(config):
@@ -101,6 +118,7 @@ class Config(object):
         else:
             self.repo = None
         self._issue_tracker = None
+        self._code_reviewer = None
         self._continuous_integration = None
         self._project_config = None
         self._tc = None
@@ -123,6 +141,17 @@ class Config(object):
 
     def ci_config(self):
         return self.project_config().get('ci', {})
+
+    def code_reviewer_config(self):
+        try:
+            return self.project_config()['codeReviewer']
+        except KeyError:
+            raise click.ClickException("no codeReviewer config found")
+
+    def code_reviewer(self):
+        if self._code_reviewer is None:
+            self._code_reviewer = code_reviewer_factory(self.code_reviewer_config())
+        return self._code_reviewer
 
     def project_config(self):
         if self._project_config is None:
