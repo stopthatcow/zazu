@@ -236,12 +236,18 @@ def review(ctx, base, head):
     except IndexError:
         descriptor = make_issue_descriptor(head)
         issue_id = descriptor.id
-        verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
-        base = 'develop' if base is None else base
-        click.echo('No existing review found, creating one...')
-        title = zazu.util.prompt('Title', default=descriptor.readable_description())
-        body = '{}\n\nFixes #{}'.format(zazu.util.prompt('Summary'), issue_id)
-        pr = code_reviewer.create_review(title=title, base=base, head=head, body=body)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
+            base = 'develop' if base is None else base
+            click.echo('No existing review found, creating one...')
+            title = zazu.util.prompt('Title', default=descriptor.readable_description())
+            body = zazu.util.prompt('Summary')
+            try:
+                issue_future.result()
+                body += '\n\nFixes #{}'.format(issue_id)
+            except zazu.issue_tracker.IssueTrackerError:
+                pass
+            pr = code_reviewer.create_review(title=title, base=base, head=head, body=body)
     click.echo('Opening "{}"'.format(pr.browse_url))
     webbrowser.open_new(pr.browse_url)
 
