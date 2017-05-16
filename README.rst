@@ -27,8 +27,16 @@ elements of git flow with CI and issue tracking.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
     "Zazu" -> "Continuous Integration"
-    "Zazu" -> "Source Control"
-    "Zazu" -> "Issue Tracker"}
+    "Continuous Integration" -> "TeamCity"
+    "Zazu" -> "Issue Tracker"
+    "Issue Tracker" -> "JIRA"
+    "Issue Tracker" -> "GitHub"
+    "Zazu" -> "Code Review"
+    "Code Review" -> "GitHub"
+    "Zazu" -> "Code Style"
+    "Code Style" -> "AStyle"
+    "Code Style" -> "Clang Format"
+    "Code Style" -> "Autopep8"}
     :align: center
 
 Zazu is implemented in Python and is a
@@ -108,7 +116,7 @@ root of a repo).
 Development workflow management
 -------------------------------
 
--  ``zazu dev start`` interactivly creates new JIRA ticket
+-  ``zazu dev start`` interactivly creates new ticket
 -  ``zazu dev start <name>`` e.g.
    ``zazu dev start LC-440_a_cool_feature``
 -  ``zazu dev status`` displays ticket and pull request status
