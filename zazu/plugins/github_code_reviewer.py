@@ -15,9 +15,9 @@ __copyright__ = "Copyright 2017"
 class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     """Implements zazu code review interface for GitHub"""
 
-    def __init__(self, org, repo):
-        self._base_url = 'https://github.com/{}/{}'.format(org, repo)
-        self._org = org
+    def __init__(self, owner, repo):
+        self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
+        self._owner = owner
         self._repo = repo
         self._github = None
 
@@ -31,11 +31,11 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         return self._github
 
     def _github_repo(self):
-        return self._github_handle().get_user(self._org).get_repo(self._repo)
+        return self._github_handle().get_user(self._owner).get_repo(self._repo)
 
     def _normalize_head(self, head):
         if ':' not in head:
-            head = '{}:{}'.format(self._org, head)
+            head = '{}:{}'.format(self._owner, head)
         return head
 
     def review(self, status=github.GithubObject.NotSet, head=github.GithubObject.NotSet, base=github.GithubObject.NotSet):

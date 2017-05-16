@@ -16,9 +16,9 @@ __copyright__ = "Copyright 2016"
 class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for GITHUB"""
 
-    def __init__(self, org, repo):
-        self._base_url = 'https://github.com/{}/{}'.format(org, repo)
-        self._org = org
+    def __init__(self, owner, repo):
+        self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
+        self._owner = owner
         self._repo = repo
         self._github_handle = None
 
@@ -32,7 +32,7 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
         return self._github_handle
 
     def github_repo(self):
-        return self.github_handle().get_user(self._org).get_repo(self._repo)
+        return self.github_handle().get_user(self._owner).get_repo(self._repo)
 
     def browse_url(self, issue_id):
         return '{}/issues/{}'.format(self._base_url, issue_id)
