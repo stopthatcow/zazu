@@ -29,15 +29,18 @@ class IssueDescriptor(object):
         self.description = description
 
     def get_branch_name(self):
-        sanitized_description = ""
-        if self.description:
-            sanitized_description = self.description.replace(' ', '_')
         ret = self.id
-        if self.type:
+        if self.type is not None:
             ret = '{}/{}'.format(self.type, ret)
-        if self.description:
+        if self.description is not None:
+            sanitized_description = self.description.replace(' ', '_')
             ret = '{}_{}'.format(ret, sanitized_description)
         return ret
+
+    def readable_description(self):
+        if self.description is None:
+            return None
+        return self.description.replace('_', ' ').capitalize()
 
 
 def make_ticket(issue_tracker):
@@ -59,7 +62,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
         issue = issue_tracker.issue(ticket_id)
         click.echo("Found ticket {}: {}".format(ticket_id, issue.name))
     except zazu.issue_tracker.IssueTrackerError:
-        raise click.ClickException('no ticket named "{}"'.format(ticket_id))
+        raise click.ClickException('no ticket for id "{}"'.format(ticket_id))
 
 
 def offer_to_stash_changes(repo):
@@ -86,6 +89,7 @@ def make_issue_descriptor(name):
     if len(components) == 2:
         description = components[1]
     id = components[0]
+
     return IssueDescriptor(type, id, description)
 
 
@@ -190,62 +194,64 @@ def wrap_text(text):
 @click.pass_context
 def status(ctx):
     """Get status of this branch"""
-    descriptor = make_issue_descriptor(ctx.obj.repo.active_branch.name)
-    issue_id = descriptor.id
-    if not issue_id:
-        raise click.ClickException('The current branch does not contain a ticket ID')
-    else:
-        gh = zazu.github_helper.make_gh()
+    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id
+    # Dispatch REST calls asynchronously
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
+        pulls_future = executor.submit(ctx.obj.code_reviewer().review, status='all', head=ctx.obj.repo.active_branch.name)
 
-        def get_pulls_for_branch(branch):
-            org, repo = zazu.github_helper.parse_github_url(ctx.obj.repo.remotes.origin.url)
-            pulls = gh.get_user(org).get_repo(repo).get_pulls()
-            return [p for p in pulls if p.head.ref == branch]
+        click.echo(click.style('Ticket info:', bg='white', fg='black'))
+        try:
+            issue = issue_future.result()
+            type = issue.type
+            click.echo('{} {}'.format(click.style('    {}: '.format(type.capitalize()), fg='green'), issue.name))
+            click.echo('{} {}'.format(click.style('    Status:', fg='green'), issue.status))
+            click.echo(click.style('    Description:\n', fg='green'), nl=False)
+            click.echo(wrap_text(issue.description))
+        except zazu.issue_tracker.IssueTrackerError:
+            click.echo("    No ticket found")
 
-        # Dispatch REST calls asynchronously
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
-            pulls_future = executor.submit(get_pulls_for_branch, ctx.obj.repo.active_branch.name)
+        matches = pulls_future.result()
+        click.secho('Review info:', bg='white', fg='black')
+        click.echo('    {} matching reviews'.format(len(matches)))
+        if matches:
+            for p in matches:
+                click.echo('{} {}'.format(click.style('    Review: '.format(type.capitalize()), fg='green'), p.name))
+                click.echo('{} {}, {}'.format(click.style('    Status:', fg='green'), p.status, 'merged' if p.merged else 'unmerged'))
+                click.echo('{} {} -> {}'.format(click.style('    Branches:', fg='green'), p.head, p.base))
+                click.echo(click.style('    Description:\n', fg='green') + wrap_text(p.description))
 
-            click.echo(click.style('Ticket info:', bg='white', fg='black'))
-            try:
-                issue = issue_future.result()
-                type = issue.type
-                click.echo(click.style('    {} ({}): '.format(type, issue.status), fg='green'), nl=False)
-                click.echo(issue.name)
-                click.echo(click.style('    Description:\n', fg='green'), nl=False)
-                click.echo(wrap_text(issue.description))
-            except zazu.issue_tracker.IssueTrackerError:
-                click.echo("    No ticket found")
-
-            matches = pulls_future.result()
-            click.secho('Pull request info:', bg='white', fg='black')
-            click.echo('    {} matching PRs'.format(len(matches)))
-            if matches:
-                for p in matches:
-                    click.echo(click.style('    PR Name:  ', fg='green') + p.title)
-                    click.echo(click.style('    PR State: ', fg='green') + p.state)
-                    click.echo(click.style('    PR Body:\n', fg='green') + wrap_text(p.body))
-
-                    # TODO: build status from TC
+                # TODO: build status from TC
 
 
 @dev.command()
 @click.pass_context
-def review(ctx):
+@click.option('--base', help='The base branch to target')
+@click.option('--head', help='The head branch (defaults to current branch and origin organization)')
+def review(ctx, base, head):
     """Create or display pull request"""
-    encoded_branch = urllib.quote_plus(ctx.obj.repo.active_branch.name)
-    url = ctx.obj.repo.remotes.origin.url
-    start = 'github.com'
-    if start in url:
-        base_url = url[url.find(start):].replace('.git', '').replace(':', '/')
-        url = 'https://{}/compare/{}?expand=1'.format(base_url, encoded_branch)
-        click.echo('Opening "{}"'.format(url))
-        webbrowser.open_new(url)
-        # TODO: add link to ticket in the PR, zazu logo
-        # <img src="http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png" alt="Zazu" width=50"/>
-    else:
-        raise click.UsageError("Can't open a PR for a non-github repo")
+    code_reviewer = ctx.obj.code_reviewer()
+    head = ctx.obj.repo.active_branch.name if head is None else head
+    existing_reviews = code_reviewer.review(status='open', head=head, base=base)
+    try:
+        pr = zazu.util.pick(existing_reviews, 'Multiple reviews found, pick one')
+    except IndexError:
+        descriptor = make_issue_descriptor(head)
+        issue_id = descriptor.id
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
+            base = 'develop' if base is None else base
+            click.echo('No existing review found, creating one...')
+            title = zazu.util.prompt('Title', default=descriptor.readable_description())
+            body = zazu.util.prompt('Summary')
+            try:
+                issue_future.result()
+                body += '\n\nFixes #{}'.format(issue_id)
+            except zazu.issue_tracker.IssueTrackerError:
+                pass
+            pr = code_reviewer.create_review(title=title, base=base, head=head, body=body)
+    click.echo('Opening "{}"'.format(pr.browse_url))
+    webbrowser.open_new(pr.browse_url)
 
 
 @dev.command()
@@ -253,16 +259,11 @@ def review(ctx):
 @click.argument('ticket', default='')
 def ticket(ctx, ticket):
     """Open the ticket for the current feature or the one supplied in the ticket argument"""
-    if ticket:
-        issue_id = ticket
-    else:
-        issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id
-    if not issue_id:
-        raise click.ClickException('The current branch does not contain a ticket ID')
-    else:
-        url = ctx.obj.issue_tracker().browse_url(issue_id)
-        click.echo('Opening "{}"'.format(url))
-        webbrowser.open_new(url)
+    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if not ticket else ticket
+    verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
+    url = ctx.obj.issue_tracker().browse_url(issue_id)
+    click.echo('Opening "{}"'.format(url))
+    webbrowser.open_new(url)
 
 
 @dev.command()

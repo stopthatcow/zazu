@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The goal of the GITHUB issue tracker is to expose a simple interface that will allow us to collect ticket information
- pertaining to the current branch based on ticket ID. Additionally we can integrate with GITHUB to create new tickets
- for bug fixes and features"""
+"""The GithubIssueTracker implements the zazu.issue_tracker.IssueTracker plugin interface for manageing tickets on github"""
 import zazu.github_helper
 import zazu.issue_tracker
 import zazu.util
@@ -14,46 +12,42 @@ zazu.util.lazy_import(locals(), [
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
-ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
-ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
-GITHUB_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
-
 
 class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for GITHUB"""
 
-    def __init__(self, org, repo):
-        self._base_url = 'https://github.com/{}/{}'.format(org, repo)
-        self._org = org
+    def __init__(self, owner, repo):
+        self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
+        self._owner = owner
         self._repo = repo
-        self._github_handle = None
+        self._github = None
 
     def connect(self):
         """Get handle to ensure that github credentials are in place"""
-        self.github_handle()
+        self._github_handle()
 
-    def github_handle(self):
-        if self._github_handle is None:
-            self._github_handle = zazu.github_helper.make_gh()
-        return self._github_handle
+    def _github_handle(self):
+        if self._github is None:
+            self._github = zazu.github_helper.make_gh()
+        return self._github
 
-    def github_repo(self):
-        return self.github_handle().get_user(self._org).get_repo(self._repo)
+    def _github_repo(self):
+        return self._github_handle().get_user(self._owner).get_repo(self._repo)
 
     def browse_url(self, issue_id):
+        self.validate_id_format(issue_id)
         return '{}/issues/{}'.format(self._base_url, issue_id)
 
     def issue(self, issue_id):
+        self.validate_id_format(issue_id)
         try:
-            return GitHubIssueAdaptor(self.github_repo().get_issue(int(issue_id)))
+            return GitHubIssueAdaptor(self._github_repo().get_issue(int(issue_id)))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
-        except ValueError:
-            raise zazu.issue_tracker.IssueTrackerError('Invalid issue id {}'.format(issue_id))
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
-            return GitHubIssueAdaptor(self.github_repo().create_issue(title=summary, body=description))
+            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
@@ -71,6 +65,11 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def issue_components(self):
         return ['']
+
+    @staticmethod
+    def validate_id_format(id):
+        if not id.isdigit():
+            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" must be numeric'.format(id))
 
     @staticmethod
     def from_config(config):
