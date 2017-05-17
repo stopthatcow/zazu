@@ -14,7 +14,8 @@ zazu.util.lazy_import(locals(), [
     'os',
     'time',
     'socket',
-    'yaml'
+    'yaml',
+    'requests'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -96,7 +97,6 @@ def init(ctx, interactive):
     -if not git repo offer to make one
     -if git repo, assume user wants current repo to use zazu
     """
-    click.echo('Interactive Repo Design, by zazu')
     
     def _get_plugin_list(plugin_subclass):
         """helper function to pull lists of plugins"""
@@ -131,7 +131,13 @@ def init(ctx, interactive):
         if stylers:
             zazu_yaml_obj['style'] = stylers['style']
         yaml.dump(zazu_yaml_obj, file('zazu.yaml','w'), default_flow_style=False)
-            
+
+    def _getZazuYaml():
+        """gets zazu's yaml"""
+        import pdb
+        pdb.set_trace()
+        zazu_yaml = requests.get('https://raw.githubusercontent.com/stopthatcow/zazu/develop/zazu.yaml')
+
     # check for git repo in cwd
     if not os.path.isdir('.git'):
         event_time = time.gmtime()
@@ -139,16 +145,19 @@ def init(ctx, interactive):
 
         # click.prompt does not play well with py format
         repo_name = click.prompt('No existing git repo found, Name your new repo:', default='zazuRepoCreated_'+str(default_name))
-        
-        if not os.path.exists(repo_name):
+
+        try:
             os.mkdir(repo_name)
             bare_repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'),bare=True)
-    
-    if click.confirm("We are currently in a git repo, configure zazu.yml?", abort=True):
-        click.echo("Configuring Zazu for: " + os.getcwd())
-        repo_name = os.path.basename(os.path.normpath(os.getcwd()))
+        except OSError as err:
+            raise click.ClickException(str(err))
+
+        if click.confirm("We are currently in a git repo, configure zazu.yml?", abort=True):
+            click.echo("Configuring Zazu for: " + os.getcwd())
+            repo_name = os.path.basename(os.path.normpath(os.getcwd()))
 
     if interactive: 
+        click.echo('Interactive Repo Design, by zazu')
         trackers = _get_plugin_list(zazu.issue_tracker.IssueTracker)
         tracker_list = trackers.append('None')
         stylers = _get_plugin_list(zazu.styler.Styler)
@@ -162,6 +171,10 @@ def init(ctx, interactive):
         styler_choice = _build_inquiry('style', 'Pick one or more stylers', choices=stylers, checkbox=True)
         _zazu_yaml(tracker_choice, styler_choice)
         click.echo('Creating zazu.yaml')
+ 
+    else:
+        _getZazuYaml()
+            
         
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
