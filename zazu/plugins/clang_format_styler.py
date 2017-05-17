@@ -10,12 +10,12 @@ __copyright__ = "Copyright 2017"
 class ClangFormatStyler(zazu.styler.Styler):
     """ClangFormat plugin for code styling."""
 
-    def style_file(self, file, verbose, dry_run):
+    def style_file(self, path, verbose, dry_run):
         """checks a single file to see if it is within style guidelines and optionally fixes it"""
         args = ['clang-format'] + self. options
 
-        check_args = args + ['-output-replacements-xml', file]
-        fix_args = args + ['-i', file]
+        check_args = args + ['-output-replacements-xml', path]
+        fix_args = args + ['-i', path]
 
         fix_needed = True
         if dry_run or verbose:
@@ -25,7 +25,7 @@ class ClangFormatStyler(zazu.styler.Styler):
                 fix_needed = False
         if not dry_run and fix_needed:
             zazu.util.check_output(fix_args)
-        return file, fix_needed
+        return path, fix_needed
 
     @staticmethod
     def default_extensions():

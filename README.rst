@@ -1,20 +1,42 @@
 Zazu (at your service)
 ======================
 |buildBadge| |coverageBadge|
+|ReleaseBadge|  |FormatBadge|
+|LicenseBadge| |PythonVersionBadge|
 
-.. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg
-    :target: https://coveralls.io/github/stopthatcow/zazu
+.. |coverageBadge| image:: https://coveralls.io/repos/github/stopthatcow/zazu/badge.svg?branch=develop
+    :target: https://coveralls.io/github/stopthatcow/zazu?branch=develop
 
 .. |buildBadge| image:: https://travis-ci.org/stopthatcow/zazu.svg?branch=develop
     :target: https://travis-ci.org/stopthatcow/zazu
+
+.. |ReleaseBadge| image:: https://img.shields.io/pypi/v/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |LicenseBadge| image:: https://img.shields.io/pypi/l/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |PythonVersionBadge| image:: https://img.shields.io/pypi/pyversions/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
+
+.. |FormatBadge| image:: https://img.shields.io/pypi/format/zazu.svg
+    :target: https://coveralls.io/github/stopthatcow/zazu
 
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
     "Zazu" -> "Continuous Integration"
-    "Zazu" -> "Source Control"
-    "Zazu" -> "Issue Tracker"}
+    "Continuous Integration" -> "TeamCity"
+    "Zazu" -> "Issue Tracker"
+    "Issue Tracker" -> "JIRA"
+    "Issue Tracker" -> "GitHub"
+    "Zazu" -> "Code Review"
+    "Code Review" -> "GitHub"
+    "Zazu" -> "Code Style"
+    "Code Style" -> "Artistic Style"
+    "Code Style" -> "ClangFormat"
+    "Code Style" -> "autopep8"}
     :align: center
 
 Zazu is implemented in Python and is a
@@ -30,21 +52,18 @@ Pre-requsites (linux)
 
 ::
 
-    sudo apt-get install libncurses-dev python-dev libssl-dev libffi-dev
-    sudo pip install keyrings.alt
+    sudo apt-get install python-dev libssl-dev libffi-dev
 
 All platforms
 ~~~~~~~~~~~~~
 
 ::
 
-    git clone git@github.com:stopthatcow/zazu.git
-    cd zazu
     sudo pip install --upgrade pip
-    sudo pip install --upgrade .
+    sudo pip install zazu
 
 If you get an error about a package called "six" use the following
-command instead: ``sudo pip install --upgrade --ignore-installed six .``
+command instead: ``sudo pip install --upgrade --ignore-installed zazu``
 
 Command overview
 ----------------
@@ -97,7 +116,7 @@ root of a repo).
 Development workflow management
 -------------------------------
 
--  ``zazu dev start`` interactivly creates new JIRA ticket
+-  ``zazu dev start`` interactivly creates new ticket
 -  ``zazu dev start <name>`` e.g.
    ``zazu dev start LC-440_a_cool_feature``
 -  ``zazu dev status`` displays ticket and pull request status
@@ -169,6 +188,16 @@ requirements for each goal.
                     - gcc-linaro-arm-linux-gnueabihf==4.9
               - arch: x86_64-linux-gcc
 
+    issueTracker:
+        type: github
+        owner: stopthatcow
+        repo: zazu
+
+    codeReviewer:
+        type: github
+        owner: stopthatcow
+        repo: zazu
+
     style:
       exclude:
         - dependencies/ #list path prefixes here to exclude from style
@@ -219,14 +248,7 @@ Add the following to your
 
 ::
 
-    _zazu_completion() {
-        COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
-                       COMP_CWORD=$COMP_CWORD \
-                       _ZAZU_COMPLETE=complete $1 ) )
-        return 0
-    }
-
-    complete -F _zazu_completion -o default zazu;
+    eval "$(_ZAZU_COMPLETE=source zazu)"
 
 ZSH users
 ~~~~~~~~~
@@ -237,14 +259,7 @@ Add the following to your ``~/.zshrc`` file
 
     autoload bashcompinit
     bashcompinit
-    _zazu_completion() {
-        COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
-                       COMP_CWORD=$COMP_CWORD \
-                       _ZAZU_COMPLETE=complete $1 ) )
-        return 0
-    }
-
-    complete -F _zazu_completion -o default zazu;
+    eval "$(_ZAZU_COMPLETE=source zazu)"
 
 Handy aliases
 -------------

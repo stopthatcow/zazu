@@ -3,6 +3,7 @@
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
+    'pip'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -21,6 +22,5 @@ def upgrade(ctx, version):
         else:
             click.echo('No version specified in zazu.yaml file, upgrading to latest')
     pip_args = ['install', '--upgrade', 'zazu{}'.format(version)]
-    import pip
     click.echo('pip {}'.format(' '.join(pip_args)))
     ctx.exit(pip.main(pip_args))

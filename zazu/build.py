@@ -54,18 +54,12 @@ class BuildGoal(object):
     def __init__(self, goal):
         self._name = goal.get('name', '')
         self._description = goal.get('description', '')
-        self._build_type = goal.get('buildType', None)
+        self._build_type = goal.get('buildType', 'minSizeRel')
         self._build_vars = goal.get('buildVars', {})
         self._build_goal = goal.get('buildGoal', self._name)
         self._requires = goal.get('requires', {})
         self._artifacts = goal.get('artifacts', [])
         self._builds = {}
-        self._default_spec = BuildSpec(goal=self._build_goal,
-                                       type=self._build_type,
-                                       vars=self._build_vars,
-                                       requires=self._requires,
-                                       description=self._description,
-                                       artifacts=self._artifacts)
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
@@ -98,7 +92,14 @@ class BuildGoal(object):
         return self._builds
 
     def get_build(self, arch):
-        return self._builds.get(arch, self._default_spec)
+        if arch is None:
+            if len(self._builds) == 1:
+                only_arch = self._builds.keys()[0]
+                click.echo("No arch specified, but there is only one ({})".format(only_arch))
+                return self._builds[only_arch]
+            else:
+                raise click.ClickException("No arch specified, but there are multiple arches available")
+        return self._builds[arch]
 
 
 class BuildSpec(object):
@@ -141,7 +142,7 @@ class BuildSpec(object):
 def cmake_build(repo_root, arch, type, goal, verbose, vars):
     """Build using cmake"""
     if arch not in zazu.cmake_helper.known_arches():
-        raise click.BadParameter("Arch not recognized, choose from:\n    - {}".format('\n    - '.join(zazu.cmake_helper.known_arches())))
+        raise click.BadParameter('Arch "{}" not recognized, choose from:\n'.format(arch, zazu.util.pprint_list(zazu.cmake_helper.known_arches())))
 
     build_dir = os.path.join(repo_root, 'build', '{}-{}'.format(arch, type))
     ret = 0
@@ -208,9 +209,7 @@ def parse_describe(repo_root):
 
 def sanitize_branch_name(branch_name):
     """replaces punctuation that cannot be in semantic version from a branch name and replaces them with dashes"""
-    branch_name_sanitized = branch_name.replace('/', '-')
-    branch_name_sanitized = branch_name_sanitized.replace('_', '-')
-    return branch_name_sanitized
+    return branch_name.replace('/', '-').replace('_', '-')
 
 
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
@@ -289,7 +288,7 @@ def add_version_args(repo_root, build_num, args):
 
 @click.command()
 @click.pass_context
-@click.option('-a', '--arch', default='local', help='the desired architecture to build for')
+@click.option('-a', '--arch', help='the desired architecture to build for')
 @click.option('-t', '--type', type=click.Choice(zazu.cmake_helper.build_types),
               help='defaults to what is specified in the config file, or release if unspecified there')
 @click.option('-n', '--build_num', help='build number', default=os.environ.get('BUILD_NUMBER', 0))
@@ -312,7 +311,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     build_args.update(extra_args)
     add_version_args(ctx.obj.repo_root, build_num, build_args)
     if spec.build_script() is None:
-        cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
+        cmake_build(ctx.obj.repo_root, spec.build_arch(), spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
     try:

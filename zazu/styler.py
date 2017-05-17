@@ -25,7 +25,7 @@ class Styler(object):
         for file_path, violation in zazu.util.dispatch(work):
             yield os.path.relpath(file_path, working_dir), violation
 
-    def style_file(self, file, verbose, dry_run):
+    def style_file(self, path, verbose, dry_run):
         raise NotImplementedError('All style plugins must implement style_file()')
 
     @classmethod

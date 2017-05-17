@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
 import tests.conftest
-import distutils
+import distutils.spawn
 import pytest
 import zazu.cli
 import zazu.style

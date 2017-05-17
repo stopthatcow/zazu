@@ -47,12 +47,13 @@ setuptools.setup(
     package_data={'zazu': ['cmake/*.cmake', 'githooks/*', 'version.txt']},
     install_requires=['click>=6.6',               # BSD
                       'requests>=2.10.0',         # Apache 2.0
-                      'PyGithub>=1.26.0',         # LGPL 3
+                      'PyGithub>=1.34.0',         # LGPL 3
                       'jira>=1.0.10',             # BSD
                       'GitPython>=2.0.7',         # BSD
                       'pyteamcity>=0.1.1',        # MIT
                       'pyyaml>=3.11',             # MIT
                       'keyring>=8.7',             # MIT
+                      'keyrings.alt>=2.2',        # MIT
                       'autopep8>=1.2.4',          # MIT
                       'semantic_version>=2.5.0',  # BSD
                       'gcovr>=3.2',               # BSD
@@ -61,7 +62,7 @@ setuptools.setup(
                       'futures>=3.0.5',           # PSF
                       'inquirer>=2.1.7',          # MIT
                       'Importing>=1.10',          # PSF
-                      'straight.plugin<=1.4.1'],  # MIT
+                      'straight.plugin>=1.4.1'],  # MIT
     extras_require={
         ':sys_platform == "win32"': [
             'pyreadline>=2.1'                     # BSD

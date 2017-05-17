@@ -30,14 +30,6 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         """Get handle to ensure that JIRA credentials are in place"""
         self.jira_handle()
 
-    @staticmethod
-    def closed(issue):
-        return str(issue.fields.status) == 'Closed'
-
-    @staticmethod
-    def resolved(issue):
-        return str(issue.fields.status) == 'Resolved'
-
     def jira_handle(self):
         if self._jira_handle is None:
             username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
@@ -46,12 +38,14 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
                                           options={'check_update': False}, max_retries=0)
         return self._jira_handle
 
-    def browse_url(self, issue_id):
-        return '{}/browse/{}'.format(self._base_url, issue_id)
+    def browse_url(self, id):
+        self.validate_id_format(id)
+        return '{}/browse/{}'.format(self._base_url, id)
 
-    def issue(self, issue_id):
+    def issue(self, id):
+        self.validate_id_format(id)
         try:
-            ret = self.jira_handle().issue(issue_id)
+            ret = self.jira_handle().issue(id)
             # Only show description up to the separator
             if ret.fields.description is None:
                 ret.fields.description = ''
@@ -86,6 +80,11 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         return self._components
 
     @staticmethod
+    def validate_id_format(id):
+        if not re.match('[A-Z]+-[0-9]+', id, flags=re.IGNORECASE):
+            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not of the form PROJ-#'.format(id))
+
+    @staticmethod
     def from_config(config):
         """Makes a JiraIssueTracker from a config"""
         try:
@@ -111,6 +110,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
+
     def __init__(self, jira_issue):
         self._jira_issue = jira_issue
 
@@ -137,6 +137,10 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     @property
     def assignee(self):
         return self._jira_issue.fields.assignee.name
+
+    @property
+    def closed(self):
+        return str(self._jira_issue.fields.status) == 'Closed'
 
     def __str__(self):
         return str(self._jira_issue)
