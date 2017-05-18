@@ -133,4 +133,4 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
         return str(self._github_issue.number)
 
     def __str__(self):
-        return '#' + self.id
+        return self.id
