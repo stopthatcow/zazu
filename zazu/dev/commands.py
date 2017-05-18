@@ -244,12 +244,12 @@ def review(ctx, base, head):
             click.echo('No existing review found, creating one...')
             title = zazu.util.prompt('Title', default=descriptor.readable_description())
             body = zazu.util.prompt('Summary')
+            issue = None
             try:
-                issue_future.result()
-                body += '\n\nFixes #{}'.format(issue_id)
+                issue = issue_future.result()
             except zazu.issue_tracker.IssueTrackerError:
                 pass
-            pr = code_reviewer.create_review(title=title, base=base, head=head, body=body)
+            pr = code_reviewer.create_review(title=title, base=base, head=head, body=body, issue=issue)
     click.echo('Opening "{}"'.format(pr.browse_url))
     webbrowser.open_new(pr.browse_url)
 
