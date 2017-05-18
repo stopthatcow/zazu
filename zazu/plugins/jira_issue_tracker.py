@@ -142,7 +142,7 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
 
     @property
     def closed(self):
-        return str(self._jira_issue.fields.status) == 'Closed'
+        return self._jira_issue.fields.status.name == 'Closed'
 
     @property
     def browse_url(self):
