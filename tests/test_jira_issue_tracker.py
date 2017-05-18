@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import conftest
 import pytest
 import zazu.plugins.jira_issue_tracker
 
@@ -9,16 +10,6 @@ __copyright__ = "Copyright 2016"
 @pytest.fixture
 def tracker_mock():
     return zazu.plugins.jira_issue_tracker.JiraIssueTracker('https://jira', 'project', ['NA'])
-
-
-class Struct(object):
-
-    def __init__(self, d):
-        for a, b in d.items():
-            if isinstance(b, (list, tuple)):
-                setattr(self, a, [Struct(x) if isinstance(x, dict) else x for x in b])
-            else:
-                setattr(self, a, Struct(b) if isinstance(b, dict) else b)
 
 
 def test_jira_issue_adaptor(tracker_mock):
@@ -41,7 +32,7 @@ def test_jira_issue_adaptor(tracker_mock):
         },
         'key': 'ZZ-1'
     }
-    mock_issue = Struct(mock_issue_dict)
+    mock_issue = conftest.dict_to_obj(mock_issue_dict)
 
     uut = zazu.plugins.jira_issue_tracker.JiraIssueAdaptor(mock_issue, tracker_mock)
     assert uut.name == 'name'

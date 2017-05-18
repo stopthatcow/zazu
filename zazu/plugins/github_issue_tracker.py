@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The GithubIssueTracker implements the zazu.issue_tracker.IssueTracker plugin interface for manageing tickets on github"""
+"""The GitHubIssueTracker implements the zazu.issue_tracker.IssueTracker plugin interface for managing tickets on github"""
 import zazu.github_helper
 import zazu.issue_tracker
 import zazu.util
@@ -13,7 +13,7 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
+class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for GITHUB"""
 
     def __init__(self, owner, repo):
@@ -73,7 +73,7 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
 
     @staticmethod
     def from_config(config):
-        """Makes a GithubIssueTracker from a config"""
+        """Makes a GitHubIssueTracker from a config"""
         # Get URL from current git repo:
         owner = config.get('owner', None)
         repo_name = config.get('repo', None)
@@ -84,7 +84,7 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
             except AttributeError:
                 raise zazu.issue_tracker.IssueTrackerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
-        return GithubIssueTracker(owner, repo_name)
+        return GitHubIssueTracker(owner, repo_name)
 
     @staticmethod
     def type():
@@ -93,8 +93,9 @@ class GithubIssueTracker(zazu.issue_tracker.IssueTracker):
 
 class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
 
-    def __init__(self, github_issue):
+    def __init__(self, github_issue, tracker_handle):
         self._github_issue = github_issue
+        self._tracker = tracker_handle
 
     @property
     def name(self):
