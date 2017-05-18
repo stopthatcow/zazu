@@ -124,5 +124,13 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
     def closed(self):
         return str(self._github_issue.state) == 'closed'
 
-    def __str__(self):
+    @property
+    def browse_url(self):
+        return self._tracker.browse_url(self.id)
+
+    @property
+    def id(self):
         return str(self._github_issue.number)
+
+    def __str__(self):
+        return '#' + self.id

@@ -46,8 +46,10 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         matches = self._github_repo().get_pulls(state=status, head=head, base=base)
         return [GitHubCodeReview(m) for m in matches]
 
-    def create_review(self, title, base, head, body):
+    def create_review(self, title, base, head, body, issue=None):
         head = self._normalize_head(head)
+        if issue is not None:
+            body += '\n\nFixes [{}]({})'.format(issue, issue.browse_url)
         return GitHubCodeReview(self._github_repo().create_pull(title=title, base=base, head=head, body=body))
 
     @staticmethod
