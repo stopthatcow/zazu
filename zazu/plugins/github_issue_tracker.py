@@ -41,13 +41,13 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
     def issue(self, issue_id):
         self.validate_id_format(issue_id)
         try:
-            return GitHubIssueAdaptor(self._github_repo().get_issue(int(issue_id)))
+            return GitHubIssueAdaptor(self._github_repo().get_issue(int(issue_id)), self)
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
-            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description))
+            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description), self)
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
