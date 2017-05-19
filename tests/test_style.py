@@ -44,6 +44,7 @@ def test_astyle(git_repo):
         assert dict(ret)[bad_file_name]
         ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
         assert not any(dict(ret).values())
+        assert styler.default_extensions()
 
 
 def test_autopep8(git_repo):
@@ -58,6 +59,7 @@ def test_autopep8(git_repo):
         assert dict(ret)[bad_file_name]
         ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
         assert not any(dict(ret).values())
+        assert ['*.py'] == styler.default_extensions()
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
@@ -74,6 +76,7 @@ def test_clang_format(git_repo):
         assert dict(ret)[bad_file_name]
         ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
         assert not dict(ret)[bad_file_name]
+        assert styler.default_extensions()
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),

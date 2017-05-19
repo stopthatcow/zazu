@@ -13,7 +13,7 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2017"
 
 
-class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
+class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     """Implements zazu code review interface for GitHub"""
 
     def __init__(self, owner, repo):
@@ -59,7 +59,7 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
 
     @staticmethod
     def from_config(config):
-        """Makes a GithubCodeReviewer from a config"""
+        """Makes a GitHubCodeReviewer from a config"""
         # Get URL from current git repo:
         owner = config.get('owner', None)
         repo_name = config.get('repo', None)
@@ -70,7 +70,7 @@ class GithubCodeReviewer(zazu.code_reviewer.CodeReviewer):
             except AttributeError:
                 raise zazu.code_review.CodeReviewerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
-        return GithubCodeReviewer(owner, repo_name)
+        return GitHubCodeReviewer(owner, repo_name)
 
     @staticmethod
     def type():
@@ -115,6 +115,10 @@ class GitHubCodeReview(zazu.code_reviewer.CodeReview):
     def merged(self):
         return self._pr.merged
 
+    @property
+    def id(self):
+        return str(self._pr.number)
+
     def __str__(self):
-        return '#{} ({}, {}) {} -> {}'.format(self._pr.number, self.status, 'merged' if self.merged else 'unmerged',
+        return '#{} ({}, {}) {} -> {}'.format(self.id, self.status, 'merged' if self.merged else 'unmerged',
                                               self.head, self.base)

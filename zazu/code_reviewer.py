@@ -48,3 +48,7 @@ class CodeReview:
     @property
     def base(self):
         raise NotImplementedError('Must implement base')
+
+    @property
+    def id(self):
+        raise NotImplementedError('Must implement id')
