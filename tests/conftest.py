@@ -30,7 +30,7 @@ def repo_with_style(git_repo):
         'style': {
             'exclude': ['dependency'],
             'autopep8': {},
-            'astyle': {}
+            'clang-format': {}
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:

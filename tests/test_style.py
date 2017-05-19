@@ -79,8 +79,8 @@ def test_clang_format(git_repo):
         assert styler.default_extensions()
 
 
-@pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
-                    reason="requires astyle")
+@pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
+                    reason="requires clang-format")
 def test_bad_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
     with tests.conftest.working_directory(dir):
@@ -95,8 +95,8 @@ def test_bad_style(repo_with_style_errors):
         assert result.exit_code == 0
 
 
-@pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
-                    reason="requires astyle")
+@pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
+                    reason="requires clang-format")
 def test_dirty_style(repo_with_style_errors, monkeypatch):
     dir = repo_with_style_errors.working_tree_dir
     with tests.conftest.working_directory(dir):
