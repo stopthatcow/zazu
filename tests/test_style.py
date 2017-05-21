@@ -117,3 +117,9 @@ def test_style_no_config(repo_with_missing_style):
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.output == 'no style settings found\n'
         assert result.exit_code == 0
+
+
+def test_styler():
+    uut = zazu.styler.Styler()
+    with pytest.raises(NotImplementedError):
+        uut.style_file('', False, False)

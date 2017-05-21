@@ -9,11 +9,8 @@ class LazyVersion():
     def __str__(self):
         import pkg_resources
         version_file_path = pkg_resources.resource_filename('zazu', 'version.txt')
-        try:
-            with open(version_file_path, 'r') as version_file:
-                version = version_file.readline().rstrip()
-        except IOError:
-            version = "unknown"
+        with open(version_file_path, 'r') as version_file:
+            version = version_file.readline().rstrip()
         return version
 
 

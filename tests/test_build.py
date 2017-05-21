@@ -70,12 +70,12 @@ def test_cmake_build(repo_with_build_config, mocker):
     with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
-        print result.output
         assert not result.exit_code
-        zazu.cmake_helper.configure.assert_called()
+        zazu.cmake_helper.configure.assert_called_once()
         assert dir in zazu.cmake_helper.configure.call_args[0][0]
         assert str(os.path.join(dir, 'build')) in zazu.cmake_helper.configure.call_args[0][1]
-        zazu.cmake_helper.build.assert_called()
+        zazu.cmake_helper.build.assert_called_once()
         assert dir in zazu.cmake_helper.build.call_args[0][0]
-        assert 'minSizeRel' in zazu.cmake_helper.build.call_args[0][1]
-        assert 'cmake_build' in zazu.cmake_helper.build.call_args[0][2]
+        assert 'host' == zazu.cmake_helper.build.call_args[0][1]
+        assert 'minSizeRel' == zazu.cmake_helper.build.call_args[0][2]
+        assert 'cmake_build' == zazu.cmake_helper.build.call_args[0][3]

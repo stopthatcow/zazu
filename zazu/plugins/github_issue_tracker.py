@@ -61,10 +61,10 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         return ''
 
     def issue_types(self):
-        return ['Issue']
+        return ['issue']
 
     def issue_components(self):
-        return ['']
+        return []
 
     @staticmethod
     def validate_id_format(id):

@@ -156,7 +156,7 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
         ret = zazu.cmake_helper.configure(repo_root, build_dir, arch, type, vars, click.echo if verbose else lambda x: x)
         if ret:
             raise click.ClickException("Error configuring with cmake")
-        ret = zazu.cmake_helper.build(build_dir, type, goal, verbose)
+        ret = zazu.cmake_helper.build(build_dir, arch, type, goal, verbose)
         if ret:
             raise click.ClickException("Error building with cmake")
     return ret

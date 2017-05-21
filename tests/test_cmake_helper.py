@@ -29,15 +29,48 @@ def test_configure_cmake(tmp_dir, mocker):
         '-DZAZU_BUILD_VERSION=0.0.0.dev'
     ]
     zazu.util.call.assert_called_once_with(expected_call)
+    # Call again to ensure we cache the args.
+    zazu.cmake_helper.configure(tmp_dir, tmp_dir, 'host', 'release', args, echo=lambda x: x)
+    zazu.util.call.assert_called_once()
 
 
-def test_build_cmake(tmp_dir, mocker):
+def test_configure_cmak_toolchain(tmp_dir, mocker):
     mocker.patch('zazu.util.call', return_value=0)
-    zazu.cmake_helper.build(tmp_dir, 'Release', 'foo', True)
+    args = {'ZAZU_BUILD_VERSION': '0.0.0.dev'}
+    zazu.cmake_helper.configure(tmp_dir, tmp_dir, 'arm32-linux-gnueabihf', 'release', args, echo=lambda x: x)
+    expected_call = [
+        'cmake',
+        tmp_dir,
+        '-G', 'Unix Makefiles', '-DCMAKE_BUILD_TYPE=Release',
+        '-DCPACK_SYSTEM_NAME=arm32-linux-gnueabihf', '-DCPACK_PACKAGE_VERSION=0.0.0.dev',
+        '-DZAZU_TOOL_PATH={}'.format(zazu.tool.tool_helper.package_path),
+        '-DZAZU_BUILD_VERSION=0.0.0.dev',
+        '-DCMAKE_TOOLCHAIN_FILE={}'.format(zazu.cmake_helper.get_toolchain_file_from_arch('arm32-linux-gnueabihf'))
+    ]
+    zazu.util.call.assert_called_once_with(expected_call)
+
+
+def test_build_cmake_posix(tmp_dir, mocker):
+    mocker.patch('zazu.util.call', return_value=0)
+    mocker.patch('os.name', new_callable=mocker.PropertyMock(return_value='posix'))
+    zazu.cmake_helper.build(tmp_dir, 'arm32-linux-gnueabihf', 'Release', 'foo', True)
     expected_call = [
         'make',
         '-j{}'.format(multiprocessing.cpu_count()),
         'foo',
         'VERBOSE=1'
+    ]
+    zazu.util.call.assert_called_once_with(expected_call)
+
+
+def test_build_cmake_windows(tmp_dir, mocker):
+    mocker.patch('zazu.util.call', return_value=0)
+    zazu.cmake_helper.build(tmp_dir, 'x86_64-win-msvc_2015', 'Release', 'foo', True)
+    expected_call = [
+        'cmake',
+        '--build'.format(multiprocessing.cpu_count()),
+        '.',
+        '--config', 'Release',
+        '--target', 'foo'
     ]
     zazu.util.call.assert_called_once_with(expected_call)

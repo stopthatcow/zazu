@@ -24,7 +24,7 @@ pytest_runner = ['pytest-runner>=2.0'] if needs_pytest else []
 setuptools.setup(
     name='zazu',
     version=version,
-    description='A development workflow management CLI for GitHub, Jira, and TeamCity',
+    description='A development workflow management CLI for GitHub, JIRA, and TeamCity',
     long_description=description,
     author='Nicholas Wiles',
     author_email='nhwiles@gmail.com',
