@@ -91,6 +91,12 @@ def repo_with_missing_style(git_repo):
     return git_repo
 
 
+@pytest.fixture()
+def repo_with_github_as_origin(git_repo):
+    git_repo.create_remote('origin', 'http://github.com/stopthatcow/zazu')
+    return git_repo
+
+
 @contextlib.contextmanager
 def working_directory(path):
     """Changes the working directory to the given path back to its previous value on exit"""

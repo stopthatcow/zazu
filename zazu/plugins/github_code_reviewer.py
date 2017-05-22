@@ -68,7 +68,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
             try:
                 remote = repo.remotes.origin
             except AttributeError:
-                raise zazu.code_review.CodeReviewerError('No "origin" remote specified for this repo')
+                raise zazu.code_reviewer.CodeReviewerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
         return GitHubCodeReviewer(owner, repo_name)
 

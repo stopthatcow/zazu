@@ -19,11 +19,11 @@ class CodeReviewer(object):
         raise NotImplementedError('Must implement create_review')
 
 
-class CodeReviewError(Exception):
+class CodeReviewerError(Exception):
     """Parent of all CodeReview errors"""
 
 
-class CodeReview:
+class CodeReview(object):
     """Provides an interface for code reviews"""
     @property
     def name(self):
