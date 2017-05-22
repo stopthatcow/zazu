@@ -249,10 +249,7 @@ def pep440_from_semver(semver):
 def install_requirements(requirements, verbose):
     """Installs the requirements using the zazu tool manager"""
     for req in requirements:
-        if verbose:
-            zazu.tool.tool_helper.install_spec(req, echo=click.echo)
-        else:
-            zazu.tool.tool_helper.install_spec(req)
+        zazu.tool.tool_helper.install_spec(req, echo=click.echo if verbose else lambda x: x)
 
 
 def script_build(repo_root, spec, build_args, verbose):
