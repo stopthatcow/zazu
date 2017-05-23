@@ -312,6 +312,6 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
     try:
-        ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
+        ctx.obj.build_server().publish_artifacts(spec.build_artifacts())
     except click.ClickException:
         pass

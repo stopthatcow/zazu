@@ -54,7 +54,7 @@ def repo_with_jira(git_repo):
 
 def test_teamcity_config(repo_with_teamcity):
     cfg = zazu.config.Config(repo_with_teamcity.working_tree_dir)
-    tc = cfg.continuous_integration()
+    tc = cfg.build_server()
     assert tc is not None
     assert tc.type() == 'TeamCity'
 
@@ -62,7 +62,7 @@ def test_teamcity_config(repo_with_teamcity):
 def test_invalid_ci(repo_with_invalid_ci):
     cfg = zazu.config.Config(repo_with_invalid_ci.working_tree_dir)
     with pytest.raises(click.ClickException):
-        cfg.continuous_integration()
+        cfg.build_server()
 
 
 def test_jira_config(repo_with_jira):

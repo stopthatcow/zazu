@@ -41,15 +41,15 @@ def hooks(ctx):
 def ci(ctx):
     """Setup CI configurations based on a zazu.yaml file"""
     ctx.obj.check_repo()
-    continuous_integration = ctx.obj.continuous_integration()
+    build_server = ctx.obj.build_server()
     project_config = ctx.obj.project_config()
-    if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
+    if click.confirm("Post build configuration to {}?".format(build_server.type())):
         scm_url = ctx.obj.repo.remotes.origin.url
         scm_org, scm_name = zazu.github_helper.parse_github_url(scm_url)
         components = project_config['components']
         for c in components:
             component = zazu.build.ComponentConfiguration(c)
-            continuous_integration.setup_component(component, scm_name, scm_url)
+            build_server.setup_component(component, scm_name, scm_url)
 
 
 @repo.command()
