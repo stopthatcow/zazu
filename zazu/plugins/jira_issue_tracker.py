@@ -82,7 +82,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     @staticmethod
     def validate_id_format(id):
-        if not re.match('[A-Z]+-[0-9]+', id, flags=re.IGNORECASE):
+        if not re.match('[A-Z]+-[0-9]+$', id):
             raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not of the form PROJ-#'.format(id))
 
     @staticmethod
@@ -96,7 +96,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             project = config['project']
         except KeyError:
             raise zazu.ZazuException('Jira config requires a "project" field')
-        components = config.get('component', None)
+        components = config.get('component', [])
         if not isinstance(components, list):
             components = [components]
         return JiraIssueTracker(url, project, components)
