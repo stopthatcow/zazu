@@ -95,20 +95,30 @@ def prompt(text, default=None, expected_type=str):
     return expected_type(result)
 
 
-def pick(choices, message):
+def pick(choices, message, checkbox=False):
+
     if len(choices) > 1:
         click.clear()
-        questions = [
-            inquirer.List(' ',
-                          message=message,
-                          choices=choices,
-                          ),
-        ]
-        response = inquirer.prompt(questions)
-        if response is None:
-            raise KeyboardInterrupt
-        return response[' ']
-    return choices[0]
+        if not checkbox:
+            questions = [
+                inquirer.List(' ',
+                              message=message,
+                              choices=choices,
+                              ),
+            ]
+        else:
+            questions = [
+                inquirer.Checkbox(' ',
+                             message = message,
+                             choices = choices,
+                             ),
+            ]
+
+            response = inquirer.prompt(questions)
+            if response is None:
+                raise KeyboardInterrupt
+            return response[' ']
+        return choices[0]
 
 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
