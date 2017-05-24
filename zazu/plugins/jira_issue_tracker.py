@@ -96,7 +96,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             project = config['project']
         except KeyError:
             raise zazu.ZazuException('Jira config requires a "project" field')
-        components = config.get('component', [])
+        components = config.get('component', None)
         if not isinstance(components, list):
             components = [components]
         return JiraIssueTracker(url, project, components)

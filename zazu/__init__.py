@@ -19,3 +19,6 @@ __version__ = LazyVersion()
 
 class ZazuException(Exception):
     """Parent of all Zazu errors"""
+
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
