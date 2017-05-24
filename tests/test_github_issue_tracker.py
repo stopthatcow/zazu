@@ -68,6 +68,17 @@ def test_from_config_no_project(git_repo):
         assert str(e.value) == 'No "origin" remote specified for this repo'
 
 
+def test_github_issue_tracker_get_repo(mocker, tracker_mock):
+    github_mock = mocker.Mock('github.Github', autospec=True)
+    user_mock = mocker.Mock('github.NamedUser.NamedUser', autospec=True)
+    github_mock.get_user = mocker.Mock('github.Github.get_user', autospec=True, return_value=user_mock)
+    user_mock.get_repo = mocker.Mock('ggithub.NamedUser.NamedUser.get_repo', autospec=True)
+    mocker.patch('zazu.github_helper.make_gh', return_value=github_mock)
+    tracker_mock._github_repo()
+    github_mock.get_user.assert_called_once_with('stopthatcow')
+    user_mock.get_repo.assert_called_once_with('zazu')
+
+
 def test_from_config(git_repo):
     uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({'owner': 'stopthatcow',
                                                                             'repo': 'zazu'})
