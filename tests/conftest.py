@@ -13,7 +13,6 @@ def tmp_dir():
 
 @pytest.fixture
 def git_repo(tmp_dir):
-    print('Tmpdir: {}'.format(tmp_dir))
     repo = git.Repo.init(tmp_dir)
     readme = os.path.join(tmp_dir, 'README.md')
     with open(readme, 'w'):
@@ -21,6 +20,14 @@ def git_repo(tmp_dir):
     repo.index.add([readme])
     repo.index.commit('initial readme')
     return repo
+
+
+@pytest.fixture
+def git_repo_with_bad_config(git_repo):
+    zazu_file = os.path.join(git_repo.working_tree_dir, 'zazu.yaml')
+    with open(zazu_file, 'w') as f:
+        f.write('{')
+    return git_repo
 
 
 @pytest.fixture()

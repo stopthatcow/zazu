@@ -70,15 +70,34 @@ def path_gen(search_paths, file_names):
             yield os.path.join(p, f)
 
 
+def get_line(file_path, line_number):
+    """Returns line number in file"""
+    with open(file_path, 'r') as fp:
+        for i, line in enumerate(fp):
+            if i == line_number:
+                return line
+
+
+def make_col_indicator(index):
+    """Return a carrot indicator at index"""
+    return '{}^'.format(' ' * index)
+
+
 def load_yaml_file(search_paths, file_names):
     """Load a project yaml file"""
     searched = path_gen(search_paths, file_names)
     for file_name in searched:
         try:
-            with open(file_name) as f:
-                config = yaml.load(f)
-                if config is None:
-                    raise click.ClickException('unable to parse config file')
+            with open(file_name, 'r') as f:
+                try:
+                    config = yaml.load(f)
+                except yaml.YAMLError as e:
+                    if hasattr(e, 'problem_mark'):
+                        error_line = get_line(file_name, e.problem_mark.line)
+                        col_indicator = make_col_indicator(e.problem_mark.column)
+                        error_string = "invalid_syntax: '{}'\n" \
+                                       "                 {}".format(error_line, col_indicator)
+                    raise click.ClickException('unable to parse config file \'{}\'\n{}'.format(file_name, error_string))
                 return config
         except IOError:
             pass
@@ -93,10 +112,11 @@ class Config(object):
 
     def __init__(self, repo_root):
         self.repo_root = repo_root
-        if self.repo_root:
-            self.repo = git.Repo(self.repo_root)
-        else:
-            self.repo = None
+        if self.repo_root is not None:
+            try:
+                self.repo = git.Repo(self.repo_root)
+            except git.InvalidGitRepositoryError:
+                self.repo = None
         self._issue_tracker = None
         self._code_reviewer = None
         self._build_server = None
@@ -135,6 +155,7 @@ class Config(object):
 
     def project_config(self):
         if self._project_config is None:
+            self.check_repo()
             self._project_config = load_yaml_file([self.repo_root], PROJECT_FILE_NAMES)
             required_zazu_version = self._project_config.get('zazu', '')
             if required_zazu_version and required_zazu_version != zazu.__version__:

@@ -19,7 +19,7 @@ def get_repo_root(starting_dir):
         g = git.Git(starting_dir)
         ret = g.rev_parse('--show-toplevel')
     except git.exc.GitCommandError:
-        ret = ''
+        ret = None
     return ret
 
 
