@@ -6,7 +6,8 @@ import zazu.credential_helper
 import zazu.issue_tracker
 import zazu.util
 zazu.util.lazy_import(locals(), [
-    'jira'
+    'jira',
+    're'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -52,7 +53,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             ret.fields.description = ret.fields.description.split('\n\n----', 1)[0]
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
-        return JiraIssueAdaptor(ret)
+        return JiraIssueAdaptor(ret, self)
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
@@ -66,7 +67,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
                 issue_dict['components'] = [{'name': component}]
             issue = self.jira_handle().create_issue(issue_dict)
             self.jira_handle().assign_issue(issue, issue.fields.reporter.name)
-            return JiraIssueAdaptor(issue)
+            return JiraIssueAdaptor(issue, self)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
@@ -111,8 +112,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
 
-    def __init__(self, jira_issue):
+    def __init__(self, jira_issue, tracker_handle):
         self._jira_issue = jira_issue
+        self._tracker = tracker_handle
 
     @property
     def name(self):
@@ -140,7 +142,15 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
 
     @property
     def closed(self):
-        return str(self._jira_issue.fields.status) == 'Closed'
+        return self._jira_issue.fields.status.name == 'Closed'
+
+    @property
+    def browse_url(self):
+        return self._tracker.browse_url(self.id)
+
+    @property
+    def id(self):
+        return self._jira_issue.key
 
     def __str__(self):
-        return str(self._jira_issue)
+        return self.id

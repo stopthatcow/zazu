@@ -19,6 +19,11 @@ issueTracker:
     owner: stopthatcow
     repo: zazu
 
+#issueTracker:
+#    type: jira
+#    url: https://zazucli.atlassian.net/
+#    project: ZZ
+
 codeReviewer:
     type: github
     owner: stopthatcow

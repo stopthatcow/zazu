@@ -33,3 +33,11 @@ class Issue:
     @property
     def assignee(self):
         raise NotImplementedError('Must implement assignee')
+
+    @property
+    def browse_url(self):
+        raise NotImplementedError('Must implement browse_url')
+
+    @property
+    def id(self):
+        raise NotImplementedError('Must implement id')
