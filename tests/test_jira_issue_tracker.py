@@ -19,6 +19,9 @@ def test_jira_issue_adaptor(tracker_mock):
             'status': {
                 'name': 'Closed'
             },
+            'resolution': {
+                'name': 'Done'
+            },
             'description': 'description',
             'issuetype': {
                 'name': 'type'

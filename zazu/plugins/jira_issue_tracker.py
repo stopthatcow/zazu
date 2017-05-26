@@ -111,6 +111,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
+    """Wraps a issue returned from the jiri api and adapts it to the zazu.issue_tracker.Issue interface"""
 
     def __init__(self, jira_issue, tracker_handle):
         self._jira_issue = jira_issue
@@ -142,7 +143,7 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
 
     @property
     def closed(self):
-        return self._jira_issue.fields.status.name == 'Closed'
+        return self._jira_issue.fields.resolution.name != 'Unresolved'
 
     @property
     def browse_url(self):
