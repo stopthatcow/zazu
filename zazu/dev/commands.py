@@ -233,9 +233,9 @@ def review(ctx, base, head):
     code_reviewer = ctx.obj.code_reviewer()
     head = ctx.obj.repo.active_branch.name if head is None else head
     existing_reviews = code_reviewer.review(status='open', head=head, base=base)
-    try:
+    if existing_reviews:
         pr = zazu.util.pick(existing_reviews, 'Multiple reviews found, pick one')
-    except IndexError:
+    else:
         descriptor = make_issue_descriptor(head)
         issue_id = descriptor.id
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
