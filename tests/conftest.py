@@ -100,3 +100,16 @@ def working_directory(path):
         yield
     finally:
         os.chdir(prev_cwd)
+
+
+def dict_to_obj(dictionary):
+    """Creates a object from a dictionary"""
+    class Struct(object):
+
+        def __init__(self, d):
+            for a, b in d.items():
+                if isinstance(b, (list, tuple)):
+                    setattr(self, a, [Struct(x) if isinstance(x, dict) else x for x in b])
+                else:
+                    setattr(self, a, Struct(b) if isinstance(b, dict) else b)
+    return Struct(dictionary)
