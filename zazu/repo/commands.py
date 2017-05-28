@@ -5,8 +5,6 @@ import zazu.github_helper
 import zazu.util
 import zazu.config
 import zazu.plugins
-import inquirer
-import straight
 zazu.util.lazy_import(locals(), [
     'click',
     'functools',
@@ -93,7 +91,6 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 @click.pass_context
 def init(ctx, nohooks):
     """Initialize repo directory structure"""
-       
     def _zazu_yaml(issue_tracker={}, stylers=[]):
         """builds zazu.yaml file"""
         if issue_tracker:
@@ -101,10 +98,9 @@ def init(ctx, nohooks):
         else:
             zazu_yaml_obj = {}
         if stylers:
-            zazu_yaml_obj['style'] = {key: {'options':[None]} for key in stylers}
+            zazu_yaml_obj['style'] = {key: {'options': [None]} for key in stylers}
             click.echo('Reminder: please specify styler options in  zazu.yaml')
-        yaml.dump(zazu_yaml_obj, file('zazu.yaml','w'), default_flow_style=False)
-    
+        yaml.dump(zazu_yaml_obj, file('zazu.yaml', 'w'), default_flow_style=False)
     # check for git repo in cwd
     try:
         repo = git.Repo(os.getcwd())
@@ -112,11 +108,11 @@ def init(ctx, nohooks):
         event_time = time.gmtime()
         default_name = time.mktime(event_time)
         # click.prompt does not play well with py format
-        repo_name = click.prompt('No existing git repo found, Name your new repo:', default='zazuRepoCreated_'+str(default_name))
+        repo_name = click.prompt('No existing git repo found, Name your new repo:', default='zazuRepoCreated_' + str(default_name))
 
         try:
             os.mkdir(repo_name)
-            bare_repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'),bare=True)
+            repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'), bare=True)
             os.chdir(repo_name)
         except OSError as err:
             raise click.ClickException(str(err))
@@ -133,9 +129,9 @@ def init(ctx, nohooks):
         stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
         tracker_choice = zazu.util.pick(trackers, 'Pick an Issue Tracker')
         tracker_dict = {}
-        if not tracker_choice is 'None':
+        if tracker_choice is not 'None':
             owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
-            tracker_dict['issueTracker'] = {'owner':owner,'repo':repo_name,'type':tracker_choice}
+            tracker_dict['issueTracker'] = {'owner': owner, 'repo': repo_name, 'type': tracker_choice}
 
         styler_choice = zazu.util.pick(stylers, 'Pick some stylers', checkbox=True)
         if not styler_choice and tracker_choice is 'None':
@@ -147,8 +143,8 @@ def init(ctx, nohooks):
             click.echo('Installing Git Hooks')
             zazu.git_helper.install_git_hooks(repo.working_dir)
         click.echo('Creating zazu.yaml')
- 
- 
+
+
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
