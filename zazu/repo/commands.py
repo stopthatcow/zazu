@@ -89,14 +89,14 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 
 
 @repo.command()
+@click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.pass_context
-def init(ctx):
+def init(ctx, nohooks):
     """Initialize repo directory structure
     TODo:
     -if not git repo offer to make one
     -if git repo, assume user wants current repo to use zazu
     """
-    import pdb 
 
     def _zazu_yaml(issue_tracker={}, stylers=[]):
         """builds zazu.yaml file"""
@@ -107,7 +107,6 @@ def init(ctx):
 
     def _getZazuYaml():
         """gets zazu's yaml"""
-        pdb.set_trace()
         zazu_yaml = requests.get('https://raw.githubusercontent.com/stopthatcow/zazu/develop/zazu.yaml')
 
     # check for git repo in cwd
@@ -139,10 +138,12 @@ def init(ctx):
             owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
             tracker_dict = {}
             tracker_dict['issueTracker'] = {'owner':owner,'repo':repo_name,'type':tracker_choice}
-            pdb.set_trace()
 
         styler_choice = zazu.util.pick(stylers, 'Pick some stylers', checkbox=True)
         _zazu_yaml(tracker_dict, styler_choice)
+        if not nohooks:
+            click.echo('Installing Git Hooks')
+            zazu.git_helper.install_git_hooks(repo.working_dir)
         click.echo('Creating zazu.yaml')
  
  
