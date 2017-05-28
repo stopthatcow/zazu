@@ -89,14 +89,14 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 
 
 @repo.command()
-@click.option('-i', 'interactive', is_flag=True, help='starts interactive repo init')
 @click.pass_context
-def init(ctx, interactive):
+def init(ctx):
     """Initialize repo directory structure
     TODo:
     -if not git repo offer to make one
     -if git repo, assume user wants current repo to use zazu
     """
+    import pdb 
 
     def _build_inquiry(name, message, choices=[], checkbox=False):
         """helper function to build an inquiry"""
@@ -128,15 +128,15 @@ def init(ctx, interactive):
 
     def _getZazuYaml():
         """gets zazu's yaml"""
-        import pdb
         pdb.set_trace()
         zazu_yaml = requests.get('https://raw.githubusercontent.com/stopthatcow/zazu/develop/zazu.yaml')
 
     # check for git repo in cwd
-    if not os.path.isdir('.git'):
+    try:
+        repo_name = git.Repo(os.getcwd())
+    except git.InvalidGitRepositoryError:
         event_time = time.gmtime()
         default_name = time.mktime(event_time)
-
         # click.prompt does not play well with py format
         repo_name = click.prompt('No existing git repo found, Name your new repo:', default='zazuRepoCreated_'+str(default_name))
 
@@ -146,11 +146,10 @@ def init(ctx, interactive):
         except OSError as err:
             raise click.ClickException(str(err))
 
-        if click.confirm("We are currently in a git repo, configure zazu.yml?", abort=True):
-            click.echo("Configuring Zazu for: " + os.getcwd())
-            repo_name = os.path.basename(os.path.normpath(os.getcwd()))
+    if click.confirm("We are currently in a git repo, configure zazu.yml?", abort=True):
+        click.echo("Configuring Zazu for: " + os.getcwd())
+        repo_name = os.path.basename(os.path.normpath(os.getcwd()))
 
-    if interactive: 
         click.echo('Interactive Repo Design, by zazu')
         trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
         tracker_list = trackers.append('None')
@@ -166,10 +165,7 @@ def init(ctx, interactive):
         _zazu_yaml(tracker_choice, styler_choice)
         click.echo('Creating zazu.yaml')
  
-    else:
-        _getZazuYaml()
-            
-        
+ 
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
