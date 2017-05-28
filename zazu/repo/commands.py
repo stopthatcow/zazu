@@ -97,12 +97,6 @@ def init(ctx, interactive):
     -if not git repo offer to make one
     -if git repo, assume user wants current repo to use zazu
     """
-    
-    def _get_plugin_list(plugin_subclass):
-        """helper function to pull lists of plugins"""
-        plugins = straight.plugin.load('zazu.plugins', subclasses=plugin_subclass)
-        known_types = {p.type().lower(): p.from_config for p in plugins}
-        return known_types.keys()
 
     def _build_inquiry(name, message, choices=[], checkbox=False):
         """helper function to build an inquiry"""
@@ -158,9 +152,9 @@ def init(ctx, interactive):
 
     if interactive: 
         click.echo('Interactive Repo Design, by zazu')
-        trackers = _get_plugin_list(zazu.issue_tracker.IssueTracker)
+        trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
         tracker_list = trackers.append('None')
-        stylers = _get_plugin_list(zazu.styler.Styler)
+        stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
         tracker_choice =  _build_inquiry('type', 'Pick an Issue Tracker', choices=tracker_list)
 
         if not tracker_choice['type'] is 'None':

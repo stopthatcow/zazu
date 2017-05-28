@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
 import platform
+import zazu.plugins
+
 try:
     if platform.system() == 'Windows':
         import pyreadline
@@ -42,7 +44,8 @@ lazy_import(locals(), [
     'inquirer',
     'multiprocessing',
     'os',
-    'subprocess'
+    'subprocess',
+    'straight'
 ])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -147,3 +150,10 @@ def pprint_list(data):
 def raise_uninstalled(pkg_name):
     """Raises a exception for a missing package"""
     raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
+
+
+def get_plugin_list(plugin_subclass):
+    """helper function to pull lists of plugins"""
+    plugins = straight.plugin.load('zazu.plugins', subclasses=plugin_subclass)
+    known_types = {p.type().lower(): p.from_config for p in plugins}
+    return known_types.keys()
