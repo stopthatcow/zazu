@@ -98,32 +98,11 @@ def init(ctx):
     """
     import pdb 
 
-    def _build_inquiry(name, message, choices=[], checkbox=False):
-        """helper function to build an inquiry"""
-        if not checkbox:
-            inquiry = [
-                inquirer.List(str(name),
-                             message = str(message),
-                             choices = trackers,
-                             ),
-            ]
-
-        else:
-            inquiry = [
-                inquirer.Checkbox(str(name),
-                             message = str(message),
-                             choices = choices,
-                             ),
-            ]
-        
-        return inquirer.prompt(inquiry)
-
-    def _zazu_yaml(issue_tracker={}, stylers={}):
+    def _zazu_yaml(issue_tracker={}, stylers=[]):
         """builds zazu.yml file"""
-        zazu_yaml_obj = {}
-        zazu_yaml_obj['issueTracker'] = issue_tracker
+        zazu_yaml_obj = issue_tracker
         if stylers:
-            zazu_yaml_obj['style'] = stylers['style']
+            zazu_yaml_obj['style'] = {key: {'options':[]} for key in stylers}
         yaml.dump(zazu_yaml_obj, file('zazu.yaml','w'), default_flow_style=False)
 
     def _getZazuYaml():
@@ -152,17 +131,17 @@ def init(ctx):
 
         click.echo('Interactive Repo Design, by zazu')
         trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
-        tracker_list = trackers.append('None')
+        trackers.append('None')
         stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
-        tracker_choice =  _build_inquiry('type', 'Pick an Issue Tracker', choices=tracker_list)
-
-        if not tracker_choice['type'] is 'None':
+        tracker_choice = zazu.util.pick(trackers, 'Pick an Issue Tracker')
+        if not tracker_choice is 'None':
             owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
-            tracker_choice['owner'] = owner
-            tracker_choice['repo'] = repo_name
+            tracker_dict = {}
+            tracker_dict['issueTracker'] = {'owner':owner,'repo':repo_name,'type':tracker_choice}
+            pdb.set_trace()
 
-        styler_choice = _build_inquiry('style', 'Pick one or more stylers', choices=stylers, checkbox=True)
-        _zazu_yaml(tracker_choice, styler_choice)
+        styler_choice = zazu.util.pick(stylers, 'Pick some stylers', checkbox=True)
+        _zazu_yaml(tracker_dict, styler_choice)
         click.echo('Creating zazu.yaml')
  
  
