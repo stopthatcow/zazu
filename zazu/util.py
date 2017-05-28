@@ -110,11 +110,10 @@ def pick(choices, message, checkbox=False):
                              ),
             ]
 
-            response = inquirer.prompt(questions)
-            if response is None:
-                raise KeyboardInterrupt
-            return response[' ']
-        return choices[0]
+        response = inquirer.prompt(questions)
+        if response is None:
+            raise KeyboardInterrupt
+        return response[' ']
 
 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
