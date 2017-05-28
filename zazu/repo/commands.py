@@ -99,7 +99,7 @@ def init(ctx):
     import pdb 
 
     def _zazu_yaml(issue_tracker={}, stylers=[]):
-        """builds zazu.yml file"""
+        """builds zazu.yaml file"""
         zazu_yaml_obj = issue_tracker
         if stylers:
             zazu_yaml_obj['style'] = {key: {'options':[]} for key in stylers}
@@ -122,10 +122,11 @@ def init(ctx):
         try:
             os.mkdir(repo_name)
             bare_repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'),bare=True)
+            os.chdir(repo_name)
         except OSError as err:
             raise click.ClickException(str(err))
 
-    if click.confirm("We are currently in a git repo, configure zazu.yml?", abort=True):
+    if click.confirm("We are currently in a git repo, configure zazu.yaml?", abort=True):
         click.echo("Configuring Zazu for: " + os.getcwd())
         repo_name = os.path.basename(os.path.normpath(os.getcwd()))
 
