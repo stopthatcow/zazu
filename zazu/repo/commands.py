@@ -68,7 +68,7 @@ def ci(ctx):
 def clone(ctx, repository_url, nohooks, nosubmodules):
     """Clone and initialize a repo
 
-        Args:
+       Args:
             repository_url(str):url of the repository to clone
     """
     try:
@@ -89,29 +89,25 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 
 
 @repo.command()
-@click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
+@click.option('--nohooks', is_flag=True, help='does not install git hooks in the repo')
 @click.pass_context
 def init(ctx, nohooks):
-    """Initialize repo directory structure
-    TODo:
-    -if not git repo offer to make one
-    -if git repo, assume user wants current repo to use zazu
-    """
-
+    """Initialize repo directory structure"""
+       
     def _zazu_yaml(issue_tracker={}, stylers=[]):
         """builds zazu.yaml file"""
-        zazu_yaml_obj = issue_tracker
+        if issue_tracker:
+            zazu_yaml_obj = issue_tracker
+        else:
+            zazu_yaml_obj = {}
         if stylers:
-            zazu_yaml_obj['style'] = {key: {'options':[]} for key in stylers}
+            zazu_yaml_obj['style'] = {key: {'options':[None]} for key in stylers}
+            click.echo('Reminder: please specify styler options in  zazu.yaml')
         yaml.dump(zazu_yaml_obj, file('zazu.yaml','w'), default_flow_style=False)
-
-    def _getZazuYaml():
-        """gets zazu's yaml"""
-        zazu_yaml = requests.get('https://raw.githubusercontent.com/stopthatcow/zazu/develop/zazu.yaml')
-
+    
     # check for git repo in cwd
     try:
-        repo_name = git.Repo(os.getcwd())
+        repo = git.Repo(os.getcwd())
     except git.InvalidGitRepositoryError:
         event_time = time.gmtime()
         default_name = time.mktime(event_time)
@@ -127,6 +123,8 @@ def init(ctx, nohooks):
 
     if click.confirm("We are currently in a git repo, configure zazu.yaml?", abort=True):
         click.echo("Configuring Zazu for: " + os.getcwd())
+        if os.path.isfile('zazu.yaml'):
+            click.confirm('zazu.yaml file found, continuing will overwrite, continue?', abort=True)
         repo_name = os.path.basename(os.path.normpath(os.getcwd()))
 
         click.echo('Interactive Repo Design, by zazu')
@@ -134,12 +132,16 @@ def init(ctx, nohooks):
         trackers.append('None')
         stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
         tracker_choice = zazu.util.pick(trackers, 'Pick an Issue Tracker')
+        tracker_dict = {}
         if not tracker_choice is 'None':
             owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
-            tracker_dict = {}
             tracker_dict['issueTracker'] = {'owner':owner,'repo':repo_name,'type':tracker_choice}
 
         styler_choice = zazu.util.pick(stylers, 'Pick some stylers', checkbox=True)
+        if not styler_choice and tracker_choice is 'None':
+            click.clear()
+            click.echo('No issue tracker or stylers chosen, exiting')
+            exit()
         _zazu_yaml(tracker_dict, styler_choice)
         if not nohooks:
             click.echo('Installing Git Hooks')
