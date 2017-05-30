@@ -15,11 +15,6 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-def description_to_branch(description):
-    """Sanitizes a string for inclusion into branch name"""
-    return description.replace(' ', '_')
-
-
 class IssueDescriptor(object):
     """Info holder of type, ticket ID, and description"""
 
@@ -32,14 +27,12 @@ class IssueDescriptor(object):
         ret = self.id
         if self.type is not None:
             ret = '{}/{}'.format(self.type, ret)
-        if self.description is not None:
+        if self.description:
             sanitized_description = self.description.replace(' ', '_')
             ret = '{}_{}'.format(ret, sanitized_description)
         return ret
 
     def readable_description(self):
-        if self.description is None:
-            return None
         return self.description.replace('_', ' ').capitalize()
 
 
@@ -47,13 +40,11 @@ def make_ticket(issue_tracker):
     """Creates a new ticket interactively"""
     # ensure that we have a connection
     issue_tracker.connect()
-    project = issue_tracker.default_project()
-    issue_type = zazu.util.pick(issue_tracker.issue_types(), 'Pick issue type')
-    component = zazu.util.pick(issue_tracker.issue_components(), 'Pick issue component')
-    click.echo('Making a new {} on {}...'.format(issue_type.lower(), issue_tracker.type()))
-    summary = zazu.util.prompt('Enter a title')
-    description = zazu.util.prompt('Enter a description')
-    return issue_tracker.create_issue(project, issue_type, summary, description, component)
+    return issue_tracker.create_issue(project=issue_tracker.default_project(),
+                                      issue_type=zazu.util.pick(issue_tracker.issue_types(), 'Pick type'),
+                                      summary=zazu.util.prompt('Enter a title'),
+                                      description=zazu.util.prompt('Enter a description'),
+                                      component=zazu.util.pick(issue_tracker.issue_components(), 'Pick component'))
 
 
 def verify_ticket_exists(issue_tracker, ticket_id):
@@ -79,7 +70,7 @@ def make_issue_descriptor(name):
     """Splits input into type, id and description"""
     known_types = set(['hotfix', 'release', 'feature', 'bug'])
     type = None
-    description = None
+    description = ''
     components = name.split('/')
     if len(components) > 1:
         type = components[-2]
@@ -168,7 +159,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     issue = make_issue_descriptor(name)
     if not no_verify:
         verify_ticket_exists(ctx.obj.issue_tracker(), issue.id)
-    if issue.description is None:
+    if not issue.description:
         issue.description = zazu.util.prompt('Enter a short description for the branch')
     issue.type = type
     branch_name = issue.get_branch_name()

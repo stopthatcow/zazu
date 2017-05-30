@@ -150,15 +150,12 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
         os.makedirs(build_dir)
     except OSError:
         pass
-    if 'distclean' == goal:
-        shutil.rmtree(build_dir)
-    else:
-        ret = zazu.cmake_helper.configure(repo_root, build_dir, arch, type, vars, click.echo if verbose else lambda x: x)
-        if ret:
-            raise click.ClickException("Error configuring with cmake")
-        ret = zazu.cmake_helper.build(build_dir, arch, type, goal, verbose)
-        if ret:
-            raise click.ClickException("Error building with cmake")
+    ret = zazu.cmake_helper.configure(repo_root, build_dir, arch, type, vars, click.echo if verbose else lambda x: x)
+    if ret:
+        raise click.ClickException('Error configuring with cmake')
+    ret = zazu.cmake_helper.build(build_dir, arch, type, goal, verbose)
+    if ret:
+        raise click.ClickException('Error building with cmake')
     return ret
 
 
@@ -293,8 +290,7 @@ def add_version_args(repo_root, build_num, args):
 @click.argument('goal')
 @click.argument('extra_args_str', nargs=-1)
 def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
-    """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target,
-     use distclean to clean whole build folder"""
+    """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target"""
     # Run the supplied build script if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
     project_config = ctx.obj.project_config()
