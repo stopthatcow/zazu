@@ -79,3 +79,11 @@ def test_make_ticket(mocker):
                                                             summary='title',
                                                             description='description',
                                                             component='component')
+
+
+def test_check_if_branch_is_protected():
+    protected_branches = ['develop', 'master']
+    for b in protected_branches:
+        with pytest.raises(click.ClickException) as e:
+            zazu.dev.commands.check_if_branch_is_protected(b)
+        assert str(e.value) == 'branch "{}" is protected'.format(b)
