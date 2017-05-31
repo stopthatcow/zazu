@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-import click
-import zazu.git_helper
 import zazu.build
+import zazu.git_helper
+import zazu.github_helper
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'functools',
+    'git',
+    'os'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -12,12 +18,14 @@ __copyright__ = "Copyright 2016"
 @click.pass_context
 def repo(ctx):
     """Manage repository"""
-    ctx.obj.check_repo()
+    pass
 
 
 @repo.group()
-def setup():
+@click.pass_context
+def setup(ctx):
     """Setup repository with services"""
+    ctx.obj.check_repo()
     pass
 
 
@@ -28,33 +36,48 @@ def hooks(ctx):
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
-def get_git_hub_name(url):
-    name = url.rsplit('/', 1)[-1]
-    name = name.replace('.git', '')
-    return name
-
-
 @setup.command()
 @click.pass_context
 def ci(ctx):
     """Setup CI configurations based on a zazu.yaml file"""
     ctx.obj.check_repo()
-    continuous_integration = ctx.obj.continuous_integration()
+    build_server = ctx.obj.build_server()
     project_config = ctx.obj.project_config()
-    if click.confirm("Post build configuration to {}?".format(continuous_integration.type())):
+    if click.confirm("Post build configuration to {}?".format(build_server.type())):
         scm_url = ctx.obj.repo.remotes.origin.url
-        scm_name = get_git_hub_name(scm_url)
+        scm_org, scm_name = zazu.github_helper.parse_github_url(scm_url)
         components = project_config['components']
         for c in components:
             component = zazu.build.ComponentConfiguration(c)
-            continuous_integration.setup_component(component, scm_name, scm_url)
+            build_server.setup_component(component, scm_name, scm_url)
 
 
 @repo.command()
+@click.argument('repository_url')
+@click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
+@click.option('--nosubmodules', is_flag=True, help='does not update submodules')
 @click.pass_context
-def clone(ctx):
-    """Clone and initialize a repo"""
-    raise NotImplementedError
+def clone(ctx, repository_url, nohooks, nosubmodules):
+    """Clone and initialize a repo
+
+        Args:
+            repository_url(str):url of the repository to clone
+    """
+    try:
+        destination = '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', ''))
+        repo = git.Repo.clone_from(repository_url, destination)
+        click.echo('Repository successfully cloned')
+
+        if not nohooks:
+            click.echo('Installing Git Hooks')
+            zazu.git_helper.install_git_hooks(repo.working_dir)
+
+        if not nosubmodules:
+            click.echo('Updating all submodules')
+            repo.submodule_update(init=True, recursive=True)
+
+    except git.GitCommandError as err:
+        raise click.ClickException(str(err))
 
 
 @repo.command()
@@ -69,9 +92,13 @@ def init(ctx):
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
 @click.pass_context
 def cleanup(ctx, remote, target_branch):
-    """Clean up merged branches that have been merged or are associated with cloded/resolved tickets"""
+    """Clean up merged branches that have been merged or are associated with closed/resolved tickets"""
+    ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
-    repo_obj.git.checkout('develop')
+    try:
+        repo_obj.git.checkout('develop')
+    except git.exc.GitCommandError:
+        raise click.ClickException('unable to checkout "develop"')
     issue_tracker = ctx.obj.issue_tracker()
     closed_branches = set([])
     if remote:
@@ -114,15 +141,22 @@ def tickets_from_branches(branches):
 
 def get_closed_branches(issue_tracker, branches):
     """get descriptors of branches that refer to closed branches"""
-    return [t.get_branch_name() for t in tickets_from_branches(branches) if ticket_is_closed(issue_tracker, t)]
+    def ticket_if_closed(tracker, ticket):
+        try:
+            if tracker.issue(ticket.id).closed:
+                return ticket
+        except zazu.issue_tracker.IssueTrackerError:
+            pass
+        return None
+
+    work = [functools.partial(ticket_if_closed, issue_tracker, t) for t in tickets_from_branches(branches)]
+    closed_tickets = zazu.util.dispatch(work)
+    return [t.get_branch_name() for t in closed_tickets if t is not None]
 
 
 def ticket_is_closed(issue_tracker, descriptor):
     """determines if a ticket is closed or not, defaults to false in case the ticket isn't found by the issue tracker"""
-    ret = False
     try:
-        issue = issue_tracker.issue(descriptor.id)
-        ret = issue_tracker.resolved(issue) or issue_tracker.closed(issue)
+        return issue_tracker.issue(descriptor.id).closed
     except zazu.issue_tracker.IssueTrackerError:
-        pass
-    return ret
+        return False

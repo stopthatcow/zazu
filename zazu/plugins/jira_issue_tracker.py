@@ -2,9 +2,13 @@
 """The goal of the JIRA issue tracker is to expose a simple interface that will allow us to collect ticket information
  pertaining to the current branch based on ticket ID. Additionally we can integrate with JIRA to create new tickets
  for bug fixes and features"""
-import jira
 import zazu.credential_helper
 import zazu.issue_tracker
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'jira',
+    're'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -27,14 +31,6 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         """Get handle to ensure that JIRA credentials are in place"""
         self.jira_handle()
 
-    @staticmethod
-    def closed(issue):
-        return str(issue.fields.status) == 'Closed'
-
-    @staticmethod
-    def resolved(issue):
-        return str(issue.fields.status) == 'Resolved'
-
     def jira_handle(self):
         if self._jira_handle is None:
             username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
@@ -43,17 +39,21 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
                                           options={'check_update': False}, max_retries=0)
         return self._jira_handle
 
-    def browse_url(self, issue_id):
-        return '{}/browse/{}'.format(self._base_url, issue_id)
+    def browse_url(self, id):
+        self.validate_id_format(id)
+        return '{}/browse/{}'.format(self._base_url, id)
 
-    def issue(self, issue_id):
+    def issue(self, id):
+        self.validate_id_format(id)
         try:
-            ret = self.jira_handle().issue(issue_id)
+            ret = self.jira_handle().issue(id)
             # Only show description up to the separator
-            ret.fields.description = ret.fields.description.split('\n\n----')[0]
+            if ret.fields.description is None:
+                ret.fields.description = ''
+            ret.fields.description = ret.fields.description.split('\n\n----', 1)[0]
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
-        return ret
+        return JiraIssueAdaptor(ret, self)
 
     def create_issue(self, project, issue_type, summary, description, component):
         try:
@@ -65,13 +65,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             }
             if component is not None:
                 issue_dict['components'] = [{'name': component}]
-            return self.jira_handle().create_issue(issue_dict)
-        except jira.exceptions.JIRAError as e:
-            raise zazu.issue_tracker.IssueTrackerError(str(e))
-
-    def assign_issue(self, issue, assignee):
-        try:
-            self.jira_handle().assign_issue(issue, assignee)
+            issue = self.jira_handle().create_issue(issue_dict)
+            self.jira_handle().assign_issue(issue, issue.fields.reporter.name)
+            return JiraIssueAdaptor(issue, self)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
@@ -83,6 +79,11 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def issue_components(self):
         return self._components
+
+    @staticmethod
+    def validate_id_format(id):
+        if not re.match('[A-Z]+-[0-9]+$', id):
+            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not of the form PROJ-#'.format(id))
 
     @staticmethod
     def from_config(config):
@@ -107,3 +108,50 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 # Some ideas for APIs
 # list work assigned to me in this sprint
 # update ticket progress (transition states)
+
+
+class JiraIssueAdaptor(zazu.issue_tracker.Issue):
+    """Wraps a issue returned from the jiri api and adapts it to the zazu.issue_tracker.Issue interface"""
+
+    def __init__(self, jira_issue, tracker_handle):
+        self._jira_issue = jira_issue
+        self._tracker = tracker_handle
+
+    @property
+    def name(self):
+        return self._jira_issue.fields.summary
+
+    @property
+    def status(self):
+        return self._jira_issue.fields.status.name
+
+    @property
+    def description(self):
+        return self._jira_issue.fields.description
+
+    @property
+    def type(self):
+        return self._jira_issue.fields.issuetype.name
+
+    @property
+    def reporter(self):
+        return self._jira_issue.fields.reporter.name
+
+    @property
+    def assignee(self):
+        return self._jira_issue.fields.assignee.name
+
+    @property
+    def closed(self):
+        return self._jira_issue.fields.resolution.name != 'Unresolved'
+
+    @property
+    def browse_url(self):
+        return self._tracker.browse_url(self.id)
+
+    @property
+    def id(self):
+        return self._jira_issue.key
+
+    def __str__(self):
+        return self.id

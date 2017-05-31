@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """github functions for zazu"""
-import click
-import getpass
-import github
-import keyring
-import re
-import requests
-import socket
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'getpass',
+    'github',
+    're',
+    'requests',
+    'socket'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -29,7 +30,7 @@ def get_gh_token():
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
-                headers = {'X-GitHub-OTP': click.prompt('GitHub two-factor code (6 digits)', type=str)}
+                headers = {'X-GitHub-OTP': zazu.util.prompt('GitHub two-factor code (6 digits)', expected_type=str)}
                 r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
             else:
                 click.echo("Invalid username or password!")
@@ -46,6 +47,7 @@ def get_gh_token():
 
 
 def make_gh():
+    import keyring  # For some reason this doesn't play nicely with threads on lazy import.
     token = keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")
