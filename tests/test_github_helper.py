@@ -65,6 +65,7 @@ def test_get_gh_token_otp(mocker):
 
     mocker.patch('zazu.util.prompt', side_effect=['user', 'token'], autospec=True)
     mocker.patch('click.prompt', return_value='password', autospec=True)
+    mocker.patch('keyring.set_password')
 
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=require_otp)) as post_auth:
         assert 'token' == zazu.github_helper.get_gh_token()
@@ -100,6 +101,7 @@ def test_get_gh_token_try_again(mocker):
 
     mocker.patch('zazu.util.prompt', side_effect=['bad_user', 'user'], autospec=True)
     mocker.patch('click.prompt', side_effect=['bad_password', 'password'], autospec=True)
+    mocker.patch('keyring.set_password')
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=normal_auth)) as post_auth:
         zazu.github_helper.get_gh_token()
         post_auth.call_count == 2
