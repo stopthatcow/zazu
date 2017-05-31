@@ -48,7 +48,7 @@ def test_make_issue_descriptor_github_style():
     with pytest.raises(click.ClickException) as e:
         zazu.dev.commands.make_issue_descriptor('bad/1')
     assert str(e.value).startswith('Branch type specifier must be one of ')
-    branch_name ='feature/1_description'
+    branch_name = 'feature/1_description'
     uut = zazu.dev.commands.make_issue_descriptor(branch_name)
     assert uut.get_branch_name() == branch_name
     assert uut.type == 'feature'
@@ -57,7 +57,7 @@ def test_make_issue_descriptor_github_style():
 
 
 def test_make_issue_descriptor_jira_style():
-    branch_name ='feature/ZZ-1_description'
+    branch_name = 'feature/ZZ-1_description'
     uut = zazu.dev.commands.make_issue_descriptor(branch_name)
     assert uut.get_branch_name() == branch_name
     assert uut.type == 'feature'
