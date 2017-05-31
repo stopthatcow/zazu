@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import click
 import future.utils
 import os
+import pytest
 import zazu.tool.tool_helper
 
 __author__ = "Nicholas Wiles"
@@ -25,3 +27,17 @@ def test_parse_install_spec():
     name, ver = zazu.tool.tool_helper.parse_install_spec('foo==1.2.3')
     assert name == 'foo'
     assert ver == '1.2.3'
+
+
+def test_get_enforcer():
+    with pytest.raises(click.ClickException):
+        zazu.tool.tool_helper.get_enforcer('gcc-arm-none-eabi', '1.0')
+
+
+def test_ensure_directory_exists(tmp_dir):
+    path = os.path.join(tmp_dir, 'foo')
+    assert not os.path.isdir(path)
+    zazu.tool.tool_helper.ensure_directory_exists(path)
+    assert os.path.isdir(path)
+    zazu.tool.tool_helper.ensure_directory_exists(path)
+    assert os.path.isdir(path)

@@ -70,12 +70,55 @@ def test_cmake_build(repo_with_build_config, mocker):
     with tests.conftest.working_directory(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
-        print result.output
         assert not result.exit_code
-        zazu.cmake_helper.configure.assert_called()
+        zazu.cmake_helper.configure.assert_called_once()
         assert dir in zazu.cmake_helper.configure.call_args[0][0]
         assert str(os.path.join(dir, 'build')) in zazu.cmake_helper.configure.call_args[0][1]
-        zazu.cmake_helper.build.assert_called()
+        zazu.cmake_helper.build.assert_called_once()
         assert dir in zazu.cmake_helper.build.call_args[0][0]
-        assert 'minSizeRel' in zazu.cmake_helper.build.call_args[0][1]
-        assert 'cmake_build' in zazu.cmake_helper.build.call_args[0][2]
+        assert 'host' == zazu.cmake_helper.build.call_args[0][1]
+        assert 'minSizeRel' == zazu.cmake_helper.build.call_args[0][2]
+        assert 'cmake_build' == zazu.cmake_helper.build.call_args[0][3]
+        # Build again, to make sure existing directories don't break things
+        result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
+
+
+def test_cmake_configure_error(repo_with_build_config, mocker):
+    mocker.patch('zazu.cmake_helper.configure', return_value=1)
+    dir = repo_with_build_config.working_tree_dir
+    with tests.conftest.working_directory(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
+        assert result.exit_code
+        zazu.cmake_helper.configure.assert_called_once()
+        assert result.output.endswith('Error configuring with cmake\n')
+
+
+def test_cmake_build_error(repo_with_build_config, mocker):
+    mocker.patch('zazu.cmake_helper.configure', return_value=0)
+    mocker.patch('zazu.cmake_helper.build', return_value=1)
+    dir = repo_with_build_config.working_tree_dir
+    with tests.conftest.working_directory(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
+        assert result.exit_code
+        zazu.cmake_helper.configure.assert_called_once()
+        zazu.cmake_helper.build.assert_called_once()
+        assert result.output.endswith('Error building with cmake\n')
+
+
+def test_cmake_build_bad_arch():
+    with pytest.raises(click.BadParameter) as e:
+        zazu.build.cmake_build('', 'bad_arch', 'release', all, False, {})
+    assert 'Arch "bad_arch" not recognized,' in str(e)
+
+
+def test_make_version_number():
+    semver = zazu.build.make_version_number('master', 1, '1.1', 0, 'abcdef1')
+    assert str(semver) == '1.1.0+sha.abcdef1.build.1.branch.master'
+    semver = zazu.build.make_version_number('release/1.2', 1, '1.1', 1, 'abcdef1')
+    assert str(semver) == '1.2.0-1+sha.abcdef1.build.1.branch.release-1.2'
+    semver = zazu.build.make_version_number('hotfix/1.2.1', 1, '1.1', 1, 'abcdef1')
+    assert str(semver) == '1.2.1-1+sha.abcdef1.build.1.branch.hotfix-1.2.1'
+    semver = zazu.build.make_version_number('feature/name', 1, '1.1', 1, 'abcdef1')
+    assert str(semver) == '0.0.0-1+sha.abcdef1.build.1.branch.feature-name'

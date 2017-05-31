@@ -82,7 +82,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     @staticmethod
     def validate_id_format(id):
-        if not re.match('[A-Z]+-[0-9]+', id, flags=re.IGNORECASE):
+        if not re.match('[A-Z]+-[0-9]+$', id):
             raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not of the form PROJ-#'.format(id))
 
     @staticmethod

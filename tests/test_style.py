@@ -44,6 +44,7 @@ def test_astyle(git_repo):
         assert dict(ret)[bad_file_name]
         ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
         assert not any(dict(ret).values())
+        assert styler.default_extensions()
 
 
 def test_autopep8(git_repo):
@@ -58,6 +59,7 @@ def test_autopep8(git_repo):
         assert dict(ret)[bad_file_name]
         ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
         assert not any(dict(ret).values())
+        assert ['*.py'] == styler.default_extensions()
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
@@ -74,10 +76,11 @@ def test_clang_format(git_repo):
         assert dict(ret)[bad_file_name]
         ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
         assert not dict(ret)[bad_file_name]
+        assert styler.default_extensions()
 
 
-@pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
-                    reason="requires astyle")
+@pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
+                    reason="requires clang-format")
 def test_bad_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
     with tests.conftest.working_directory(dir):
@@ -92,8 +95,8 @@ def test_bad_style(repo_with_style_errors):
         assert result.exit_code == 0
 
 
-@pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
-                    reason="requires astyle")
+@pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
+                    reason="requires clang-format")
 def test_dirty_style(repo_with_style_errors, monkeypatch):
     dir = repo_with_style_errors.working_tree_dir
     with tests.conftest.working_directory(dir):
@@ -114,3 +117,9 @@ def test_style_no_config(repo_with_missing_style):
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.output == 'no style settings found\n'
         assert result.exit_code == 0
+
+
+def test_styler():
+    uut = zazu.styler.Styler()
+    with pytest.raises(NotImplementedError):
+        uut.style_file('', False, False)

@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
-import platform
+
 try:
-    if platform.system() == 'Windows':
-        import pyreadline
-        assert pyreadline
-    else:
-        import readline
-        assert readline
+    import readline  # NOQA
 except ImportError:
-    # Fall back to regular input
-    pass
+    # This will be available on Windows
+    import pyreadline  # NOQA
 
 
 def lazy_import(scope, imports):
@@ -96,6 +91,8 @@ def prompt(text, default=None, expected_type=str):
 
 
 def pick(choices, message):
+    if not choices:
+        return None
     if len(choices) > 1:
         click.clear()
         questions = [

@@ -35,6 +35,27 @@ def test_scan_tree():
     assert os.path.relpath(include_file, dir) in results
 
 
+def test_check_output(mocker):
+    mocker.patch('subprocess.check_output', side_effect=OSError(''))
+    with pytest.raises(click.ClickException):
+        zazu.util.check_output('foo')
+        subprocess.check_output.assert_called_once_with('foo')
+
+
+def test_call(mocker):
+    mocker.patch('subprocess.call', side_effect=OSError(''))
+    with pytest.raises(click.ClickException):
+        zazu.util.call('foo')
+        subprocess.call.assert_called_once_with('foo')
+
+
+def call(*args, **kwargs):
+    try:
+        return subprocess.call(*args, **kwargs)
+    except OSError:
+        raise_uninstalled(args[0][0])
+
+
 def test_pprint_list():
     list = ['a', 'b', 'c']
     formatted = zazu.util.pprint_list(list)
@@ -65,6 +86,10 @@ def test_prompt(monkeypatch):
     assert zazu.util.prompt('foo') == expected2
     with pytest.raises(ValueError):
         zazu.util.prompt('foo', expected_type=int)
+
+
+def test_pick_empty():
+    assert zazu.util.pick([], 'foo') is None
 
 
 def test_pick_single():

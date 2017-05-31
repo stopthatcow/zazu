@@ -3,6 +3,7 @@
 import zazu.tool.tool_helper
 import zazu.util
 zazu.util.lazy_import(locals(), [
+    'distutils',
     'multiprocessing',
     'os',
     'pkg_resources',
@@ -82,16 +83,16 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
     return r
 
 
-def build(build_dir, build_type, target, verbose):
+def build(build_dir, arch, build_type, target, verbose):
     """Build using CMake"""
-    if 'nt' in os.name:
-        build_args = ['cmake', '--build', '.', '--config', build_type.capitalize()]
-        if 'all' != target:
-            build_args += ['--target', target]
-    else:
+    if architecture_to_generator(arch) == 'Unix Makefiles':
         build_args = ['make', '-j{}'.format(multiprocessing.cpu_count()), target]
         if verbose:
             build_args.append('VERBOSE=1')
+    else:
+        build_args = ['cmake', '--build', '.', '--config', build_type.capitalize()]
+        if 'all' != target:
+            build_args += ['--target', target]
     with zazu.util.cd(build_dir):
         return zazu.util.call(build_args)
 

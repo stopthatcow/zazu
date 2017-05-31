@@ -13,7 +13,6 @@ def tmp_dir():
 
 @pytest.fixture
 def git_repo(tmp_dir):
-    print('Tmpdir: {}'.format(tmp_dir))
     repo = git.Repo.init(tmp_dir)
     readme = os.path.join(tmp_dir, 'README.md')
     with open(readme, 'w'):
@@ -23,6 +22,14 @@ def git_repo(tmp_dir):
     return repo
 
 
+@pytest.fixture
+def git_repo_with_bad_config(git_repo):
+    zazu_file = os.path.join(git_repo.working_tree_dir, 'zazu.yaml')
+    with open(zazu_file, 'w') as f:
+        f.write('{')
+    return git_repo
+
+
 @pytest.fixture()
 def repo_with_style(git_repo):
     root = git_repo.working_tree_dir
@@ -30,7 +37,7 @@ def repo_with_style(git_repo):
         'style': {
             'exclude': ['dependency'],
             'autopep8': {},
-            'astyle': {}
+            'clang-format': {}
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
@@ -88,6 +95,12 @@ def repo_with_missing_style(git_repo):
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
         file.write(yaml.dump(config))
+    return git_repo
+
+
+@pytest.fixture()
+def repo_with_github_as_origin(git_repo):
+    git_repo.create_remote('origin', 'http://github.com/stopthatcow/zazu')
     return git_repo
 
 

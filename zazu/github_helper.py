@@ -30,7 +30,7 @@ def get_gh_token():
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
-                headers = {'X-GitHub-OTP': click.prompt('GitHub two-factor code (6 digits)', type=str)}
+                headers = {'X-GitHub-OTP': zazu.util.prompt('GitHub two-factor code (6 digits)', expected_type=str)}
                 r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
             else:
                 click.echo("Invalid username or password!")

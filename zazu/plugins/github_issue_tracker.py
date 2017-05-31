@@ -51,25 +51,19 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
-    def assign_issue(self, issue, assignee):
-        try:
-            issue.edit(assignee=assignee)
-        except github.GithubException as e:
-            raise zazu.issue_tracker.IssueTrackerError(str(e))
-
     def default_project(self):
         return ''
 
     def issue_types(self):
-        return ['Issue']
+        return ['issue']
 
     def issue_components(self):
-        return ['']
+        return []
 
     @staticmethod
     def validate_id_format(id):
         if not id.isdigit():
-            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" must be numeric'.format(id))
+            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not numeric'.format(id))
 
     @staticmethod
     def from_config(config):

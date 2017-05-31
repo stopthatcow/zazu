@@ -12,7 +12,7 @@ class IssueTrackerError(Exception):
     """Parent of all IssueTracker errors"""
 
 
-class Issue:
+class Issue(object):
 
     @property
     def name(self):
