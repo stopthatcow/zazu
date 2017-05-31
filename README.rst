@@ -41,7 +41,7 @@ elements of git flow with CI and issue tracking.
 
 Zazu is implemented in Python and is a
 `Click <http://click.pocoo.org/5/>`__ based CLI. If you're wondering why
-Click, this is a well `answered <http://click.pocoo.org/5/why/>`__
+Click, this is a `well answered <http://click.pocoo.org/5/why/>`__
 question.
 
 Install
