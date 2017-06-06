@@ -10,8 +10,6 @@ zazu.util.lazy_import(locals(), [
     'functools',
     'git',
     'os',
-    'time',
-    'socket',
     'yaml',
     'requests'
 ])
