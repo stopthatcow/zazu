@@ -103,10 +103,7 @@ def init(ctx, nohooks):
     try:
         repo = git.Repo(os.getcwd())
     except git.InvalidGitRepositoryError:
-        event_time = time.gmtime()
-        default_name = time.mktime(event_time)
-        # click.prompt does not play well with py format
-        repo_name = click.prompt('No existing git repo found, Name your new repo:', default='zazuRepoCreated_' + str(default_name))
+        repo_name = click.prompt('No existing git repo found, Name your new repo:')
 
         try:
             os.mkdir(repo_name)
@@ -115,20 +112,19 @@ def init(ctx, nohooks):
         except OSError as err:
             raise click.ClickException(str(err))
 
-    if click.confirm("We are currently in a git repo, configure zazu.yaml?", abort=True):
+    if click.confirm("Configure zazu.yaml?", abort=True):
         click.echo("Configuring Zazu for: " + os.getcwd())
         if os.path.isfile('zazu.yaml'):
             click.confirm('zazu.yaml file found, continuing will overwrite, continue?', abort=True)
         repo_name = os.path.basename(os.path.normpath(os.getcwd()))
 
-        click.echo('Interactive Repo Design, by zazu')
         trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
         trackers.append('None')
         stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
         tracker_choice = zazu.util.pick(trackers, 'Pick an Issue Tracker')
         tracker_dict = {}
         if tracker_choice is not 'None':
-            owner = click.prompt('Please enter an owner for issues created from this repo', default=socket.getfqdn())
+            owner = click.prompt('Please enter an owner for issues created from this repo')
             tracker_dict['issueTracker'] = {'owner': owner, 'repo': repo_name, 'type': tracker_choice}
 
         styler_choice = zazu.util.pick(stylers, 'Pick some stylers', checkbox=True)
