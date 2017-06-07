@@ -23,6 +23,7 @@ def mocked_github_issue_tracker(mocker, tracker_mock):
     tracker_mock._github = repo_obj_mock
     return tracker_mock
 
+
 mock_issue_dict = {
     'number': 1,
     'title': 'name',

@@ -96,4 +96,5 @@ def build(build_dir, arch, build_type, target, verbose):
     with zazu.util.cd(build_dir):
         return zazu.util.call(build_args)
 
+
 build_types = ['release', 'debug', 'minSizeRel', 'relWithDebInfo', 'coverage']

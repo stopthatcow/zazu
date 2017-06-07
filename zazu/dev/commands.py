@@ -176,9 +176,21 @@ def start(ctx, name, no_verify, head, rename_flag, type):
             ctx.obj.repo.git.checkout('HEAD', b=branch_name)
 
 
-def wrap_text(text):
-    return '\n'.join(['\n'.join(textwrap.wrap(line, 90, break_long_words=False, initial_indent='    ',
-                                              subsequent_indent='    ')) for line in text.splitlines()])
+def wrap_text(text, width=90, indent=''):
+    """Wraps each line of text to width characters wide with indent.
+
+    Args:
+        text (str): The text to wrap.
+        width (str): width to wrap to.
+        indent (str): the indent to prepend to each line.
+
+    Returns:
+        str: A wrapped block of text.
+    """
+    return '\n'.join(['\n'.join(textwrap.wrap(line, width,
+                                              break_long_words=False,
+                                              initial_indent=indent,
+                                              subsequent_indent=indent)) for line in text.splitlines()])
 
 
 @dev.command()
@@ -198,7 +210,7 @@ def status(ctx):
             click.echo('{} {}'.format(click.style('    {}: '.format(type.capitalize()), fg='green'), issue.name))
             click.echo('{} {}'.format(click.style('    Status:', fg='green'), issue.status))
             click.echo(click.style('    Description:\n', fg='green'), nl=False)
-            click.echo(wrap_text(issue.description))
+            click.echo(wrap_text(issue.description, indent='    '))
         except zazu.issue_tracker.IssueTrackerError:
             click.echo("    No ticket found")
 
@@ -210,7 +222,7 @@ def status(ctx):
                 click.echo('{} {}'.format(click.style('    Review: '.format(type.capitalize()), fg='green'), p.name))
                 click.echo('{} {}, {}'.format(click.style('    Status:', fg='green'), p.status, 'merged' if p.merged else 'unmerged'))
                 click.echo('{} {} -> {}'.format(click.style('    Branches:', fg='green'), p.head, p.base))
-                click.echo(click.style('    Description:\n', fg='green') + wrap_text(p.description))
+                click.echo(click.style('    Description:\n', fg='green') + wrap_text(p.description, indent='    '))
 
                 # TODO: build status from TC
 
