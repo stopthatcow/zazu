@@ -1,5 +1,5 @@
-zazu
-====
+Reference
+=========
 
 .. toctree::
    :maxdepth: 4

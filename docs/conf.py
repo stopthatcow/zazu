@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Zazu documentation build configuration file, created by
-# sphinx-quickstart on Tue Jun  6 20:21:21 2017.
+# sphinx-quickstart on Tue Jun  6 21:54:00 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -18,7 +18,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('..'))
+
 
 # -- General configuration ------------------------------------------------
 
@@ -53,7 +54,7 @@ author = u'Nicholas Wiles'
 # built documents.
 #
 # The short X.Y version.
-with open('../../zazu/version.txt', 'r') as f:
+with open('../zazu/version.txt', 'r') as f:
     version = f.read()
 # The full version, including alpha/beta/rc tags.
 release = version
@@ -68,7 +69,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -85,6 +86,7 @@ todo_include_todos = False
 import sphinx_rtd_theme
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
