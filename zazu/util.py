@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""utility functions for zazu"""
+"""Utility functions for zazu."""
 
 try:
     import readline  # NOQA
@@ -9,7 +9,7 @@ except ImportError:
 
 
 def lazy_import(scope, imports):
-    """Imports modules when they are used"""
+    """Declare a list of modules to import on their first use."""
     class LazyImport(object):
 
         def __init__(self, **entries):
@@ -44,6 +44,7 @@ __copyright__ = "Copyright 2016"
 
 
 def check_output(*args, **kwargs):
+    """Like subprocess.check_output but raises an exception if it cannot be found."""
     try:
         return subprocess.check_output(*args, **kwargs)
     except OSError:
@@ -51,6 +52,7 @@ def check_output(*args, **kwargs):
 
 
 def call(*args, **kwargs):
+    """Like subprocess.call but raise an exception if it cannot be found."""
     try:
         return subprocess.call(*args, **kwargs)
     except OSError:
@@ -59,6 +61,7 @@ def call(*args, **kwargs):
 
 @contextlib.contextmanager
 def cd(path):
+    """Change directory context manager."""
     prev_dir = os.getcwd()
     os.chdir(path)
     try:
@@ -68,7 +71,7 @@ def cd(path):
 
 
 def dispatch(work):
-    """Dispatches a list of callables in multiple threads and yields their returns"""
+    """Dispatche a list of callables in multiple threads and yields their returns."""
     with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
         futures = {executor.submit(w): w for w in work}
         for future in concurrent.futures.as_completed(futures):
@@ -79,10 +82,12 @@ FAIL_OK = [click.style('FAIL', fg='red', bold=True), click.style(' OK ', fg='gre
 
 
 def format_checklist_item(tag, text, tag_formats=FAIL_OK):
+    """Format a list item based on an enumerated set of tags."""
     return '[{}] {}'.format(tag_formats[tag], text)
 
 
 def prompt(text, default=None, expected_type=str):
+    """Prompt user for an input."""
     if default is not None:
         result = builtins.input('{} [{}]: '.format(text, default)) or default
     else:
@@ -91,6 +96,7 @@ def prompt(text, default=None, expected_type=str):
 
 
 def pick(choices, message):
+    """Interactively allow user to pick among a set of choices."""
     if not choices:
         return None
     if len(choices) > 1:
@@ -127,10 +133,10 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
 
 
 def pprint_list(data):
-    """Formats list as a bulleted list string"""
+    """Format list as a bulleted list string."""
     return '\n  - {}'.format('\n  - '.join(data))
 
 
 def raise_uninstalled(pkg_name):
-    """Raises a exception for a missing package"""
+    """Raise an exception for a missing package."""
     raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
