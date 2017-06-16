@@ -1,5 +1,5 @@
-Zazu (at your service)
-======================
+Getting Started
+===============
 |buildBadge| |coverageBadge|
 |ReleaseBadge|  |FormatBadge|
 |LicenseBadge| |PythonVersionBadge|
