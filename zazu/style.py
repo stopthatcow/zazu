@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""style functions for zazu"""
+"""Style functions for zazu."""
 import zazu.git_helper
 import zazu.styler
 import zazu.util
@@ -22,7 +22,7 @@ default_exclude_paths = ['build',
 @click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them')
 @click.option('--dirty', is_flag=True, help='only examine files that are staged for CI commit')
 def style(ctx, verbose, check, dirty):
-    """Style repo files or check that they are valid style"""
+    """Style repo files or check that they are valid style."""
     ctx.obj.check_repo()
     file_count = 0
     violation_count = 0
@@ -30,7 +30,7 @@ def style(ctx, verbose, check, dirty):
     if stylers:
         if dirty:
             dirty_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
-        # Run each styler
+        # Run each Styler
         for s in stylers:
             files = zazu.util.scantree(ctx.obj.repo_root,
                                        s.includes,

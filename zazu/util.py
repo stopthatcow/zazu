@@ -9,7 +9,12 @@ except ImportError:
 
 
 def lazy_import(scope, imports):
-    """Declare a list of modules to import on their first use."""
+    """Declare a list of modules to import on their first use.
+
+    Args:
+        scope: the scope to import the modules into.
+        imports: the list of modules to import.
+    """
     class LazyImport(object):
 
         def __init__(self, **entries):
@@ -61,7 +66,12 @@ def call(*args, **kwargs):
 
 @contextlib.contextmanager
 def cd(path):
-    """Change directory context manager."""
+    """Change directory context manager.
+
+    Args:
+        path: the path to change to.
+
+    """
     prev_dir = os.getcwd()
     os.chdir(path)
     try:
@@ -71,7 +81,15 @@ def cd(path):
 
 
 def dispatch(work):
-    """Dispatche a list of callables in multiple threads and yields their returns."""
+    """Dispatch a list of callables in multiple threads and yields their returns.
+
+    Args:
+        work: the list of callables to execute.
+
+    Yields:
+        the results of the callables as they are finished.
+
+    """
     with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
         futures = {executor.submit(w): w for w in work}
         for future in concurrent.futures.as_completed(futures):
@@ -82,12 +100,32 @@ FAIL_OK = [click.style('FAIL', fg='red', bold=True), click.style(' OK ', fg='gre
 
 
 def format_checklist_item(tag, text, tag_formats=FAIL_OK):
-    """Format a list item based on an enumerated set of tags."""
+    """Format a list item based on an enumerated set of tags.
+
+    Args:
+        tag (int): index into the tag_formats list.
+        text (str): the checklist text to display.
+        tag_formats (list of str): the possible states of the checklist.
+
+    Returns (str):
+        the checklist string.
+
+    """
     return '[{}] {}'.format(tag_formats[tag], text)
 
 
 def prompt(text, default=None, expected_type=str):
-    """Prompt user for an input."""
+    """Prompt user for an input.
+
+    Args:
+        text (str): the text to display to the user.
+        default (str): the default to return if the user doesn't provide input.
+        expected_type (type): the type to cast the user's return to.
+
+    Returns:
+        user's input casted to expected_type or default if no inout is provided. 
+
+    """
     if default is not None:
         result = builtins.input('{} [{}]: '.format(text, default)) or default
     else:
@@ -96,7 +134,13 @@ def prompt(text, default=None, expected_type=str):
 
 
 def pick(choices, message):
-    """Interactively allow user to pick among a set of choices."""
+    """Interactively allow user to pick among a set of choices.
+
+    Args:
+        choices: list of possible choices.
+        message: the message to display to the user.
+
+    """
     if not choices:
         return None
     if len(choices) > 1:
@@ -115,7 +159,18 @@ def pick(choices, message):
 
 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
-    """List files recursively that match any of the include glob patterns but are not in an excluded pattern."""
+    """List files recursively that match any of the include glob patterns but are not in an excluded pattern.
+
+    Args:
+        base_path (str): the path to scan.
+        include_patterns (str): list of glob patterns to include.
+        exclude_patterns (str): list of glob patterns to exclude.
+        exclude_hidden (bool): don't include hidden files if True.
+
+    Returns:
+        list of str: of file paths (relative to the base path) that match the input parameters.
+
+    """
     files = []
     exclude_dirs = set([os.path.normpath(e) for e in exclude_patterns])
     for dirName, subdirList, fileList in os.walk(base_path):
@@ -133,10 +188,26 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
 
 
 def pprint_list(data):
-    """Format list as a bulleted list string."""
+    """Format list as a bulleted list string.
+
+    Args: 
+        data (list): the list to pprint.
+
+    Returns:
+        str: a newline separated pretty printed list.
+
+    """
     return '\n  - {}'.format('\n  - '.join(data))
 
 
 def raise_uninstalled(pkg_name):
-    """Raise an exception for a missing package."""
+    """Raise an exception for a missing package.
+
+    Args:
+        pkg_name (str): the package name that is missing.
+
+    Raises:
+        click.ClickException
+
+    """
     raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))

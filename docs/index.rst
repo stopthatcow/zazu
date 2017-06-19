@@ -13,3 +13,4 @@ Zazu
    introduction
    modules
    changelog
+   license

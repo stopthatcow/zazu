@@ -46,6 +46,10 @@ class Styler(object):
             path: absolute path to the file to style.
             verbose: if true, print style status.
             dry_run: if true, doesn't touch local files.
+
+        Raises:
+            NotImplementedError
+
         """
         raise NotImplementedError('All style plugins must implement style_file()')
 
@@ -57,6 +61,10 @@ class Styler(object):
             config: the configuration dictionary.
             excludes: patterns to exclude.
             includes: patterns to include.
+
+        Returns:
+            Styler with config options set.
+
         """
         obj = cls(config.get('options', []),
                   excludes + config.get('excludes', []),
