@@ -56,7 +56,7 @@ build_server_factory = PluginFactory('buildServer', zazu.build_server.BuildServe
 def styler_factory(config):
     """Make and initialize the Stylers from the config."""
     stylers = []
-    plugins = straight.plugin.load('zazu.plugins', subclass=zazu.styler.Styler)
+    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
     known_types = {p.type(): p for p in plugins}
     excludes = config.get('exclude', [])
     for k in config.keys():

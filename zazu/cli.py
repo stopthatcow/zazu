@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""entry point for zazu"""
+"""Entry point for zazu."""
 import click
 import os
 import zazu.build
@@ -19,6 +19,7 @@ __copyright__ = "Copyright 2016"
 @click.version_option(version=zazu.__version__)
 @click.pass_context
 def cli(ctx):
+    """Entry point for zazu cli."""
     ctx.obj = zazu.config.Config(zazu.git_helper.get_repo_root(os.getcwd()))
 
 

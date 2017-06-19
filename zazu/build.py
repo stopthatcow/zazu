@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build command for zazu"""
+"""Build command for zazu."""
 
 import zazu.cmake_helper
 import zazu.config
@@ -19,7 +19,7 @@ __copyright__ = "Copyright 2016"
 
 
 class ComponentConfiguration(object):
-    """Stores a configuration for a single component"""
+    """Store a configuration for a single component."""
 
     def __init__(self, component):
         self._name = component['name']
@@ -49,7 +49,7 @@ class ComponentConfiguration(object):
 
 
 class BuildGoal(object):
-    """Stores a configuration for a single build goal with one or more architectures"""
+    """Store a configuration for a single build goal with one or more architectures."""
 
     def __init__(self, goal):
         self._name = goal.get('name', '')
@@ -140,7 +140,7 @@ class BuildSpec(object):
 
 
 def cmake_build(repo_root, arch, type, goal, verbose, vars):
-    """Build using cmake"""
+    """Build using cmake."""
     if arch not in zazu.cmake_helper.known_arches():
         raise click.BadParameter('Arch "{}" not recognized, choose from:\n'.format(arch, zazu.util.pprint_list(zazu.cmake_helper.known_arches())))
 
@@ -160,8 +160,10 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
 
 
 def tag_to_version(tag):
-    """Converts a git tag into a semantic version string.
-     i.e. R4.1 becomes 4.1.0. A leading 'r' or 'v' is optional on the tag"""
+    """Convert a git tag into a semantic version string.
+
+    i.e. R4.1 becomes 4.1.0. A leading 'r' or 'v' is optional on the tag.
+    """
     components = []
     if tag is not None:
         if tag.lower().startswith('r') or tag.lower().startswith('v'):
@@ -181,13 +183,13 @@ def tag_to_version(tag):
 
 
 def make_semver(repo_root, build_number):
-    """Parses SCM info and creates a semantic version"""
+    """Parse SCM info and creates a semantic version."""
     branch_name, sha, last_tag, commits_past_tag = parse_describe(repo_root)
     return make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha)
 
 
 def parse_describe(repo_root):
-    """Parses the results of git describe into branch name, sha, last tag, and number of commits since the tag"""
+    """Parse the results of git describe into branch name, sha, last tag, and number of commits since the tag."""
     stdout = subprocess.check_output(['git', 'describe', '--dirty=.dirty', '--always', '--long'], cwd=repo_root)
     components = stdout.strip().split('-')
     sha = None
@@ -205,12 +207,12 @@ def parse_describe(repo_root):
 
 
 def sanitize_branch_name(branch_name):
-    """replaces punctuation that cannot be in semantic version from a branch name and replaces them with dashes"""
+    """Replace punctuation that cannot be in semantic version from a branch name with dashes."""
     return branch_name.replace('/', '-').replace('_', '-')
 
 
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
-    """Converts repo metadata and build version into a semantic version"""
+    """Convert repo metadata and build version into a semantic version."""
     branch_name_sanitized = sanitize_branch_name(branch_name)
     build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name_sanitized]
     prerelease = []
@@ -230,7 +232,7 @@ def make_version_number(branch_name, build_number, last_tag, commits_past_tag, s
 
 
 def pep440_from_semver(semver):
-    # Convert semantic version to PEP440 compliant version
+    """Convert semantic version to PEP440 compliant version."""
     segment = ''
     if semver.prerelease:
         segment = '.dev{}'.format('.'.join(semver.prerelease))
@@ -244,13 +246,13 @@ def pep440_from_semver(semver):
 
 
 def install_requirements(requirements, verbose):
-    """Installs the requirements using the zazu tool manager"""
+    """Install the requirements using the zazu tool manager."""
     for req in requirements:
         zazu.tool.tool_helper.install_spec(req, echo=click.echo if verbose else lambda x: x)
 
 
 def script_build(repo_root, spec, build_args, verbose):
-    """Build using a provided shell script"""
+    """Build using a provided shell script."""
     env = os.environ
     env.update(build_args)
     for s in spec.build_script():
@@ -262,7 +264,7 @@ def script_build(repo_root, spec, build_args, verbose):
 
 
 def parse_key_value_pairs(arg_string):
-    """Parses a argument string in the form x=y j=k and returns a dictionary of the key value pairs"""
+    """Parse a argument string in the form x=y j=k and returns a dictionary of the key value pairs."""
     try:
         return {key: value for (key, value) in [tuple(str(arg).split('=', 1)) for arg in arg_string]}
     except ValueError:
@@ -270,7 +272,7 @@ def parse_key_value_pairs(arg_string):
 
 
 def add_version_args(repo_root, build_num, args):
-    """Adds version strings and build number arguments to args"""
+    """Add version strings and build number arguments to args."""
     try:
         semver = semantic_version.Version(args['ZAZU_BUILD_VERSION'])
     except KeyError:
@@ -290,7 +292,7 @@ def add_version_args(repo_root, build_num, args):
 @click.argument('goal')
 @click.argument('extra_args_str', nargs=-1)
 def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
-    """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target"""
+    """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target."""
     # Run the supplied build script if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
     project_config = ctx.obj.project_config()

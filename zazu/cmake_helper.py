@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Defines helper functions for cmake interaction"""
+"""Defines helper functions for cmake interaction."""
 import zazu.tool.tool_helper
 import zazu.util
 zazu.util.lazy_import(locals(), [
@@ -15,7 +15,7 @@ __copyright__ = "Copyright 2016"
 
 
 def architecture_to_generator(arch):
-    """Gets the required generator for a given architecture"""
+    """Get the required generator for a given architecture."""
     known_arches = {
         'x86_64-win-msvc_2015': 'Visual Studio 14 2015 Win64',
         'x86_32-win-msvc_2015': 'Visual Studio 14 2015',
@@ -26,7 +26,7 @@ def architecture_to_generator(arch):
 
 
 def get_toolchain_file_from_arch(arch):
-    """Gets the required toolchain file for a given architecture"""
+    """Get the required toolchain file for a given architecture."""
     ret = None
     if 'arm32-linux-gnueabihf' in arch:
         ret = pkg_resources.resource_filename('zazu', 'cmake/arm32-linux-gnueabihf.cmake')
@@ -34,7 +34,7 @@ def get_toolchain_file_from_arch(arch):
 
 
 def known_arches():
-    """Lists arches that zazu is familiar with"""
+    """List arches that zazu is familiar with."""
     return ['host',
             'arm32-linux-gnueabihf',
             'arm32-none-eabi',
@@ -47,7 +47,7 @@ def known_arches():
 
 
 def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lambda x: x):
-    """Configures a cmake based project to be built and caches args used to bypass configuration in future"""
+    """Configure a cmake based project to be built and caches args used to bypass configuration in future."""
     configure_args = [
         'cmake',
         repo_root,
@@ -84,7 +84,7 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
 
 
 def build(build_dir, arch, build_type, target, verbose):
-    """Build using CMake"""
+    """Build using CMake."""
     if architecture_to_generator(arch) == 'Unix Makefiles':
         build_args = ['make', '-j{}'.format(multiprocessing.cpu_count()), target]
         if verbose:
