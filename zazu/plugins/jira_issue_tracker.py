@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """The goal of the JIRA issue tracker is to expose a simple interface that will allow us to collect ticket information
  pertaining to the current branch based on ticket ID. Additionally we can integrate with JIRA to create new tickets
- for bug fixes and features"""
+ for bug fixes and features."""
 import zazu.credential_helper
 import zazu.issue_tracker
 import zazu.util
@@ -19,7 +19,7 @@ JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IM
 
 
 class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
-    """Implements zazu issue tracker interface for JIRA"""
+    """Implements zazu issue tracker interface for JIRA."""
 
     def __init__(self, base_url, default_project, components):
         self._base_url = base_url
@@ -28,7 +28,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         self._jira_handle = None
 
     def connect(self):
-        """Get handle to ensure that JIRA credentials are in place"""
+        """Get handle to ensure that JIRA credentials are in place."""
         self.jira_handle()
 
     def jira_handle(self):
@@ -87,7 +87,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     @staticmethod
     def from_config(config):
-        """Makes a JiraIssueTracker from a config"""
+        """Makes a JiraIssueTracker from a config."""
         try:
             url = config['url']
         except KeyError:
@@ -111,7 +111,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
-    """Wraps a issue returned from the jiri api and adapts it to the zazu.issue_tracker.Issue interface"""
+    """Wraps a issue returned from the jiri api and adapts it to the zazu.issue_tracker.Issue interface."""
 
     def __init__(self, jira_issue, tracker_handle):
         self._jira_issue = jira_issue

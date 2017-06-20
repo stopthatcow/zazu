@@ -17,14 +17,14 @@ __copyright__ = "Copyright 2016"
 @click.group()
 @click.pass_context
 def repo(ctx):
-    """Manage repository"""
+    """Manage repository."""
     pass
 
 
 @repo.group()
 @click.pass_context
 def setup(ctx):
-    """Setup repository with services"""
+    """Setup repository with services."""
     ctx.obj.check_repo()
     pass
 
@@ -32,14 +32,14 @@ def setup(ctx):
 @setup.command()
 @click.pass_context
 def hooks(ctx):
-    """Setup default git hooks"""
+    """Setup default git hooks."""
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
 @setup.command()
 @click.pass_context
 def ci(ctx):
-    """Setup CI configurations based on a zazu.yaml file"""
+    """Setup CI configurations based on a zazu.yaml file."""
     ctx.obj.check_repo()
     build_server = ctx.obj.build_server()
     project_config = ctx.obj.project_config()
@@ -83,7 +83,7 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 @repo.command()
 @click.pass_context
 def init(ctx):
-    """Initialize repo directory structure"""
+    """Initialize repo directory structure."""
     raise NotImplementedError
 
 
@@ -92,7 +92,7 @@ def init(ctx):
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
 @click.pass_context
 def cleanup(ctx, remote, target_branch):
-    """Clean up merged branches that have been merged or are associated with closed/resolved tickets"""
+    """Clean up merged branches that have been merged or are associated with closed/resolved tickets."""
     ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
     try:
@@ -140,7 +140,7 @@ def tickets_from_branches(branches):
 
 
 def get_closed_branches(issue_tracker, branches):
-    """get descriptors of branches that refer to closed branches"""
+    """get descriptors of branches that refer to closed branches."""
     def ticket_if_closed(tracker, ticket):
         try:
             if tracker.issue(ticket.id).closed:
@@ -155,7 +155,7 @@ def get_closed_branches(issue_tracker, branches):
 
 
 def ticket_is_closed(issue_tracker, descriptor):
-    """determines if a ticket is closed or not, defaults to false in case the ticket isn't found by the issue tracker"""
+    """determines if a ticket is closed or not, defaults to false in case the ticket isn't found by the issue tracker."""
     try:
         return issue_tracker.issue(descriptor.id).closed
     except zazu.issue_tracker.IssueTrackerError:

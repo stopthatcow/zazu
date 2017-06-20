@@ -16,7 +16,7 @@ __copyright__ = "Copyright 2016"
 
 
 class IssueDescriptor(object):
-    """Info holder of type, ticket ID, and description"""
+    """Info holder of type, ticket ID, and description."""
 
     def __init__(self, type, id, description=''):
         self.type = type
@@ -37,7 +37,7 @@ class IssueDescriptor(object):
 
 
 def make_ticket(issue_tracker):
-    """Creates a new ticket interactively"""
+    """Creates a new ticket interactively."""
     # ensure that we have a connection
     issue_tracker.connect()
     return issue_tracker.create_issue(project=issue_tracker.default_project(),
@@ -48,7 +48,7 @@ def make_ticket(issue_tracker):
 
 
 def verify_ticket_exists(issue_tracker, ticket_id):
-    """Verify that a given ticket exists"""
+    """Verify that a given ticket exists."""
     try:
         issue = issue_tracker.issue(ticket_id)
         click.echo("Found ticket {}: {}".format(ticket_id, issue.name))
@@ -57,7 +57,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
 
 
 def offer_to_stash_changes(repo):
-    """Offers to stash local changes if there are any"""
+    """Offers to stash local changes if there are any."""
     diff = repo.index.diff(None)
     status = repo.git.status('-s', '-uno')
     if len(diff) and len(status):
@@ -67,7 +67,7 @@ def offer_to_stash_changes(repo):
 
 
 def make_issue_descriptor(name):
-    """Splits input into type, id and description"""
+    """Splits input into type, id and description."""
     known_types = set(['hotfix', 'release', 'feature', 'bug'])
     type = None
     description = ''
@@ -87,26 +87,26 @@ def make_issue_descriptor(name):
 @click.group()
 @click.pass_context
 def dev(ctx):
-    """Create or update work items"""
+    """Create or update work items."""
     ctx.obj.check_repo()
 
 
 def check_if_branch_is_protected(branch_name):
-    """throws if branch_name is protected from being renamed"""
+    """throws if branch_name is protected from being renamed."""
     protected_branches = ['develop', 'master']
     if branch_name in protected_branches:
         raise click.ClickException('branch "{}" is protected'.format(branch_name))
 
 
 def check_if_active_branch_can_be_renamed(repo):
-    """throws if the current head is detached or if the active branch is protected"""
+    """throws if the current head is detached or if the active branch is protected."""
     if repo.head.is_detached:
         raise click.ClickException("the current HEAD is detached")
     check_if_branch_is_protected(repo.active_branch.name)
 
 
 def rename_branch(repo, old_branch, new_branch):
-    """Renames old_branch in repo to new_branch, locally and remotely"""
+    """Renames old_branch in repo to new_branch, locally and remotely."""
     check_if_branch_is_protected(old_branch)
     remote_branch_exists = repo.heads[old_branch].tracking_branch() is not None
     if remote_branch_exists:
@@ -124,7 +124,7 @@ def rename_branch(repo, old_branch, new_branch):
 @click.argument('name')
 @click.pass_context
 def rename(ctx, name):
-    """Renames the current branch, locally and remotely"""
+    """Renames the current branch, locally and remotely."""
     repo = ctx.obj.repo
     rename_branch(repo, repo.active_branch.name, name)
 
@@ -138,7 +138,7 @@ def rename(ctx, name):
               default='feature')
 @click.pass_context
 def start(ctx, name, no_verify, head, rename_flag, type):
-    """Start a new feature, much like git-flow but with more sugar"""
+    """Start a new feature, much like git-flow but with more sugar."""
     if rename_flag:
         check_if_active_branch_can_be_renamed(ctx.obj.repo)
     if not (head or rename_flag):
@@ -196,7 +196,7 @@ def wrap_text(text, width=90, indent=''):
 @dev.command()
 @click.pass_context
 def status(ctx):
-    """Get status of this branch"""
+    """Get status of this branch."""
     issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id
     # Dispatch REST calls asynchronously
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -232,7 +232,7 @@ def status(ctx):
 @click.option('--base', help='The base branch to target')
 @click.option('--head', help='The head branch (defaults to current branch and origin organization)')
 def review(ctx, base, head):
-    """Create or display pull request"""
+    """Create or display pull request."""
     code_reviewer = ctx.obj.code_reviewer()
     head = ctx.obj.repo.active_branch.name if head is None else head
     existing_reviews = code_reviewer.review(status='open', head=head, base=base)
@@ -260,7 +260,7 @@ def review(ctx, base, head):
 @click.pass_context
 @click.argument('ticket', default='')
 def ticket(ctx, ticket):
-    """Open the ticket for the current feature or the one supplied in the ticket argument"""
+    """Open the ticket for the current feature or the one supplied in the ticket argument."""
     issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if not ticket else ticket
     verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
     url = ctx.obj.issue_tracker().browse_url(issue_id)
@@ -271,5 +271,5 @@ def ticket(ctx, ticket):
 @dev.command()
 @click.pass_context
 def builds(ctx):
-    """Display build statuses"""
+    """Display build statuses."""
     raise NotImplementedError

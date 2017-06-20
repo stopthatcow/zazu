@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The GitHubIssueTracker implements the zazu.issue_tracker.IssueTracker plugin interface for managing tickets on github"""
+"""The GitHubIssueTracker implements the zazu.issue_tracker.IssueTracker plugin interface for managing tickets on github."""
 import zazu.github_helper
 import zazu.issue_tracker
 import zazu.util
@@ -14,7 +14,7 @@ __copyright__ = "Copyright 2016"
 
 
 class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
-    """Implements zazu issue tracker interface for GitHub"""
+    """Implements zazu issue tracker interface for GitHub."""
 
     def __init__(self, owner, repo):
         self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
@@ -23,7 +23,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         self._github = None
 
     def connect(self):
-        """Get handle to ensure that github credentials are in place"""
+        """Get handle to ensure that github credentials are in place."""
         self._github_handle()
 
     def _github_handle(self):
@@ -67,7 +67,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 
     @staticmethod
     def from_config(config):
-        """Makes a GitHubIssueTracker from a config"""
+        """Makes a GitHubIssueTracker from a config."""
         # Get URL from current git repo:
         owner = config.get('owner', None)
         repo_name = config.get('repo', None)
@@ -86,7 +86,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
-    """Wraps a returned issue from pygithub and adapts it to the zazu.issue_tracker.Issue interface"""
+    """Wraps a returned issue from pygithub and adapts it to the zazu.issue_tracker.Issue interface."""
 
     def __init__(self, github_issue, tracker_handle):
         self._github_issue = github_issue

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Enables code review using github"""
+"""Enables code review using github."""
 import zazu.code_reviewer
 import zazu.plugins.github_issue_tracker
 import zazu.util
@@ -14,7 +14,7 @@ __copyright__ = "Copyright 2017"
 
 
 class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
-    """Implements zazu code review interface for GitHub"""
+    """Implements zazu code review interface for GitHub."""
 
     def __init__(self, owner, repo):
         self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
@@ -23,7 +23,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         self._github = None
 
     def connect(self):
-        """Get handle to ensure that github credentials are in place"""
+        """Get handle to ensure that github credentials are in place."""
         self._github_handle()
 
     def _github_handle(self):
@@ -59,7 +59,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
 
     @staticmethod
     def from_config(config):
-        """Makes a GitHubCodeReviewer from a config"""
+        """Makes a GitHubCodeReviewer from a config."""
         # Get URL from current git repo:
         owner = config.get('owner', None)
         repo_name = config.get('repo', None)
@@ -78,7 +78,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
 
 
 class GitHubCodeReview(zazu.code_reviewer.CodeReview):
-    """Adapts a github pull request object into a zazu CodeReview object"""
+    """Adapts a github pull request object into a zazu CodeReview object."""
 
     def __init__(self, github_pull_request):
         self._pr = github_pull_request

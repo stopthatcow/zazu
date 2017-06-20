@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""astyle plugin for zazu"""
+"""astyle plugin for zazu."""
 import zazu.styler
 import zazu.util
 
@@ -8,10 +8,10 @@ __copyright__ = "Copyright 2017"
 
 
 class AstyleStyler(zazu.styler.Styler):
-    """Astyle plugin for code styling"""
+    """Astyle plugin for code styling."""
 
     def style_file(self, path, verbose, dry_run):
-        """Run astyle on a file"""
+        """Run astyle on a file."""
         args = ['astyle', '--formatted'] + self.options
         if dry_run:
             args.append('--dry-run')

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Defines helper functions for teamcity interaction"""
+"""Defines helper functions for teamcity interaction."""
 import zazu.build_server
 import zazu.credential_helper
 import zazu.util
@@ -16,7 +16,7 @@ __copyright__ = "Copyright 2016"
 
 
 class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
-    """Extends the pyteamcity.Teamcity object to expose interfaces to create projects and build configurations"""
+    """Extends the pyteamcity.Teamcity object to expose interfaces to create projects and build configurations."""
 
     def __init__(self, address, port=80, protocol='http'):
         self._address = address
