@@ -11,7 +11,7 @@ class Autopep8Styler(zazu.styler.Styler):
     """Autopep8 plugin for code styling."""
 
     def style_file(self, path, verbose, dry_run):
-        """checks a single file to see if it is within style guidelines and optionally fixes it."""
+        """Check a single file to see if it is within style guidelines and optionally fix it."""
         args = ['autopep8'] + self.options
 
         check_args = args + ['--diff', path]
@@ -28,8 +28,10 @@ class Autopep8Styler(zazu.styler.Styler):
 
     @staticmethod
     def default_extensions():
+        """Return the list of file extensions that are compatible with this Styler."""
         return ['*.py']
 
     @staticmethod
     def type():
+        """Return the name of this Styler."""
         return 'autopep8'

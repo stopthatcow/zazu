@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Holds the zazu tool subcommand."""
 import zazu.tool.tool_helper
 import zazu.util
 zazu.util.lazy_import(locals(), [

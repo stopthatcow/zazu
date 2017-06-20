@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Holds the zazu repo subcommand."""
 import zazu.build
 import zazu.git_helper
 import zazu.github_helper
@@ -24,7 +25,7 @@ def repo(ctx):
 @repo.group()
 @click.pass_context
 def setup(ctx):
-    """Setup repository with services."""
+    """Handle repository services setup."""
     ctx.obj.check_repo()
     pass
 
@@ -32,14 +33,14 @@ def setup(ctx):
 @setup.command()
 @click.pass_context
 def hooks(ctx):
-    """Setup default git hooks."""
+    """Install default git hooks."""
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
 @setup.command()
 @click.pass_context
 def ci(ctx):
-    """Setup CI configurations based on a zazu.yaml file."""
+    """Post CI configurations to the CI server based on a zazu.yaml file."""
     ctx.obj.check_repo()
     build_server = ctx.obj.build_server()
     project_config = ctx.obj.project_config()
@@ -56,12 +57,13 @@ def ci(ctx):
 @click.argument('repository_url')
 @click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.option('--nosubmodules', is_flag=True, help='does not update submodules')
-@click.pass_context
-def clone(ctx, repository_url, nohooks, nosubmodules):
-    """Clone and initialize a repo
+def clone(repository_url, nohooks, nosubmodules):
+    """Clone and initialize a repo.
 
-        Args:
-            repository_url(str):url of the repository to clone
+    Args:
+        repository_url (str): url of the repository to clone.
+        nohooks (bool): if True, git hooks are not installed.
+        nosubmodules (bool): if True submodules are not initialized.
     """
     try:
         destination = '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', ''))
@@ -81,8 +83,7 @@ def clone(ctx, repository_url, nohooks, nosubmodules):
 
 
 @repo.command()
-@click.pass_context
-def init(ctx):
+def init():
     """Initialize repo directory structure."""
     raise NotImplementedError
 
@@ -130,17 +131,16 @@ def cleanup(ctx, remote, target_branch):
 
 
 def tickets_from_branches(branches):
-    descriptors = []
+    """Generate IssueDescriptors from a branch names."""
     for b in branches:
         try:
-            descriptors.append(zazu.dev.commands.make_issue_descriptor(b))
+            yield zazu.dev.commands.make_issue_descriptor(b)
         except click.ClickException:
             pass
-    return descriptors
 
 
 def get_closed_branches(issue_tracker, branches):
-    """get descriptors of branches that refer to closed branches."""
+    """Get descriptors of branches that refer to closed branches."""
     def ticket_if_closed(tracker, ticket):
         try:
             if tracker.issue(ticket.id).closed:
@@ -155,7 +155,7 @@ def get_closed_branches(issue_tracker, branches):
 
 
 def ticket_is_closed(issue_tracker, descriptor):
-    """determines if a ticket is closed or not, defaults to false in case the ticket isn't found by the issue tracker."""
+    """Determine if a ticket is closed or not, defaults to False in case the ticket isn't found by the issue tracker."""
     try:
         return issue_tracker.issue(descriptor.id).closed
     except zazu.issue_tracker.IssueTrackerError:

@@ -25,7 +25,7 @@ def get_repo_root(starting_dir):
 
 
 def get_hooks_path(repo_base):
-    """Gets the path for git hooks."""
+    """Get the path for git hooks."""
     g = git.Git(repo_base)
     git_dir = g.rev_parse('--git-dir')
     return os.path.join(repo_base, git_dir, 'hooks')
@@ -33,7 +33,6 @@ def get_hooks_path(repo_base):
 
 def get_default_git_hooks():
     """Get list of known git hooks to install."""
-
     return {
         "pre-commit": pkg_resources.resource_filename('zazu', 'githooks/pre-commit'),
         "post-checkout": pkg_resources.resource_filename('zazu', 'githooks/post-checkout'),
@@ -102,6 +101,6 @@ def get_merged_branches(repo, target_branch, remote=False):
 
 
 def filter_undeletable(branches):
-    """Filters out branches that we don't want to delete."""
+    """Filter out branches that we don't want to delete."""
     undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-', 'HEAD'])
     return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (not b.startswith('origin/HEAD'))]

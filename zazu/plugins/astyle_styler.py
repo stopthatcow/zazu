@@ -11,7 +11,7 @@ class AstyleStyler(zazu.styler.Styler):
     """Astyle plugin for code styling."""
 
     def style_file(self, path, verbose, dry_run):
-        """Run astyle on a file."""
+        """Check a single file to see if it is within style guidelines and optionally fix it."""
         args = ['astyle', '--formatted'] + self.options
         if dry_run:
             args.append('--dry-run')
@@ -21,6 +21,7 @@ class AstyleStyler(zazu.styler.Styler):
 
     @staticmethod
     def default_extensions():
+        """Return the list of file extensions that are compatible with this Styler."""
         return ['*.c',
                 '*.cc',
                 '*.cs',
@@ -31,4 +32,5 @@ class AstyleStyler(zazu.styler.Styler):
 
     @staticmethod
     def type():
+        """Return the string type of this Styler."""
         return 'astyle'

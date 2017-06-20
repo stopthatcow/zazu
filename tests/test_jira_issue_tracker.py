@@ -131,7 +131,6 @@ def test_jira_issue_adaptor(tracker_mock):
     assert uut.name == 'name'
     assert uut.status == 'Closed'
     assert uut.description == 'description'
-    assert uut.reporter == 'reporter'
     assert uut.assignee == 'assignee'
     assert uut.closed
     assert uut.type == 'type'

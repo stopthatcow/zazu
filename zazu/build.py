@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Build command for zazu."""
-
 import zazu.cmake_helper
 import zazu.config
 import zazu.tool.tool_helper
@@ -58,10 +57,10 @@ class BuildGoal(object):
 
     def __init__(self, goal):
         """Create a build goal.
-        
+
         Args:
             goal (str): the name of the goal.
-            
+
         """
         self._name = goal.get('name', '')
         self._description = goal.get('description', '')
@@ -123,14 +122,14 @@ class BuildSpec(object):
 
     def __init__(self, goal, type='minSizeRel', vars={}, requires={}, description='', arch='', script=None, artifacts=[]):
         """Create a BuildSpec.
-        
+
         Args:
             goal (str): the goal name.
             type (str): the build type.
             vars (dict): key value pairs that are passed to the build.
             description (str): a description of the build spec.
-            arch (str): the target architechture.
-            script (list of str): the build script steps if one exists. 
+            arch (str): the target architecture.
+            script (list of str): the build script steps if one exists.
             artifacts (list of str): the list of artifacts to pass to CI.
         """
         self._build_goal = goal

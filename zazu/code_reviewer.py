@@ -58,6 +58,16 @@ class CodeReview(object):
         raise NotImplementedError('Must implement base')
 
     @property
+    def browse_url(self):
+        """Get the url to open to display the code review."""
+        raise NotImplementedError('Must implement browse_url')
+
+    @property
+    def merged(self):
+        """Return True if the code review is closed."""
+        raise NotImplementedError('Must implement merged')
+
+    @property
     def id(self):
         """Return the unique id of the code review."""
         raise NotImplementedError('Must implement id')

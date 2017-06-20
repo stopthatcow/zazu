@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import contextlib
 import github
-import keyring
+import keyring  # NOQA
 import pytest
-import requests
+import requests  # NOQA
 import zazu.github_helper
 
 __author__ = "Nicholas Wiles"

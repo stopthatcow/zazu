@@ -141,7 +141,7 @@ class Config(object):
         """Return the issue tracker configuration if one exists.
 
         Raises:
-            click.ClickException: if no issue tracker configuration is present. 
+            click.ClickException: if no issue tracker configuration is present.
 
         """
         try:
@@ -163,7 +163,7 @@ class Config(object):
         """Return the code reviewer configuration if one exists.
 
         Raises:
-           click.ClickException: if no code review configuration is present. 
+           click.ClickException: if no code review configuration is present.
 
         """
         try:

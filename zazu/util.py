@@ -123,7 +123,7 @@ def prompt(text, default=None, expected_type=str):
         expected_type (type): the type to cast the user's return to.
 
     Returns:
-        user's input casted to expected_type or default if no inout is provided. 
+        user's input casted to expected_type or default if no inout is provided.
 
     """
     if default is not None:
@@ -190,7 +190,7 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
 def pprint_list(data):
     """Format list as a bulleted list string.
 
-    Args: 
+    Args:
         data (list): the list to pprint.
 
     Returns:

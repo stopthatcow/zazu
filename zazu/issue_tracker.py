@@ -26,6 +26,11 @@ class Issue(object):
         raise NotImplementedError('Must implement status')
 
     @property
+    def closed(self):
+        """Return True if the issue is closed."""
+        raise NotImplementedError('Must implement closed')
+
+    @property
     def description(self):
         """Get the description of the issue."""
         raise NotImplementedError('Must implement description')
