@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Dev subcommand for zazu."""
 import zazu.github_helper
 import zazu.config
 import zazu.util
@@ -19,11 +20,19 @@ class IssueDescriptor(object):
     """Info holder of type, ticket ID, and description."""
 
     def __init__(self, type, id, description=''):
+        """Create an IssueDescriptor.
+
+        Args:
+            type (str): the issue type.
+            id (str): the issue tracker id.
+            description (str): a brief description (used for the branch name only).
+        """
         self.type = type
         self.id = id
         self.description = description
 
     def get_branch_name(self):
+        """Get the branch name for this issue descriptor."""
         ret = self.id
         if self.type is not None:
             ret = '{}/{}'.format(self.type, ret)
@@ -33,11 +42,12 @@ class IssueDescriptor(object):
         return ret
 
     def readable_description(self):
+        """Get the human readable description by replacing underscores with spaces."""
         return self.description.replace('_', ' ').capitalize()
 
 
 def make_ticket(issue_tracker):
-    """Creates a new ticket interactively."""
+    """Create a new ticket interactively."""
     # ensure that we have a connection
     issue_tracker.connect()
     return issue_tracker.create_issue(project=issue_tracker.default_project(),
@@ -57,7 +67,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
 
 
 def offer_to_stash_changes(repo):
-    """Offers to stash local changes if there are any."""
+    """Offer to stash local changes if there are any."""
     diff = repo.index.diff(None)
     status = repo.git.status('-s', '-uno')
     if len(diff) and len(status):
@@ -67,7 +77,7 @@ def offer_to_stash_changes(repo):
 
 
 def make_issue_descriptor(name):
-    """Splits input into type, id and description."""
+    """Split input into type, id and description."""
     known_types = set(['hotfix', 'release', 'feature', 'bug'])
     type = None
     description = ''
@@ -92,21 +102,21 @@ def dev(ctx):
 
 
 def check_if_branch_is_protected(branch_name):
-    """throws if branch_name is protected from being renamed."""
+    """Throw if branch_name is protected from being renamed."""
     protected_branches = ['develop', 'master']
     if branch_name in protected_branches:
         raise click.ClickException('branch "{}" is protected'.format(branch_name))
 
 
 def check_if_active_branch_can_be_renamed(repo):
-    """throws if the current head is detached or if the active branch is protected."""
+    """Throw if the current head is detached or if the active branch is protected."""
     if repo.head.is_detached:
         raise click.ClickException("the current HEAD is detached")
     check_if_branch_is_protected(repo.active_branch.name)
 
 
 def rename_branch(repo, old_branch, new_branch):
-    """Renames old_branch in repo to new_branch, locally and remotely."""
+    """Rename old_branch in repo to new_branch, locally and remotely."""
     check_if_branch_is_protected(old_branch)
     remote_branch_exists = repo.heads[old_branch].tracking_branch() is not None
     if remote_branch_exists:
@@ -124,7 +134,7 @@ def rename_branch(repo, old_branch, new_branch):
 @click.argument('name')
 @click.pass_context
 def rename(ctx, name):
-    """Renames the current branch, locally and remotely."""
+    """Rename the current branch, locally and remotely."""
     repo = ctx.obj.repo
     rename_branch(repo, repo.active_branch.name, name)
 
@@ -177,7 +187,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
 
 
 def wrap_text(text, width=90, indent=''):
-    """Wraps each line of text to width characters wide with indent.
+    """Wrap each line of text to width characters wide with indent.
 
     Args:
         text (str): The text to wrap.
@@ -186,6 +196,7 @@ def wrap_text(text, width=90, indent=''):
 
     Returns:
         str: A wrapped block of text.
+
     """
     return '\n'.join(['\n'.join(textwrap.wrap(line, width,
                                               break_long_words=False,
