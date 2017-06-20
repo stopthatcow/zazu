@@ -22,6 +22,7 @@ class ComponentConfiguration(object):
     """Store a configuration for a single component."""
 
     def __init__(self, component):
+        """Construct configuration from config dictionary."""
         self._name = component['name']
         self._description = component.get('description', '')
         self._goals = {}
@@ -29,6 +30,7 @@ class ComponentConfiguration(object):
             self._goals[g['name']] = BuildGoal(g)
 
     def get_spec(self, goal, arch, type):
+        """Get a BuildSpec object for the given params."""
         try:
             build_goal = self._goals[goal]
             ret = build_goal.get_build(arch)
@@ -39,12 +41,15 @@ class ComponentConfiguration(object):
         return ret
 
     def description(self):
+        """Get string description."""
         return self._description
 
     def name(self):
+        """Get string name."""
         return self._name
 
     def goals(self):
+        """Get list of goals."""
         return self._goals
 
 
@@ -52,6 +57,12 @@ class BuildGoal(object):
     """Store a configuration for a single build goal with one or more architectures."""
 
     def __init__(self, goal):
+        """Create a build goal.
+        
+        Args:
+            goal (str): the name of the goal.
+            
+        """
         self._name = goal.get('name', '')
         self._description = goal.get('description', '')
         self._build_type = goal.get('buildType', 'minSizeRel')
@@ -80,18 +91,23 @@ class BuildGoal(object):
                                            artifacts=artifacts)
 
     def description(self):
+        """Get string description."""
         return self._description
 
     def name(self):
+        """Get string name."""
         return self._name
 
     def goal(self):
+        """Get string build goal."""
         return self._build_goal
 
     def builds(self):
+        """Get dictionary of builds."""
         return self._builds
 
     def get_build(self, arch):
+        """Get a build by arch."""
         if arch is None:
             if len(self._builds) == 1:
                 only_arch = self._builds.keys()[0]
@@ -103,8 +119,20 @@ class BuildGoal(object):
 
 
 class BuildSpec(object):
+    """A build specification that may have multiple target architectures."""
 
     def __init__(self, goal, type='minSizeRel', vars={}, requires={}, description='', arch='', script=None, artifacts=[]):
+        """Create a BuildSpec.
+        
+        Args:
+            goal (str): the goal name.
+            type (str): the build type.
+            vars (dict): key value pairs that are passed to the build.
+            description (str): a description of the build spec.
+            arch (str): the target architechture.
+            script (list of str): the build script steps if one exists. 
+            artifacts (list of str): the list of artifacts to pass to CI.
+        """
         self._build_goal = goal
         self._build_type = type
         self._build_vars = vars
@@ -115,27 +143,35 @@ class BuildSpec(object):
         self._build_artifacts = artifacts
 
     def build_type(self):
+        """Return the build type string."""
         return self._build_type
 
     def build_artifacts(self):
+        """Return the list of build artifacts."""
         return self._build_artifacts
 
     def build_goal(self):
+        """Return the build goal string."""
         return self._build_goal
 
     def build_vars(self):
+        """Return the dictionary of build variables."""
         return self._build_vars
 
     def build_requires(self):
+        """Return the string build type."""
         return self._build_requires
 
     def build_description(self):
+        """Return the build description string."""
         return self._build_description
 
     def build_arch(self):
+        """Return the build architecture string."""
         return self._build_arch
 
     def build_script(self):
+        """Return the list of build script steps."""
         return self._build_script
 
 
