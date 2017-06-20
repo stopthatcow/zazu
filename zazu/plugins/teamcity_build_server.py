@@ -261,7 +261,7 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
 
         Args:
             component (zazu.build.ComponentConfiguration): build component to create build configurations for.
-            repo_name (str): name of GitHub repo including organization.
+            repo_name (str): name of GitHub repo excluding organization.
             git_url (str): URL to the git repo.
         """
         project_name = component.name()

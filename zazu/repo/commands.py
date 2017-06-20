@@ -46,7 +46,7 @@ def ci(ctx):
     project_config = ctx.obj.project_config()
     if click.confirm("Post build configuration to {}?".format(build_server.type())):
         scm_url = ctx.obj.repo.remotes.origin.url
-        scm_org, scm_name = zazu.github_helper.parse_github_url(scm_url)
+        _, scm_name = zazu.github_helper.parse_github_url(scm_url)
         components = project_config['components']
         for c in components:
             component = zazu.build.ComponentConfiguration(c)

@@ -17,7 +17,7 @@ __copyright__ = "Copyright 2016"
 package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
 
 
-class ToolInstallFunctions:
+class ToolInstallFunctions(object):
     """Info holder with a checker fn, installer fn, and uninstaller fn."""
 
     def __init__(self, check, install, uninstall):
@@ -33,7 +33,7 @@ class ToolInstallFunctions:
         self.uninstall_fn = uninstall
 
 
-class ToolEnforcer:
+class ToolEnforcer(object):
     """Info holder with a name, version and functions."""
 
     def __init__(self, name, version, functions):
