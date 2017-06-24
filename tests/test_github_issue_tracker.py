@@ -81,24 +81,26 @@ def test_github_issue_tracker_get_repo(mocker, tracker_mock):
 
 
 def test_from_config(git_repo):
-    uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({'owner': 'stopthatcow',
-                                                                            'repo': 'zazu'})
-    assert uut._owner == 'stopthatcow'
-    assert uut._repo == 'zazu'
-    assert uut._base_url == 'https://github.com/stopthatcow/zazu'
-    assert not uut.default_project()
-    assert ['issue'] == uut.issue_types()
-    assert [] == uut.issue_components()
+    with zazu.util.cd(git_repo.working_tree_dir):
+        uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({'owner': 'stopthatcow',
+                                                                                'repo': 'zazu'})
+        assert uut._owner == 'stopthatcow'
+        assert uut._repo == 'zazu'
+        assert uut._base_url == 'https://github.com/stopthatcow/zazu'
+        assert not uut.default_project()
+        assert ['issue'] == uut.issue_types()
+        assert [] == uut.issue_components()
 
 
-def test_from_config_from_origin(git_repo):
-    uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({})
-    assert uut._owner == 'stopthatcow'
-    assert uut._repo == 'zazu'
-    assert uut._base_url == 'https://github.com/stopthatcow/zazu'
-    assert not uut.default_project()
-    assert ['issue'] == uut.issue_types()
-    assert [] == uut.issue_components()
+def test_from_config_from_origin(repo_with_github_as_origin):
+    with zazu.util.cd(repo_with_github_as_origin.working_tree_dir):
+        uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({})
+        assert uut._owner == 'stopthatcow'
+        assert uut._repo == 'zazu'
+        assert uut._base_url == 'https://github.com/stopthatcow/zazu'
+        assert not uut.default_project()
+        assert ['issue'] == uut.issue_types()
+        assert [] == uut.issue_components()
 
 
 def test_github_validate_id_format(tracker_mock):

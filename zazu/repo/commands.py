@@ -91,8 +91,9 @@ def init():
 @repo.command()
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
+@click.option('-y', '--yes', is_flag=True, help='Don\'t ask to before deleting branches')
 @click.pass_context
-def cleanup(ctx, remote, target_branch):
+def cleanup(ctx, remote, target_branch, yes):
     """Clean up merged branches that have been merged or are associated with closed/resolved tickets."""
     ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
@@ -100,7 +101,10 @@ def cleanup(ctx, remote, target_branch):
         repo_obj.git.checkout('develop')
     except git.exc.GitCommandError:
         raise click.ClickException('unable to checkout "develop"')
-    issue_tracker = ctx.obj.issue_tracker()
+    try:
+        issue_tracker = ctx.obj.issue_tracker()
+    except click.ClickException:
+        issue_tracker = None
     closed_branches = set([])
     if remote:
         repo_obj.git.fetch('--prune')
@@ -111,8 +115,8 @@ def cleanup(ctx, remote, target_branch):
         merged_remote_branches = [b.replace('origin/', '') for b in merged_remote_branches]
         branches_to_delete = set(merged_remote_branches) | closed_branches
         if branches_to_delete:
-            click.echo('These remote branches will be deleted: {}'.format(zazu.util.pprint_list(branches_to_delete)))
-            if click.confirm('Proceed?'):
+            confirmation = 'These remote branches will be deleted: {}\n\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
+            if yes or click.confirm(confirmation):
                 for b in branches_to_delete:
                     click.echo('Deleting {}'.format(b))
                 repo_obj.git.push('-df', 'origin', *branches_to_delete)
@@ -123,8 +127,8 @@ def cleanup(ctx, remote, target_branch):
         closed_branches |= set(get_closed_branches(issue_tracker, branches_to_check))
     branches_to_delete = (closed_branches & local_branches) | set(merged_branches)
     if branches_to_delete:
-        click.echo('These local branches will be deleted:{}'.format(zazu.util.pprint_list(branches_to_delete)))
-        if click.confirm('Proceed?'):
+        confirmation = 'These local branches will be deleted: {}\n\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
+        if yes or click.confirm(confirmation):
             for b in branches_to_delete:
                 click.echo('Deleting {}'.format(b))
             repo_obj.git.branch('-D', *branches_to_delete)
