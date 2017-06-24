@@ -115,7 +115,7 @@ def cleanup(ctx, remote, target_branch, yes):
         merged_remote_branches = [b.replace('origin/', '') for b in merged_remote_branches]
         branches_to_delete = set(merged_remote_branches) | closed_branches
         if branches_to_delete:
-            confirmation = 'These remote branches will be deleted: {}\n\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
+            confirmation = 'These remote branches will be deleted: {} Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
             if yes or click.confirm(confirmation):
                 for b in branches_to_delete:
                     click.echo('Deleting {}'.format(b))
@@ -127,14 +127,14 @@ def cleanup(ctx, remote, target_branch, yes):
         closed_branches |= set(get_closed_branches(issue_tracker, branches_to_check))
     branches_to_delete = (closed_branches & local_branches) | set(merged_branches)
     if branches_to_delete:
-        confirmation = 'These local branches will be deleted: {}\n\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
+        confirmation = 'These local branches will be deleted: {}\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
         if yes or click.confirm(confirmation):
             for b in branches_to_delete:
                 click.echo('Deleting {}'.format(b))
             repo_obj.git.branch('-D', *branches_to_delete)
 
 
-def tickets_from_branches(branches):
+def descriptors_from_branches(branches):
     """Generate IssueDescriptors from a branch names."""
     for b in branches:
         try:
@@ -145,15 +145,10 @@ def tickets_from_branches(branches):
 
 def get_closed_branches(issue_tracker, branches):
     """Get descriptors of branches that refer to closed branches."""
-    def ticket_if_closed(tracker, ticket):
-        try:
-            if tracker.issue(ticket.id).closed:
-                return ticket
-        except zazu.issue_tracker.IssueTrackerError:
-            pass
-        return None
+    def descriptor_if_closed(tracker, descriptor):
+        return descriptor if ticket_is_closed(issue_tracker, descriptor) else None
 
-    work = [functools.partial(ticket_if_closed, issue_tracker, t) for t in tickets_from_branches(branches)]
+    work = [functools.partial(descriptor_if_closed, issue_tracker, d) for d in descriptors_from_branches(branches)]
     closed_tickets = zazu.util.dispatch(work)
     return [t.get_branch_name() for t in closed_tickets if t is not None]
 
