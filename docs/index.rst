@@ -11,6 +11,7 @@ Zazu
    :caption: Contents:
 
    introduction
+   extending
    modules
    changelog
    license

@@ -91,6 +91,16 @@ def test_from_config(git_repo):
     assert [] == uut.issue_components()
 
 
+def test_from_config_from_origin(git_repo):
+    uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({})
+    assert uut._owner == 'stopthatcow'
+    assert uut._repo == 'zazu'
+    assert uut._base_url == 'https://github.com/stopthatcow/zazu'
+    assert not uut.default_project()
+    assert ['issue'] == uut.issue_types()
+    assert [] == uut.issue_components()
+
+
 def test_github_validate_id_format(tracker_mock):
     uut = tracker_mock
     uut.validate_id_format('10')
