@@ -56,7 +56,7 @@ def test_make_semver(git_repo):
 def test_build(repo_with_build_config, mocker):
     mocker.patch('subprocess.call', return_value=0)
     dir = repo_with_build_config.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['build', 'echo_foobar'])
         assert not result.exit_code
@@ -67,7 +67,7 @@ def test_cmake_build(repo_with_build_config, mocker):
     mocker.patch('zazu.cmake_helper.configure', return_value=0)
     mocker.patch('zazu.cmake_helper.build', return_value=0)
     dir = repo_with_build_config.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
         assert not result.exit_code
@@ -86,7 +86,7 @@ def test_cmake_build(repo_with_build_config, mocker):
 def test_cmake_configure_error(repo_with_build_config, mocker):
     mocker.patch('zazu.cmake_helper.configure', return_value=1)
     dir = repo_with_build_config.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
         assert result.exit_code
@@ -98,7 +98,7 @@ def test_cmake_build_error(repo_with_build_config, mocker):
     mocker.patch('zazu.cmake_helper.configure', return_value=0)
     mocker.patch('zazu.cmake_helper.build', return_value=1)
     dir = repo_with_build_config.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
         assert result.exit_code

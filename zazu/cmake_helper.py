@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for cmake interaction."""
-import zazu.tool.tool_helper
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'distutils',
@@ -54,8 +53,7 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
         '-G', architecture_to_generator(arch),
         '-DCMAKE_BUILD_TYPE=' + build_type.capitalize(),
         '-DCPACK_SYSTEM_NAME=' + arch,
-        '-DCPACK_PACKAGE_VERSION=' + build_variables['ZAZU_BUILD_VERSION'],
-        '-DZAZU_TOOL_PATH=' + zazu.tool.tool_helper.package_path
+        '-DCPACK_PACKAGE_VERSION=' + build_variables['ZAZU_BUILD_VERSION']
     ]
     for k, v in build_variables.items():
         configure_args.append('-D{}={}'.format(k, v))

@@ -2,7 +2,6 @@
 """Build command for zazu."""
 import zazu.cmake_helper
 import zazu.config
-import zazu.tool.tool_helper
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
@@ -280,12 +279,6 @@ def pep440_from_semver(semver):
     return version_str
 
 
-def install_requirements(requirements, verbose):
-    """Install the requirements using the zazu tool manager."""
-    for req in requirements:
-        zazu.tool.tool_helper.install_spec(req, echo=click.echo if verbose else lambda x: x)
-
-
 def script_build(repo_root, spec, build_args, verbose):
     """Build using a provided shell script."""
     env = os.environ
@@ -333,9 +326,7 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     project_config = ctx.obj.project_config()
     component = ComponentConfiguration(project_config['components'][0])
     spec = component.get_spec(goal, arch, type)
-    requirements = spec.build_requires().get('zazu', [])
-    install_requirements(requirements, verbose)
-    build_args = {"ZAZU_TOOL_DIR": zazu.tool.tool_helper.package_path}
+    build_args = {}
     extra_args = parse_key_value_pairs(extra_args_str)
     build_args.update(spec.build_vars())
     build_args.update(extra_args)
