@@ -5,6 +5,7 @@ import zazu.config
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
+    'git',
     'os',
     'shutil',
     'semantic_version',
@@ -30,7 +31,7 @@ class ComponentConfiguration(object):
     def get_spec(self, goal, arch, type):
         """Get a BuildSpec object for the given params."""
         try:
-            build_goal = self._goals[goal]
+            build_goal = self.goals()[goal]
             ret = build_goal.get_build(arch)
             if type is not None:
                 ret._build_type = type
@@ -66,15 +67,12 @@ class BuildGoal(object):
         self._build_type = goal.get('buildType', 'minSizeRel')
         self._build_vars = goal.get('buildVars', {})
         self._build_goal = goal.get('buildGoal', self._name)
-        self._requires = goal.get('requires', {})
         self._artifacts = goal.get('artifacts', [])
         self._builds = {}
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
             build_goal = b.get('buildGoal', self._build_goal)
-            requires = b.get('requires', {})
-            requires.update(self._requires)
             description = b.get('description', '')
             arch = b['arch']
             script = b.get('script', None)
@@ -82,7 +80,6 @@ class BuildGoal(object):
             self._builds[arch] = BuildSpec(goal=build_goal,
                                            type=type,
                                            vars=vars,
-                                           requires=requires,
                                            description=description,
                                            arch=arch,
                                            script=script,
@@ -134,7 +131,6 @@ class BuildSpec(object):
         self._build_goal = goal
         self._build_type = type
         self._build_vars = vars
-        self._build_requires = requires
         self._build_description = description
         self._build_arch = arch
         self._build_script = script
@@ -156,10 +152,6 @@ class BuildSpec(object):
         """Return the dictionary of build variables."""
         return self._build_vars
 
-    def build_requires(self):
-        """Return the string build type."""
-        return self._build_requires
-
     def build_description(self):
         """Return the build description string."""
         return self._build_description
@@ -179,7 +171,6 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
         raise click.BadParameter('Arch "{}" not recognized, choose from:\n'.format(arch, zazu.util.pprint_list(zazu.cmake_helper.known_arches())))
 
     build_dir = os.path.join(repo_root, 'build', '{}-{}'.format(arch, type))
-    ret = 0
     try:
         os.makedirs(build_dir)
     except OSError:
@@ -218,26 +209,27 @@ def tag_to_version(tag):
 
 def make_semver(repo_root, build_number):
     """Parse SCM info and creates a semantic version."""
-    branch_name, sha, last_tag, commits_past_tag = parse_describe(repo_root)
-    return make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha)
+    branch_name, sha, tags = parse_describe(repo_root)
+    if tags:
+        # There are git tags to consider. Parse them all then choose the one that is latest (sorted by semver rules)
+        return sorted([make_version_number(branch_name, build_number, tag, sha) for tag in tags])[-1]
+    else:
+        return make_version_number(branch_name, build_number, None, sha)
 
 
 def parse_describe(repo_root):
-    """Parse the results of git describe into branch name, sha, last tag, and number of commits since the tag."""
-    stdout = subprocess.check_output(['git', 'describe', '--dirty=.dirty', '--always', '--long'], cwd=repo_root)
-    components = stdout.strip().split('-')
-    sha = None
-    commits_past = 0
-    last_tag = None
+    """Parse the results of git describe into branch name, sha, and tags."""
+    repo = git.Repo(repo_root)
     try:
-        sha = components.pop()
-        sha = sha.replace('.dirty', '-dirty')
-        commits_past = int(components.pop())
-        last_tag = '-'.join(components)
-    except IndexError:
-        pass
-    branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], cwd=repo_root).rstrip()
-    return branch_name, sha, last_tag, commits_past
+        sha = 'g{}{}'.format(repo.git.rev_parse('HEAD')[:7], '-dirty' if repo.git.status(['--porcelain']) else '')
+        branch_name = repo.git.rev_parse(['--abbrev-ref', 'HEAD']).strip()
+        # Get the list of tags that point to HEAD
+        tag_result = repo.git.tag(['--points-at', 'HEAD'])
+        tags = filter(None, tag_result.strip().split('\n'))
+    except git.GitCommandError as e:
+        raise click.ClickException(str(e))
+
+    return branch_name, sha, tags
 
 
 def sanitize_branch_name(branch_name):
@@ -245,13 +237,13 @@ def sanitize_branch_name(branch_name):
     return branch_name.replace('/', '-').replace('_', '-')
 
 
-def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
+def make_version_number(branch_name, build_number, tag, sha):
     """Convert repo metadata and build version into a semantic version."""
     branch_name_sanitized = sanitize_branch_name(branch_name)
     build_info = ['sha', sha, 'build', str(build_number), 'branch', branch_name_sanitized]
     prerelease = []
-    if last_tag is not None and commits_past_tag == 0:
-        version = tag_to_version(last_tag)
+    if tag is not None:
+        version = tag_to_version(tag)
     elif branch_name.startswith('release/') or branch_name.startswith('hotfix/'):
         version = tag_to_version(branch_name.split('/', 1)[1])
         prerelease = [str(build_number)]

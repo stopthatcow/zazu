@@ -4,7 +4,6 @@ import future.utils
 import pytest
 import re
 import os
-import tests.conftest
 import zazu.build
 import subprocess
 import zazu.cmake_helper
@@ -53,14 +52,44 @@ def test_make_semver(git_repo):
     assert args['ZAZU_BUILD_VERSION_PEP440'] == pep440_version
 
 
+def test_make_semver_tagged(git_repo):
+    ver_re = re.compile('1\.2\.3\+sha\..*\.build\.4\.branch\.master')
+    git_repo.git.tag('-a', '1.2.3', '-m', 'my message')
+    version = zazu.build.make_semver(git_repo.working_tree_dir, 4)
+    assert ver_re.match(str(version))
+    # Tag again, to ensure we sort by semver
+    git_repo.git.tag('-a', '1.2.4', '-m', 'my message')
+    version = zazu.build.make_semver(git_repo.working_tree_dir, 5)
+    assert str(version).startswith('1.2.4+')
+
+
+def test_make_semver_empty_repo(empty_repo):
+    with pytest.raises(click.ClickException):
+        zazu.build.make_semver(empty_repo.working_tree_dir, 0)
+
+
 def test_build(repo_with_build_config, mocker):
     mocker.patch('subprocess.call', return_value=0)
     dir = repo_with_build_config.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['build', 'echo_foobar'])
+        result = runner.invoke(zazu.cli.cli, ['build', '--arch=host', '--verbose', 'echo_foobar'])
         assert not result.exit_code
-    assert subprocess.call.call_args[0][0] == 'echo "foobar"'
+        assert subprocess.call.call_args[0][0] == 'echo "foobar"'
+        # This call is an error due to the ambiguous architecture.
+        result = runner.invoke(zazu.cli.cli, ['build', '--verbose', 'echo_foobar'])
+        assert result.exit_code
+        assert 'No arch specified, but there are multiple arches available' in result.output
+
+
+def test_build_bad_exit(repo_with_build_config, mocker):
+    mocker.patch('subprocess.call', return_value=1)
+    dir = repo_with_build_config.working_tree_dir
+    with zazu.util.cd(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['build', '--arch=host', 'echo_foobar'])
+        assert result.exit_code == 1
+        assert 'Error: echo "foobar" exited with code 1' in result.output
 
 
 def test_cmake_build(repo_with_build_config, mocker):
@@ -81,6 +110,7 @@ def test_cmake_build(repo_with_build_config, mocker):
         assert 'cmake_build' == zazu.cmake_helper.build.call_args[0][3]
         # Build again, to make sure existing directories don't break things
         result = runner.invoke(zazu.cli.cli, ['build', 'cmake_build'])
+        assert not result.exit_code
 
 
 def test_cmake_configure_error(repo_with_build_config, mocker):
@@ -114,11 +144,35 @@ def test_cmake_build_bad_arch():
 
 
 def test_make_version_number():
-    semver = zazu.build.make_version_number('master', 1, '1.1', 0, 'abcdef1')
+    semver = zazu.build.make_version_number('master', 1, '1.1', 'abcdef1')
     assert str(semver) == '1.1.0+sha.abcdef1.build.1.branch.master'
-    semver = zazu.build.make_version_number('release/1.2', 1, '1.1', 1, 'abcdef1')
+    semver = zazu.build.make_version_number('release/1.2', 1, None, 'abcdef1')
     assert str(semver) == '1.2.0-1+sha.abcdef1.build.1.branch.release-1.2'
-    semver = zazu.build.make_version_number('hotfix/1.2.1', 1, '1.1', 1, 'abcdef1')
+    semver = zazu.build.make_version_number('hotfix/1.2.1', 1, None, 'abcdef1')
     assert str(semver) == '1.2.1-1+sha.abcdef1.build.1.branch.hotfix-1.2.1'
-    semver = zazu.build.make_version_number('feature/name', 1, '1.1', 1, 'abcdef1')
+    semver = zazu.build.make_version_number('feature/name', 1, None, 'abcdef1')
     assert str(semver) == '0.0.0-1+sha.abcdef1.build.1.branch.feature-name'
+
+
+def test_component_configuration(repo_with_build_config):
+    dir = repo_with_build_config.working_tree_dir
+    project_config = zazu.config.Config(dir).project_config()
+    component = zazu.build.ComponentConfiguration(project_config['components'][0])
+    component.description() == 'The description'
+    component.name() == 'zazu'
+    goals = component.goals()
+    assert len(goals) == 2
+    echo_foobar_spec = component.get_spec('echo_foobar', 'host'
+                                                         '', 'release')
+    assert echo_foobar_spec.build_description() == 'echo_foobar build description'
+    assert echo_foobar_spec.build_type() == 'release'
+    assert echo_foobar_spec.build_artifacts() == ['artifact.zip']
+    echo_foobar_goal = goals['echo_foobar']
+    assert echo_foobar_goal.name() == 'echo_foobar'
+    assert echo_foobar_goal.goal() == 'echo_foobar'
+    assert echo_foobar_goal.description() == 'echo_foobar description'
+    echo_foobar_builds = echo_foobar_goal.builds()
+    assert len(echo_foobar_builds) == 2
+    assert 'host' in echo_foobar_builds
+    fake_spec = component.get_spec('fake', None, 'release')
+    assert fake_spec.build_goal() == 'fake'
