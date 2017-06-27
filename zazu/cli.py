@@ -22,11 +22,14 @@ def cli(ctx):
     ctx.obj = zazu.config.Config(zazu.git_helper.get_repo_root(os.getcwd()))
 
 
+def init():
+    if __name__ == "__main__":
+        cli()
+
+
 cli.add_command(zazu.upgrade.upgrade)
 cli.add_command(zazu.style.style)
 cli.add_command(zazu.build.build)
 cli.add_command(zazu.dev.commands.dev)
 cli.add_command(zazu.repo.commands.repo)
-
-if __name__ == "__main__":
-    cli()
+init()
