@@ -122,12 +122,15 @@ def rename_branch(repo, old_branch, new_branch):
     if remote_branch_exists:
         # Pull first to avoid orphaning remote commits when we delete the remote branch
         repo.git.pull()
-    repo.git.branch(['-m', new_branch])
+    repo.git.branch('-m', new_branch)
     try:
-        repo.git.push(['origin', ':{}'.format(old_branch)])
+        repo.git.push('origin', ':{}'.format(old_branch))
     except git.exc.GitCommandError:
         pass
-    repo.git.push(['--set-upstream', 'origin', new_branch])
+    try:
+        repo.git.push('--set-upstream', 'origin', new_branch)
+    except git.exc.GitCommandError:
+        pass
 
 
 @dev.command()
@@ -136,6 +139,7 @@ def rename_branch(repo, old_branch, new_branch):
 def rename(ctx, name):
     """Rename the current branch, locally and remotely."""
     repo = ctx.obj.repo
+    check_if_active_branch_can_be_renamed(repo)
     rename_branch(repo, repo.active_branch.name, name)
 
 

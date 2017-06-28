@@ -16,7 +16,6 @@ def test_parse_key_value_pairs():
     expected = {'foo': '1',
                 'bar': '2'}
     args = ['{}={}'.format(k, v) for k, v in future.utils.iteritems(expected)]
-    print(args)
     parsed = zazu.build.parse_key_value_pairs(args)
     assert expected == parsed
     assert not zazu.build.parse_key_value_pairs('')
