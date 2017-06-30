@@ -4,19 +4,30 @@ components:
       - name: package
         builds:
           - arch: python
-            script: 
+            script:
               - echo "$ZAZU_BUILD_VERSION_PEP440" > zazu/version.txt &&
-                python setup.py bdist_wheel upload -r lily_pypi
+                rm -rf dist &&
+                python setup.py sdist bdist_wheel
+      - name: coverage
+        builds:
+          - arch: python
+            script:
+              - tox
 
 issueTracker:
-    type: Jira
-    url: https://lily-robotics.atlassian.net/
-    project: STI
-    component: Zazu
+    type: github
+    owner: stopthatcow
+    repo: zazu
 
-ci:
-    type: TeamCity
-    url: http://teamcity.lily.technology:8111/
+#issueTracker:
+#    type: jira
+#    url: https://zazucli.atlassian.net/
+#    project: ZZ
+
+codeReviewer:
+    type: github
+    owner: stopthatcow
+    repo: zazu
 
 style:
   exclude:

@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
 """Defines helper functions for tool install/uninstall"""
-import click
-import io
-import os
-import platform
-import shutil
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'io',
+    'os',
+    'platform',
+    'requests',
+    'shutil',
+    'tarfile'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
+
+package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
 
 
 class ToolInstallFunctions:
@@ -36,9 +42,6 @@ class ToolEnforcer:
 
     def uninstall(self):
         return self.functions.uninstall_fn(self.name, self.version)
-
-
-package_path = os.path.expanduser(os.path.join('~', '.zazu', 'tools'))
 
 
 def get_install_path(name, version):
@@ -79,7 +82,6 @@ def touch_token_file(name, version):
 def download_with_progress_bar(name, url):
     """Download a URL with a progress bar"""
     ret = b''
-    import requests
     r = requests.get(url, stream=True)
     if r.status_code == 200:
         total_size = int(r.headers.get('content-length'))
@@ -98,7 +100,6 @@ def download_extract_tar_to_folder(name, url, path):
     ensure_directory_exists(path)
     click.echo('Extracting to "{}"...'.format(path))
     file_like_object = io.BytesIO(r)
-    import tarfile
     with tarfile.open(fileobj=file_like_object) as f:
         f.extractall(path)
 

@@ -4,27 +4,21 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-verbose_level = 0
+class LazyVersion():
+
+    def __str__(self):
+        import pkg_resources
+        version_file_path = pkg_resources.resource_filename('zazu', 'version.txt')
+        with open(version_file_path, 'r') as version_file:
+            version = version_file.readline().rstrip()
+        return version
 
 
-def echo(message, level=0):
-    """Print to terminal"""
-    if level <= verbose_level:
-        print(message)
-
-
-def info(message):
-    """Echo out at level 1"""
-    echo(message, level=1)
-
-
-def debug(message):
-    """Echo out at level 2"""
-    echo(message, level=2)
+__version__ = LazyVersion()
 
 
 class ZazuException(Exception):
     """Parent of all Zazu errors"""
 
-    def __init___(self, error):
-        Exception.__init__("Error: {}".format(error))
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)

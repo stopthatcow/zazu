@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 """build command for zazu"""
-import click
-import shutil
-import subprocess
-import semantic_version
-import os
-import zazu.tool.tool_helper
+
 import zazu.cmake_helper
 import zazu.config
+import zazu.tool.tool_helper
+import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'os',
+    'shutil',
+    'semantic_version',
+    'subprocess'
+])
+
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -49,18 +54,12 @@ class BuildGoal(object):
     def __init__(self, goal):
         self._name = goal.get('name', '')
         self._description = goal.get('description', '')
-        self._build_type = goal.get('buildType', None)
+        self._build_type = goal.get('buildType', 'minSizeRel')
         self._build_vars = goal.get('buildVars', {})
         self._build_goal = goal.get('buildGoal', self._name)
         self._requires = goal.get('requires', {})
         self._artifacts = goal.get('artifacts', [])
         self._builds = {}
-        self._default_spec = BuildSpec(goal=self._build_goal,
-                                       type=self._build_type,
-                                       vars=self._build_vars,
-                                       requires=self._requires,
-                                       description=self._description,
-                                       artifacts=self._artifacts)
         for b in goal['builds']:
             vars = b.get('buildVars', self._build_vars)
             type = b.get('buildType', self._build_type)
@@ -93,7 +92,14 @@ class BuildGoal(object):
         return self._builds
 
     def get_build(self, arch):
-        return self._builds.get(arch, self._default_spec)
+        if arch is None:
+            if len(self._builds) == 1:
+                only_arch = self._builds.keys()[0]
+                click.echo("No arch specified, but there is only one ({})".format(only_arch))
+                return self._builds[only_arch]
+            else:
+                raise click.ClickException("No arch specified, but there are multiple arches available")
+        return self._builds[arch]
 
 
 class BuildSpec(object):
@@ -136,7 +142,7 @@ class BuildSpec(object):
 def cmake_build(repo_root, arch, type, goal, verbose, vars):
     """Build using cmake"""
     if arch not in zazu.cmake_helper.known_arches():
-        raise click.BadParameter("Arch not recognized, choose from:\n    - {}".format('\n    - '.join(zazu.cmake_helper.known_arches())))
+        raise click.BadParameter('Arch "{}" not recognized, choose from:\n'.format(arch, zazu.util.pprint_list(zazu.cmake_helper.known_arches())))
 
     build_dir = os.path.join(repo_root, 'build', '{}-{}'.format(arch, type))
     ret = 0
@@ -144,15 +150,12 @@ def cmake_build(repo_root, arch, type, goal, verbose, vars):
         os.makedirs(build_dir)
     except OSError:
         pass
-    if 'distclean' == goal:
-        shutil.rmtree(build_dir)
-    else:
-        ret = zazu.cmake_helper.configure(repo_root, build_dir, arch, type, vars, click.echo if verbose else lambda x: x)
-        if ret:
-            raise click.ClickException("Error configuring with cmake")
-        ret = zazu.cmake_helper.build(build_dir, type, goal, verbose)
-        if ret:
-            raise click.ClickException("Error building with cmake")
+    ret = zazu.cmake_helper.configure(repo_root, build_dir, arch, type, vars, click.echo if verbose else lambda x: x)
+    if ret:
+        raise click.ClickException('Error configuring with cmake')
+    ret = zazu.cmake_helper.build(build_dir, arch, type, goal, verbose)
+    if ret:
+        raise click.ClickException('Error building with cmake')
     return ret
 
 
@@ -202,10 +205,8 @@ def parse_describe(repo_root):
 
 
 def sanitize_branch_name(branch_name):
-    """replaces punctuation that cannot be in semantic version from a branch name and replaces them with decimals"""
-    branch_name_sanitized = branch_name.replace('/', '-')
-    branch_name_sanitized = branch_name_sanitized.replace('_', '-')
-    return branch_name_sanitized
+    """replaces punctuation that cannot be in semantic version from a branch name and replaces them with dashes"""
+    return branch_name.replace('/', '-').replace('_', '-')
 
 
 def make_version_number(branch_name, build_number, last_tag, commits_past_tag, sha):
@@ -236,7 +237,8 @@ def pep440_from_semver(semver):
     local_version = '.'.join(semver.build)
     local_version = local_version.replace('-', '.')
     version_str = '{}.{}.{}{}'.format(semver.major, semver.minor, semver.patch, segment)
-    if local_version:
+    # Include the local version if we are not a true release
+    if local_version and semver.prerelease:
         version_str = '{}+{}'.format(version_str, local_version)
     return version_str
 
@@ -244,10 +246,7 @@ def pep440_from_semver(semver):
 def install_requirements(requirements, verbose):
     """Installs the requirements using the zazu tool manager"""
     for req in requirements:
-        if verbose:
-            zazu.tool.tool_helper.install_spec(req, echo=click.echo)
-        else:
-            zazu.tool.tool_helper.install_spec(req)
+        zazu.tool.tool_helper.install_spec(req, echo=click.echo if verbose else lambda x: x)
 
 
 def script_build(repo_root, spec, build_args, verbose):
@@ -283,7 +282,7 @@ def add_version_args(repo_root, build_num, args):
 
 @click.command()
 @click.pass_context
-@click.option('-a', '--arch', default='local', help='the desired architecture to build for')
+@click.option('-a', '--arch', help='the desired architecture to build for')
 @click.option('-t', '--type', type=click.Choice(zazu.cmake_helper.build_types),
               help='defaults to what is specified in the config file, or release if unspecified there')
 @click.option('-n', '--build_num', help='build number', default=os.environ.get('BUILD_NUMBER', 0))
@@ -291,8 +290,7 @@ def add_version_args(repo_root, build_num, args):
 @click.argument('goal')
 @click.argument('extra_args_str', nargs=-1)
 def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
-    """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target,
-     use distclean to clean whole build folder"""
+    """Build project targets, the GOAL argument is the configuration name from zazu.yaml file or desired make target"""
     # Run the supplied build script if there is one, otherwise assume cmake
     # Parse file to find requirements then check that they exist, then build
     project_config = ctx.obj.project_config()
@@ -300,13 +298,16 @@ def build(ctx, arch, type, build_num, verbose, goal, extra_args_str):
     spec = component.get_spec(goal, arch, type)
     requirements = spec.build_requires().get('zazu', [])
     install_requirements(requirements, verbose)
-    build_args = {"ZAZU_TOOL_DIR": os.path.expanduser('~/.zazu/tools')}
+    build_args = {"ZAZU_TOOL_DIR": zazu.tool.tool_helper.package_path}
     extra_args = parse_key_value_pairs(extra_args_str)
     build_args.update(spec.build_vars())
     build_args.update(extra_args)
     add_version_args(ctx.obj.repo_root, build_num, build_args)
     if spec.build_script() is None:
-        cmake_build(ctx.obj.repo_root, arch, spec.build_type(), spec.build_goal(), verbose, build_args)
+        cmake_build(ctx.obj.repo_root, spec.build_arch(), spec.build_type(), spec.build_goal(), verbose, build_args)
     else:
         script_build(ctx.obj.repo_root, spec, build_args, verbose)
-    ctx.obj.continuous_integration().publish_artifacts(spec.build_artifacts())
+    try:
+        ctx.obj.build_server().publish_artifacts(spec.build_artifacts())
+    except click.ClickException:
+        pass
