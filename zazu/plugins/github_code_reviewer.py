@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Enables code review using github"""
+"""Enables code review using github."""
 import zazu.code_reviewer
 import zazu.plugins.github_issue_tracker
 import zazu.util
@@ -14,16 +14,22 @@ __copyright__ = "Copyright 2017"
 
 
 class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
-    """Implements zazu code review interface for GitHub"""
+    """Implements zazu code review interface for GitHub."""
 
     def __init__(self, owner, repo):
+        """Create a GitHubCodeReviewer.
+
+        Args:
+            owner (str): the github repo owner's username or organization name.
+            repo (str): the github repo name.
+        """
         self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
         self._owner = owner
         self._repo = repo
         self._github = None
 
     def connect(self):
-        """Get handle to ensure that github credentials are in place"""
+        """Get handle to ensure that github credentials are in place."""
         self._github_handle()
 
     def _github_handle(self):
@@ -40,6 +46,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         return head
 
     def review(self, status=github.GithubObject.NotSet, head=github.GithubObject.NotSet, base=github.GithubObject.NotSet):
+        """Get reviews (pull requests) matching the search criteria."""
         head = github.GithubObject.NotSet if head is None else head
         base = github.GithubObject.NotSet if base is None else base
         status = github.GithubObject.NotSet if status is None else status
@@ -48,6 +55,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         return [GitHubCodeReview(m) for m in matches]
 
     def create_review(self, title, base, head, body, issue=None):
+        """Create a new code review (pull request)."""
         head = self._normalize_head(head)
         if issue is not None:
             if isinstance(issue, zazu.plugins.github_issue_tracker.GitHubIssueAdaptor):
@@ -59,7 +67,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
 
     @staticmethod
     def from_config(config):
-        """Makes a GitHubCodeReviewer from a config"""
+        """Make a GitHubCodeReviewer from a config."""
         # Get URL from current git repo:
         owner = config.get('owner', None)
         repo_name = config.get('repo', None)
@@ -74,51 +82,63 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
 
     @staticmethod
     def type():
+        """Return the name of this CodeReviewer."""
         return 'github'
 
 
 class GitHubCodeReview(zazu.code_reviewer.CodeReview):
-    """Adapts a github pull request object into a zazu CodeReview object"""
+    """Adapts a github pull request object into a zazu CodeReview object."""
 
     def __init__(self, github_pull_request):
+        """Create a GitHubCodeReview interface by wrapping a pygithub PullRequest object."""
         self._pr = github_pull_request
 
     @property
     def name(self):
+        """Get the string name of the code review."""
         return self._pr.title
 
     @property
     def status(self):
+        """Get the string state of the code review."""
         return self._pr.state
 
     @property
     def description(self):
+        """Get the string description of the code review."""
         return self._pr.body
 
     @property
     def assignee(self):
+        """Get the string assignee of the code review."""
         return self._pr.assignee.login
 
     @property
     def head(self):
+        """Return the branch name that is being merged from."""
         return self._pr.head.ref
 
     @property
     def base(self):
+        """Return the branch name that is being merged to."""
         return self._pr.base.ref
 
     @property
     def browse_url(self):
+        """Get the url to open to display the code review."""
         return self._pr.html_url
 
     @property
     def merged(self):
+        """Return true if the code review has been merged."""
         return self._pr.merged
 
     @property
     def id(self):
+        """Get the string id of the code review."""
         return str(self._pr.number)
 
     def __str__(self):
+        """Create a string representation of the code review state."""
         return '#{} ({}, {}) {} -> {}'.format(self.id, self.status, 'merged' if self.merged else 'unmerged',
                                               self.head, self.base)

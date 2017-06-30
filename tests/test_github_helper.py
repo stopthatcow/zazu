@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import contextlib
 import github
-import keyring
+import keyring  # NOQA
 import pytest
-import requests
+import requests  # NOQA
 import zazu.github_helper
 
 __author__ = "Nicholas Wiles"
@@ -21,10 +21,10 @@ def test_make_gh_with_sacved_credentials(mocker):
 def test_make_gh_with_no_credentials(mocker):
     mocker.patch('keyring.get_password', return_value=None)
     mocker.patch('keyring.set_password')
-    mocker.patch('zazu.github_helper.get_gh_token', return_value='token')
+    mocker.patch('zazu.github_helper.make_gh_token', return_value='token')
     mocker.patch('github.Github')
     zazu.github_helper.make_gh()
-    zazu.github_helper.get_gh_token.assert_called_once()
+    zazu.github_helper.make_gh_token.assert_called_once()
     github.Github.assert_called_once_with('token')
 
 
@@ -54,7 +54,7 @@ def handle_post(*args, **kwargs):
     return entry(*args, **kwargs)
 
 
-def test_get_gh_token_otp(mocker):
+def test_make_gh_token_otp(mocker):
     def require_otp(uri, headers={}, auth=(), json={}):
         assert ('user', 'password') == auth
         if 'X-GitHub-OTP' not in headers:
@@ -68,11 +68,11 @@ def test_get_gh_token_otp(mocker):
     mocker.patch('keyring.set_password')
 
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=require_otp)) as post_auth:
-        assert 'token' == zazu.github_helper.get_gh_token()
+        assert 'token' == zazu.github_helper.make_gh_token()
         post_auth.call_count == 2
 
 
-def test_get_gh_token_otp_exists(mocker):
+def test_make_gh_token_otp_exists(mocker):
     def token_exists(uri, headers={}, auth=(), json={}):
         assert ('user', 'password') == auth
         return MockResponce(json={}, status_code=422)
@@ -80,20 +80,20 @@ def test_get_gh_token_otp_exists(mocker):
     mocker.patch('click.prompt', return_value='password', autospec=True)
 
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=token_exists)) as post_auth:
-        assert 'token' == zazu.github_helper.get_gh_token()
+        assert 'token' == zazu.github_helper.make_gh_token()
         post_auth.call_count == 1
 
 
-def test_get_gh_token_otp_unknown_error(mocker):
+def test_make_gh_token_otp_unknown_error(mocker):
     mocker.patch('zazu.util.prompt', return_value='user', autospec=True)
     mocker.patch('click.prompt', return_value='password', autospec=True)
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(return_value=MockResponce(json={}, status_code=400))) as post_auth:
         with pytest.raises(Exception):
-            zazu.github_helper.get_gh_token()
+            zazu.github_helper.make_gh_token()
             post_auth.call_count == 1
 
 
-def test_get_gh_token_try_again(mocker):
+def test_make_gh_token_try_again(mocker):
     def normal_auth(uri, headers={}, auth=(), json={}):
         if ('user', 'password') == auth:
             return MockResponce(json={'token': 'token'}, status_code=201)
@@ -103,7 +103,7 @@ def test_get_gh_token_try_again(mocker):
     mocker.patch('click.prompt', side_effect=['bad_password', 'password'], autospec=True)
     mocker.patch('keyring.set_password')
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=normal_auth)) as post_auth:
-        zazu.github_helper.get_gh_token()
+        zazu.github_helper.make_gh_token()
         post_auth.call_count == 2
 
 

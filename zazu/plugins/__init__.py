@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Package file for zazu.plugin."""
 import pkgutil
 
 __author__ = "Nicholas Wiles"

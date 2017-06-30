@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""config classes and methods for zazu"""
+"""Config classes and methods for zazu."""
 import zazu.build_server
 import zazu.code_reviewer
 import zazu.issue_tracker
@@ -19,14 +19,21 @@ PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 
 
 class PluginFactory(object):
+    """A genetic plugin factory that uses the type field of the config to create the appropriate class."""
 
-    def __init__(self, name, subclasses):
-        self._subclasses = subclasses
+    def __init__(self, name, subclass):
+        """Constructor.
+
+        Args:
+            name (str): the name of the plugin type.
+            subclass (type): subclasses of this type will be loaded as potential plugins.
+        """
+        self._subclass = subclass
         self._name = name
 
     def from_config(self, config):
-        """A factory function that makes and initializes a plugin object from a config"""
-        plugins = straight.plugin.load('zazu.plugins', subclasses=self._subclasses)
+        """Make and initialize a plugin object from a config."""
+        plugins = straight.plugin.load('zazu.plugins', subclasses=self._subclass)
         known_types = {p.type().lower(): p.from_config for p in plugins}
         if 'type' in config:
             type = config['type']
@@ -47,7 +54,7 @@ build_server_factory = PluginFactory('buildServer', zazu.build_server.BuildServe
 
 
 def styler_factory(config):
-    """A factory function that makes and initializes the stylers from the config"""
+    """Make and initialize the Stylers from the config."""
     stylers = []
     plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
     known_types = {p.type(): p for p in plugins}
@@ -64,14 +71,14 @@ def styler_factory(config):
 
 
 def path_gen(search_paths, file_names):
-    """Generates full paths given a list of directories and list of file names"""
+    """Generate full paths given a list of directories and list of file names."""
     for p in search_paths:
         for f in file_names:
             yield os.path.join(p, f)
 
 
 def get_line(file_path, line_number):
-    """Returns line number in file"""
+    """Return line number in file."""
     with open(file_path, 'r') as fp:
         for i, line in enumerate(fp):
             if i == line_number:
@@ -79,12 +86,12 @@ def get_line(file_path, line_number):
 
 
 def make_col_indicator(index):
-    """Return a carrot indicator at index"""
+    """Return a carrot indicator at index."""
     return '{}^'.format(' ' * index)
 
 
 def load_yaml_file(search_paths, file_names):
-    """Load a project yaml file"""
+    """Load a project yaml file."""
     searched = path_gen(search_paths, file_names)
     for file_name in searched:
         try:
@@ -107,10 +114,10 @@ def load_yaml_file(search_paths, file_names):
 
 
 class Config(object):
-
-    """Holds all zazu configuration info"""
+    """Hold all zazu configuration info."""
 
     def __init__(self, repo_root):
+        """Constructor, doesn't parse configuration or require repo to be valid."""
         self.repo_root = repo_root
         if self.repo_root is not None:
             try:
@@ -121,39 +128,57 @@ class Config(object):
         self._code_reviewer = None
         self._build_server = None
         self._project_config = None
+        self._stylers = None
         self._tc = None
 
     def issue_tracker(self):
+        """Lazily create a IssueTracker object."""
         if self._issue_tracker is None:
             self._issue_tracker = issue_tracker_factory.from_config(self.issue_tracker_config())
         return self._issue_tracker
 
     def issue_tracker_config(self):
+        """Return the issue tracker configuration if one exists.
+
+        Raises:
+            click.ClickException: if no issue tracker configuration is present.
+
+        """
         try:
             return self.project_config()['issueTracker']
         except KeyError:
             raise click.ClickException("no issueTracker config found")
 
     def build_server(self):
+        """Lazily create a build server object."""
         if self._build_server is None:
             self._build_server = build_server_factory.from_config(self.ci_config())
         return self._build_server
 
     def ci_config(self):
+        """Return the CI configuration if one exists."""
         return self.project_config().get('ci', {})
 
     def code_reviewer_config(self):
+        """Return the code reviewer configuration if one exists.
+
+        Raises:
+           click.ClickException: if no code review configuration is present.
+
+        """
         try:
             return self.project_config()['codeReviewer']
         except KeyError:
             raise click.ClickException("no codeReviewer config found")
 
     def code_reviewer(self):
+        """Lazily create and return code reviewr object."""
         if self._code_reviewer is None:
             self._code_reviewer = code_reviewer_factory.from_config(self.code_reviewer_config())
         return self._code_reviewer
 
     def project_config(self):
+        """Parse and return the zazu yaml configuration file."""
         if self._project_config is None:
             self.check_repo()
             self._project_config = load_yaml_file([self.repo_root], PROJECT_FILE_NAMES)
@@ -164,12 +189,16 @@ class Config(object):
         return self._project_config
 
     def stylers(self):
-        return styler_factory(self.project_config().get('style', {}))
+        """Lazily create Styler objects from the style config."""
+        if self._stylers is None:
+            self._stylers = styler_factory(self.project_config().get('style', {}))
+        return self._stylers
 
     def zazu_version_required(self):
+        """Return the version of zazu requested by the config file."""
         return self.project_config().get('zazu', '')
 
     def check_repo(self):
-        """Checks that the config has a valid repo set"""
+        """Check that the config has a valid repo set."""
         if self.repo_root is None or self.repo is None:
             raise click.UsageError('The current working directory is not in a git repo')

@@ -49,7 +49,7 @@ class MockGitHub(object):
 
 def test_github_issue_tracker_auto_url(repo_with_github_as_origin):
     dir = repo_with_github_as_origin.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         uut = zazu.plugins.github_code_reviewer.GitHubCodeReviewer.from_config({})
         assert uut._owner == 'stopthatcow'
         assert uut._repo == 'zazu'
@@ -57,7 +57,7 @@ def test_github_issue_tracker_auto_url(repo_with_github_as_origin):
 
 def test_github_issue_tracker_no_origin(git_repo):
     dir = git_repo.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         with pytest.raises(zazu.code_reviewer.CodeReviewerError):
             zazu.plugins.github_code_reviewer.GitHubCodeReviewer.from_config({})
 

@@ -22,3 +22,5 @@ def test_issue():
         uut.browse_url
     with pytest.raises(NotImplementedError):
         uut.id
+    with pytest.raises(NotImplementedError):
+        uut.closed

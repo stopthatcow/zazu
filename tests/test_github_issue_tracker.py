@@ -23,6 +23,7 @@ def mocked_github_issue_tracker(mocker, tracker_mock):
     tracker_mock._github = repo_obj_mock
     return tracker_mock
 
+
 mock_issue_dict = {
     'number': 1,
     'title': 'name',
@@ -80,17 +81,18 @@ def test_github_issue_tracker_get_repo(mocker, tracker_mock):
 
 
 def test_from_config(git_repo):
-    uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({'owner': 'stopthatcow',
-                                                                            'repo': 'zazu'})
-    assert uut._owner == 'stopthatcow'
-    assert uut._repo == 'zazu'
-    assert uut._base_url == 'https://github.com/stopthatcow/zazu'
-    assert not uut.default_project()
-    assert ['issue'] == uut.issue_types()
-    assert [] == uut.issue_components()
+    with zazu.util.cd(git_repo.working_tree_dir):
+        uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({'owner': 'stopthatcow',
+                                                                                'repo': 'zazu'})
+        assert uut._owner == 'stopthatcow'
+        assert uut._repo == 'zazu'
+        assert uut._base_url == 'https://github.com/stopthatcow/zazu'
+        assert not uut.default_project()
+        assert ['issue'] == uut.issue_types()
+        assert [] == uut.issue_components()
 
 
-def test_from_config(repo_with_github_as_origin):
+def test_from_config_from_origin(repo_with_github_as_origin):
     with zazu.util.cd(repo_with_github_as_origin.working_tree_dir):
         uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({})
         assert uut._owner == 'stopthatcow'
@@ -116,7 +118,6 @@ def test_github_issue_adaptor(tracker_mock):
     assert uut.name == 'name'
     assert uut.status == 'closed'
     assert uut.description == 'description'
-    assert uut.reporter == 'unknown'
     assert uut.assignee == 'assignee'
     assert uut.closed
     assert uut.type == 'issue'

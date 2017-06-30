@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ClangFormatStyler plugin for zazu"""
+"""ClangFormatStyler plugin for zazu."""
 import zazu.styler
 import zazu.util
 
@@ -11,7 +11,7 @@ class ClangFormatStyler(zazu.styler.Styler):
     """ClangFormat plugin for code styling."""
 
     def style_file(self, path, verbose, dry_run):
-        """checks a single file to see if it is within style guidelines and optionally fixes it"""
+        """Check a single file to see if it is within style guidelines and optionally fix it."""
         args = ['clang-format'] + self. options
 
         check_args = args + ['-output-replacements-xml', path]
@@ -29,6 +29,7 @@ class ClangFormatStyler(zazu.styler.Styler):
 
     @staticmethod
     def default_extensions():
+        """Return the list of file extensions that are compatible with this Styler."""
         return ['*.c',
                 '*.cc',
                 '*.cpp',
@@ -40,4 +41,5 @@ class ClangFormatStyler(zazu.styler.Styler):
 
     @staticmethod
     def type():
+        """Return the name of this Styler."""
         return 'clang-format'

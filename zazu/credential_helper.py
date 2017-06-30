@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""credential functions for zazu"""
+"""Credential functions for zazu."""
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
@@ -11,7 +11,7 @@ __copyright__ = "Copyright 2016"
 
 
 def get_user_pass_credentials(component, use_saved=True):
-    """Retrieves a stored user/password for a named component or offers to store a new set"""
+    """Retrieve a stored user/password for a named component or offers to store a new set."""
     keyring_user = component.lower() + '_user'
     keyring_password = component.lower() + '_password'
     user = None

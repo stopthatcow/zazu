@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import click
-import tests.conftest
 import distutils.spawn
 import pytest
 import zazu.cli
 import zazu.style
+import zazu.util
 
 
 def write_c_file_with_bad_style(file):
@@ -20,7 +20,7 @@ def write_py_file_with_bad_style(file):
 @pytest.fixture()
 def repo_with_style_errors(repo_with_style):
     dir = repo_with_style.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         write_c_file_with_bad_style('temp.c')
         write_c_file_with_bad_style('temp.cc')
         write_c_file_with_bad_style('temp.cpp')
@@ -34,7 +34,7 @@ def repo_with_style_errors(repo_with_style):
                     reason="requires astyle")
 def test_astyle(git_repo):
     dir = git_repo.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         bad_file_name = 'temp.c'
         write_c_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.astyle_styler.AstyleStyler()
@@ -49,7 +49,7 @@ def test_astyle(git_repo):
 
 def test_autopep8(git_repo):
     dir = git_repo.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         bad_file_name = 'temp.py'
         write_py_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.autopep8_styler.Autopep8Styler()
@@ -66,7 +66,7 @@ def test_autopep8(git_repo):
                     reason="requires clang-format")
 def test_clang_format(git_repo):
     dir = git_repo.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         bad_file_name = 'temp.c'
         write_c_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.clang_format_styler.ClangFormatStyler(['-style=google'])
@@ -83,7 +83,7 @@ def test_clang_format(git_repo):
                     reason="requires clang-format")
 def test_bad_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '-v'])
         assert result.exit_code
@@ -99,7 +99,7 @@ def test_bad_style(repo_with_style_errors):
                     reason="requires clang-format")
 def test_dirty_style(repo_with_style_errors, monkeypatch):
     dir = repo_with_style_errors.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty', '-v'])
         assert result.exit_code == 0
@@ -112,7 +112,7 @@ def test_dirty_style(repo_with_style_errors, monkeypatch):
 
 def test_style_no_config(repo_with_missing_style):
     dir = repo_with_missing_style.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.output == 'no style settings found\n'

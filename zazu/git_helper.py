@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""git functions for zazu"""
+"""Git functions for zazu."""
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'filecmp',
@@ -15,6 +15,7 @@ __copyright__ = "Copyright 2016"
 
 
 def get_repo_root(starting_dir):
+    """Get the root directory of the git repo."""
     try:
         g = git.Git(starting_dir)
         ret = g.rev_parse('--show-toplevel')
@@ -24,14 +25,14 @@ def get_repo_root(starting_dir):
 
 
 def get_hooks_path(repo_base):
+    """Get the path for git hooks."""
     g = git.Git(repo_base)
     git_dir = g.rev_parse('--git-dir')
     return os.path.join(repo_base, git_dir, 'hooks')
 
 
 def get_default_git_hooks():
-    """gets list of get hooks to install"""
-
+    """Get list of known git hooks to install."""
     return {
         "pre-commit": pkg_resources.resource_filename('zazu', 'githooks/pre-commit'),
         "post-checkout": pkg_resources.resource_filename('zazu', 'githooks/post-checkout'),
@@ -41,12 +42,12 @@ def get_default_git_hooks():
 
 
 def get_touched_files(repo):
-    """Gets list of files that are scheduled to be committed (Added, created, modified, or renamed)"""
+    """Get list of files that are scheduled to be committed (Added, created, modified, or renamed)."""
     return [file for file in repo.git.diff('--cached', '--name-only', '--diff-filter=ACMR').split('\n') if file]
 
 
 def check_git_hooks(repo_base):
-    """Checks that the default git hooks are in place"""
+    """Check that all known git hooks are in place."""
     have_hooks = True
     hooks_folder = get_hooks_path(repo_base)
     for name, file in get_default_git_hooks().items():
@@ -57,21 +58,21 @@ def check_git_hooks(repo_base):
 
 
 def check_git_hook(hooks_folder, hook_name, hook_resource_path):
-    """Checks that a git hook is in place"""
+    """Check that a git hook is in place."""
     hook_path = os.path.join(hooks_folder, hook_name)
     exists = os.path.exists(hook_path)
     return exists and os.access(hook_path, os.X_OK) and filecmp.cmp(hook_path, hook_resource_path)
 
 
 def install_git_hooks(repo_base):
-    """Enforces that proper git hooks are in place"""
+    """Enforce that all known git hooks are in place."""
     hooks_folder = get_hooks_path(repo_base)
     for name, file in get_default_git_hooks().items():
         install_git_hook(hooks_folder, name, file)
 
 
 def install_git_hook(hooks_folder, hook_name, hook_resource_path):
-    """Enforces that a git hook is in place"""
+    """Enforce that a git hook is in place."""
     if not check_git_hook(hooks_folder, hook_name, hook_resource_path):
         try:
             os.mkdir(hooks_folder)
@@ -82,6 +83,7 @@ def install_git_hook(hooks_folder, hook_name, hook_resource_path):
 
 
 def parse_branch_return_list(branches):
+    """Parse return from git branch into list of branch names."""
     ret = branches
     for i, branch in enumerate(ret):
         if branch.startswith('* '):
@@ -91,7 +93,7 @@ def parse_branch_return_list(branches):
 
 
 def get_merged_branches(repo, target_branch, remote=False):
-    """Returns list of branches that have been merged with the target_branch"""
+    """Return list of branches that have been merged with the target_branch."""
     args = ['--merged', target_branch]
     if remote:
         args.insert(0, '-r')
@@ -99,6 +101,6 @@ def get_merged_branches(repo, target_branch, remote=False):
 
 
 def filter_undeletable(branches):
-    """Filters out branches that we don't want to delete"""
+    """Filter out branches that we don't want to delete."""
     undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-', 'HEAD'])
     return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (not b.startswith('origin/HEAD'))]

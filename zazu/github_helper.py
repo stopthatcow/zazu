@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""github functions for zazu"""
+"""Github functions for zazu."""
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
@@ -14,8 +14,8 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-def get_gh_token():
-    """Make new GitHub token"""
+def make_gh_token():
+    """Make new GitHub token."""
     api_url = 'https://api.github.com'
     add_auth = {
         "scopes": [
@@ -47,18 +47,19 @@ def get_gh_token():
 
 
 def make_gh():
+    """Make github object with token from the keychain."""
     import keyring  # For some reason this doesn't play nicely with threads on lazy import.
     token = keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")
-        token = get_gh_token()
+        token = make_gh_token()
         keyring.set_password('https://api.github.com', 'token', token)
     gh = github.Github(token)
     return gh
 
 
 def parse_github_url(url):
-    """Parses github url into organization and repo name"""
+    """Parse github url into organization and repo name."""
     tokens = re.split('/|:', url.replace('.git', ''))
     repo = tokens.pop()
     organization = tokens.pop()

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Defines helper functions for cmake interaction"""
-import zazu.tool.tool_helper
+"""Defines helper functions for cmake interaction."""
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'distutils',
@@ -15,7 +14,7 @@ __copyright__ = "Copyright 2016"
 
 
 def architecture_to_generator(arch):
-    """Gets the required generator for a given architecture"""
+    """Get the required generator for a given architecture."""
     known_arches = {
         'x86_64-win-msvc_2015': 'Visual Studio 14 2015 Win64',
         'x86_32-win-msvc_2015': 'Visual Studio 14 2015',
@@ -26,7 +25,7 @@ def architecture_to_generator(arch):
 
 
 def get_toolchain_file_from_arch(arch):
-    """Gets the required toolchain file for a given architecture"""
+    """Get the required toolchain file for a given architecture."""
     ret = None
     if 'arm32-linux-gnueabihf' in arch:
         ret = pkg_resources.resource_filename('zazu', 'cmake/arm32-linux-gnueabihf.cmake')
@@ -34,7 +33,7 @@ def get_toolchain_file_from_arch(arch):
 
 
 def known_arches():
-    """Lists arches that zazu is familiar with"""
+    """List arches that zazu is familiar with."""
     return ['host',
             'arm32-linux-gnueabihf',
             'arm32-none-eabi',
@@ -47,15 +46,14 @@ def known_arches():
 
 
 def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lambda x: x):
-    """Configures a cmake based project to be built and caches args used to bypass configuration in future"""
+    """Configure a cmake based project to be built and caches args used to bypass configuration in future."""
     configure_args = [
         'cmake',
         repo_root,
         '-G', architecture_to_generator(arch),
         '-DCMAKE_BUILD_TYPE=' + build_type.capitalize(),
         '-DCPACK_SYSTEM_NAME=' + arch,
-        '-DCPACK_PACKAGE_VERSION=' + build_variables['ZAZU_BUILD_VERSION'],
-        '-DZAZU_TOOL_PATH=' + zazu.tool.tool_helper.package_path
+        '-DCPACK_PACKAGE_VERSION=' + build_variables['ZAZU_BUILD_VERSION']
     ]
     for k, v in build_variables.items():
         configure_args.append('-D{}={}'.format(k, v))
@@ -84,7 +82,7 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
 
 
 def build(build_dir, arch, build_type, target, verbose):
-    """Build using CMake"""
+    """Build using CMake."""
     if architecture_to_generator(arch) == 'Unix Makefiles':
         build_args = ['make', '-j{}'.format(multiprocessing.cpu_count()), target]
         if verbose:
@@ -95,5 +93,6 @@ def build(build_dir, arch, build_type, target, verbose):
             build_args += ['--target', target]
     with zazu.util.cd(build_dir):
         return zazu.util.call(build_args)
+
 
 build_types = ['release', 'debug', 'minSizeRel', 'relWithDebInfo', 'coverage']
