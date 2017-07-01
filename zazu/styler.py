@@ -53,6 +53,20 @@ class Styler(object):
         """
         raise NotImplementedError('All style plugins must implement style_file()')
 
+    def style_string(self, string):
+        """Style a string and return a diff of requested changes
+
+        Args:
+            string: the string to style
+
+        Returns:
+                A unified diff of requested changes or an empty string if no changes are requested.
+
+        Raises:
+            NotImplementedError
+        """
+        raise NotImplementedError('All style plugins must implement style_string')
+
     @classmethod
     def from_config(cls, config, excludes, includes):
         """Create a Styler based on a configuration dictionary.

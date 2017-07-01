@@ -2,6 +2,9 @@
 """ClangFormatStyler plugin for zazu."""
 import zazu.styler
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'subprocess'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2017"
@@ -12,20 +15,23 @@ class ClangFormatStyler(zazu.styler.Styler):
 
     def style_file(self, path, verbose, dry_run):
         """Check a single file to see if it is within style guidelines and optionally fix it."""
-        args = ['clang-format'] + self. options
+        with open(path, 'r') as f:
+            input_string = f.read()
+            styled_string = self.style_string(input_string)
+        if not dry_run:
+            with open(path, 'w') as f:
+                f.write(styled_string)
+        changed = input_string != styled_string
+        return path, changed
 
-        check_args = args + ['-output-replacements-xml', path]
-        fix_args = args + ['-i', path]
-
-        fix_needed = True
-        if dry_run or verbose:
-            output = zazu.util.check_output(check_args)
-            replacements_indicator = '</replacement>'
-            if replacements_indicator not in output:
-                fix_needed = False
-        if not dry_run and fix_needed:
-            zazu.util.check_output(fix_args)
-        return path, fix_needed
+    def style_string(self, string):
+        """Fix a string to be within style guidelines."""
+        args = ['clang-format'] + self.options
+        p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate(string)
+        if p.returncode:
+            raise subprocess.CalledProcessError(stderr)
+        return stdout
 
     @staticmethod
     def default_extensions():
