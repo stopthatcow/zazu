@@ -80,6 +80,9 @@ def stage_patch(path, input_string, styled_string):
     _, stderr = p.communicate(patch_string)
     if p.returncode:
         raise CalledProcessError(str(stderr))
+    # If the input was the same as the current file contents, apply the styling locally as well.
+    if read_file(path) == input_string:
+        write_file(path, _, styled_string)
 
 
 @click.command()
@@ -95,7 +98,7 @@ def style(ctx, verbose, check, cached):
     stylers = ctx.obj.stylers()
     if stylers:
         if cached:
-            dirty_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
+            staged_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
         # Run each Styler
         for s in stylers:
             files = zazu.util.scantree(ctx.obj.repo_root,
@@ -103,7 +106,7 @@ def style(ctx, verbose, check, cached):
                                        s.excludes,
                                        exclude_hidden=True)
             if cached:
-                files = set(files).intersection(dirty_files)
+                files = set(files).intersection(staged_files)
                 read_fn = zazu.git_helper.read_staged
                 write_fn = stage_patch
             else:

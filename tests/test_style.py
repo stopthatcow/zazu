@@ -32,51 +32,27 @@ def repo_with_style_errors(repo_with_style):
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
                     reason="requires astyle")
-def test_astyle(git_repo):
-    dir = git_repo.working_tree_dir
-    with zazu.util.cd(dir):
-        bad_file_name = 'temp.c'
-        write_c_file_with_bad_style(bad_file_name)
-        styler = zazu.plugins.astyle_styler.AstyleStyler()
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=False, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
-        assert not any(dict(ret).values())
-        assert styler.default_extensions()
+def test_astyle():
+    styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
+    ret = styler.style_string('void main ( ) {}')
+    assert ret == 'void main() {}'
+    assert styler.default_extensions()
 
 
-def test_autopep8(git_repo):
-    dir = git_repo.working_tree_dir
-    with zazu.util.cd(dir):
-        bad_file_name = 'temp.py'
-        write_py_file_with_bad_style(bad_file_name)
-        styler = zazu.plugins.autopep8_styler.Autopep8Styler()
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=False, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
-        assert not any(dict(ret).values())
-        assert ['*.py'] == styler.default_extensions()
+def test_autopep8():
+    styler = zazu.plugins.autopep8_styler.Autopep8Styler()
+    ret = styler.style_string('def foo ():\n  pass')
+    print ret
+    assert ['*.py'] == styler.default_extensions()
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
-def test_clang_format(git_repo):
-    dir = git_repo.working_tree_dir
-    with zazu.util.cd(dir):
-        bad_file_name = 'temp.c'
-        write_c_file_with_bad_style(bad_file_name)
-        styler = zazu.plugins.clang_format_styler.ClangFormatStyler(['-style=google'])
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=False, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
-        assert not dict(ret)[bad_file_name]
-        assert styler.default_extensions()
+def test_clang_format():
+    styler = zazu.plugins.clang_format_styler.ClangFormatStyler(options=['-style=google'])
+    ret = styler.style_string('void  main ( ) { }')
+    assert ret == 'void main() {}'
+    assert styler.default_extensions()
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
@@ -101,11 +77,11 @@ def test_dirty_style(repo_with_style_errors, monkeypatch):
     dir = repo_with_style_errors.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty', '-v'])
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert result.exit_code == 0
         assert result.output == '0 files with violations in 0 files\n'
-        monkeypatch.setattr('zazu.git_helper.get_touched_files', lambda x: ['temp.c'])
-        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty', '-v'])
+        repo_with_style_errors.git.add('temp.c')
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert result.exit_code
         assert result.output.endswith('1 files with violations in 1 files\n')
 

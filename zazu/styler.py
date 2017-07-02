@@ -33,22 +33,6 @@ class Styler(object):
             write_fn(path, input_string, styled_string)
         return path, violation
 
-    def style_file(self, path, dry_run):
-        """Style a single file.
-
-        Args:
-            path: absolute path to the file to style.
-            dry_run: if true, doesn't touch local files.
-        """
-        with open(path, 'r') as f:
-            input_string = f.read()
-            styled_string = self.style_string(input_string)
-        if not dry_run:
-            with open(path, 'w') as f:
-                f.write(styled_string)
-        changed = input_string != styled_string
-        return path, changed
-
     def style_string(self, string):
         """Style a string and return a diff of requested changes
 
