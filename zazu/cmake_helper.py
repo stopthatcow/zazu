@@ -24,14 +24,6 @@ def architecture_to_generator(arch):
     return known_arches.get(arch, 'Unix Makefiles')
 
 
-def get_toolchain_file_from_arch(arch):
-    """Get the required toolchain file for a given architecture."""
-    ret = None
-    if 'arm32-linux-gnueabihf' in arch:
-        ret = pkg_resources.resource_filename('zazu', 'cmake/arm32-linux-gnueabihf.cmake')
-    return ret
-
-
 def known_arches():
     """List arches that zazu is familiar with."""
     return ['host',
@@ -57,9 +49,6 @@ def configure(repo_root, build_dir, arch, build_type, build_variables, echo=lamb
     ]
     for k, v in build_variables.items():
         configure_args.append('-D{}={}'.format(k, v))
-    toolchain_file = get_toolchain_file_from_arch(arch)
-    if toolchain_file is not None:
-        configure_args.append('-DCMAKE_TOOLCHAIN_FILE=' + toolchain_file)
 
     configure_arg_str = ' '.join(configure_args)
     echo('CMake Configuration: {}'.format('\n    '.join(configure_args)))
