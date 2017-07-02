@@ -13,17 +13,6 @@ __copyright__ = "Copyright 2017"
 class ClangFormatStyler(zazu.styler.Styler):
     """ClangFormat plugin for code styling."""
 
-    def style_file(self, path, verbose, dry_run):
-        """Check a single file to see if it is within style guidelines and optionally fix it."""
-        with open(path, 'r') as f:
-            input_string = f.read()
-            styled_string = self.style_string(input_string)
-        if not dry_run:
-            with open(path, 'w') as f:
-                f.write(styled_string)
-        changed = input_string != styled_string
-        return path, changed
-
     def style_string(self, string):
         """Fix a string to be within style guidelines."""
         args = ['clang-format'] + self.options

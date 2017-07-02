@@ -38,11 +38,11 @@ def test_astyle(git_repo):
         bad_file_name = 'temp.c'
         write_c_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.astyle_styler.AstyleStyler()
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=False, dry_run=False, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=False, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
         assert not any(dict(ret).values())
         assert styler.default_extensions()
 
@@ -53,11 +53,11 @@ def test_autopep8(git_repo):
         bad_file_name = 'temp.py'
         write_py_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.autopep8_styler.Autopep8Styler()
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=False, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=False, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
         assert not any(dict(ret).values())
         assert ['*.py'] == styler.default_extensions()
 
@@ -70,11 +70,11 @@ def test_clang_format(git_repo):
         bad_file_name = 'temp.c'
         write_c_file_with_bad_style(bad_file_name)
         styler = zazu.plugins.clang_format_styler.ClangFormatStyler(['-style=google'])
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=False, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=False, working_dir=dir)
         assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
+        ret = styler.run([bad_file_name], dry_run=True, working_dir=dir)
         assert not dict(ret)[bad_file_name]
         assert styler.default_extensions()
 
@@ -122,4 +122,4 @@ def test_style_no_config(repo_with_missing_style):
 def test_styler():
     uut = zazu.styler.Styler()
     with pytest.raises(NotImplementedError):
-        uut.style_file('', False, False)
+        uut.style_string('')

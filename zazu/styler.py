@@ -25,33 +25,29 @@ class Styler(object):
         self.excludes = excludes
         self.includes = includes
 
-    def run(self, files, verbose, dry_run, working_dir):
-        """Concurrently dispatches multiple workers to perform style_file.
+    def style_one(self, path, read_fn, write_fn):
+        input_string = read_fn(path)
+        styled_string = self.style_string(input_string)
+        violation = styled_string != input_string
+        if violation and callable(write_fn):
+            write_fn(path, input_string, styled_string)
+        return path, violation
 
-        Args:
-            files: list of files to style.
-            verbose: if true, print style status.
-            dry_run: if true, doesn't touch local files.
-            working_dir: the base directory that files are located in.
-        """
-        abs_files = [os.path.join(working_dir, f) for f in files]
-        work = [functools.partial(self.style_file, f, verbose, dry_run) for f in abs_files]
-        for file_path, violation in zazu.util.dispatch(work):
-            yield os.path.relpath(file_path, working_dir), violation
-
-    def style_file(self, path, verbose, dry_run):
+    def style_file(self, path, dry_run):
         """Style a single file.
 
         Args:
             path: absolute path to the file to style.
-            verbose: if true, print style status.
             dry_run: if true, doesn't touch local files.
-
-        Raises:
-            NotImplementedError
-
         """
-        raise NotImplementedError('All style plugins must implement style_file()')
+        with open(path, 'r') as f:
+            input_string = f.read()
+            styled_string = self.style_string(input_string)
+        if not dry_run:
+            with open(path, 'w') as f:
+                f.write(styled_string)
+        changed = input_string != styled_string
+        return path, changed
 
     def style_string(self, string):
         """Style a string and return a diff of requested changes
