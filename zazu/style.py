@@ -90,6 +90,8 @@ def style(ctx, verbose, check, cached):
     file_count = 0
     violation_count = 0
     stylers = ctx.obj.stylers()
+    FIXED_OK = [click.style('FIXED', fg='red', bold=True), click.style(' OK  ', fg='green', bold=True)]
+    tags = zazu.util.FAIL_OK if check else FIXED_OK
     with zazu.util.cd(ctx.obj.repo_root):
         if stylers:
             if cached:
@@ -113,7 +115,7 @@ def style(ctx, verbose, check, cached):
                 checked_files = zazu.util.dispatch([functools.partial(style_file, s, f, read_fn, write_fn) for f in files])
                 for f, violation in checked_files:
                     if verbose:
-                        click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), f)))
+                        click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), f), tag_formats=tags))
                     violation_count += violation
             if verbose:
                 if check:

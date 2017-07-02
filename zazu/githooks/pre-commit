@@ -1,2 +1,2 @@
 #!/bin/sh
-zazu style --cached
+zazu style --cached -v
