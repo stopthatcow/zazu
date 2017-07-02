@@ -75,6 +75,7 @@ def check_popen(args, stdin_str='', *other_args, **kwargs):
     Raises:
         CalledProcessError: on non zero return from the child process.
         click.ClickException: if the program can't be found.
+
     """
     try:
         p = subprocess.Popen(args=args, stdin=subprocess.PIPE,
