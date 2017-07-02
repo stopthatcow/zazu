@@ -112,7 +112,8 @@ def style(ctx, verbose, check, cached):
                 if check:
                     write_fn = None
                 file_count += len(files)
-                checked_files = zazu.util.dispatch([functools.partial(style_file, s, f, read_fn, write_fn) for f in files])
+                work = [functools.partial(style_file, s, f, read_fn, write_fn) for f in files]
+                checked_files = zazu.util.dispatch(work)
                 for f, violation in checked_files:
                     if verbose:
                         click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), f), tag_formats=tags))
