@@ -40,17 +40,26 @@ def stage_patch(path, input_string, styled_string):
         input_string: the current state of the file in the git stage.
         styled_string: the properly styled string to stage.
     """
-    input_lines = input_string.splitlines()
-    styled_lines = styled_string.splitlines()
-    patch = difflib.unified_diff(input_lines, styled_lines, 'a/' + path, 'b/' + path, lineterm='')
-    patch_string = '\n'.join(patch) + '\n'
-    p = subprocess.Popen(['git', 'apply', '--cached', '-'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    _, stderr = p.communicate(patch_string)
-    if p.returncode:
-        raise CalledProcessError(str(stderr))
-    # If the input was the same as the current file contents, apply the styling locally as well.
+    # If the input was the same as the current file contents, apply the styling locally and add it.
     if read_file(path) == input_string:
-        write_file(path, _, styled_string)
+        write_file(path, '', styled_string)
+        zazu.util.check_output(['git', 'add', path])
+    else:
+        # The file is partially staged. We must apply a patch to the staging area.
+        input_lines = input_string.splitlines()
+        styled_lines = styled_string.splitlines()
+        patch = difflib.unified_diff(input_lines, styled_lines, 'a/' + path, 'b/' + path, lineterm='')
+        patch_string = '\n'.join(patch) + '\n'
+        if input_string[-1] != '\n':
+            # This is to address a bizarre issue with git apply whereby if the staged file doesn't end in a newline,
+            # the patch will fail to apply.
+            raise click.ClickException('File "{}" must have a trailing newline'.format(path))
+        p = subprocess.Popen(['git', 'apply', '--cached', '--verbose', '-'],
+                             stdin=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        _, stderr = p.communicate(patch_string)
+        if p.returncode:
+            raise click.ClickException(str(stderr))
 
 
 def style_file(styler, path, read_fn, write_fn):
@@ -81,36 +90,36 @@ def style(ctx, verbose, check, cached):
     file_count = 0
     violation_count = 0
     stylers = ctx.obj.stylers()
-    if stylers:
-        if cached:
-            staged_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
-        # Run each Styler
-        for s in stylers:
-            files = zazu.util.scantree(ctx.obj.repo_root,
-                                       s.includes,
-                                       s.excludes,
-                                       exclude_hidden=True)
+    with zazu.util.cd(ctx.obj.repo_root):
+        if stylers:
             if cached:
-                files = set(files).intersection(staged_files)
-                read_fn = zazu.git_helper.read_staged
-                write_fn = stage_patch
-            else:
-                read_fn = read_file
-                write_fn = write_file
-            if check:
-                write_fn = None
-            file_count += len(files)
-            with zazu.util.cd(ctx.obj.repo_root):
+                staged_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
+            # Run each Styler
+            for s in stylers:
+                files = zazu.util.scantree(ctx.obj.repo_root,
+                                           s.includes,
+                                           s.excludes,
+                                           exclude_hidden=True)
+                if cached:
+                    files = set(files).intersection(staged_files)
+                    read_fn = zazu.git_helper.read_staged
+                    write_fn = stage_patch
+                else:
+                    read_fn = read_file
+                    write_fn = write_file
+                if check:
+                    write_fn = None
+                file_count += len(files)
                 checked_files = zazu.util.dispatch([functools.partial(style_file, s, f, read_fn, write_fn) for f in files])
                 for f, violation in checked_files:
                     if verbose:
                         click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), f)))
                     violation_count += violation
-        if verbose:
-            if check:
-                click.echo('{} files with violations in {} files'.format(violation_count, file_count))
-            else:
-                click.echo('{} files fixed in {} files'.format(violation_count, file_count))
-        ctx.exit(-1 if check and violation_count else 0)
-    else:
-        click.echo('no style settings found')
+            if verbose:
+                if check:
+                    click.echo('{} files with violations in {} files'.format(violation_count, file_count))
+                else:
+                    click.echo('{} files fixed in {} files'.format(violation_count, file_count))
+            ctx.exit(-1 if check and violation_count else 0)
+        else:
+            click.echo('no style settings found')

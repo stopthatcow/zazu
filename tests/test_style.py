@@ -9,12 +9,12 @@ import zazu.util
 
 def write_c_file_with_bad_style(file):
     with open(file, 'w') as f:
-        f.write('void main(){\n\n}\n ')
+        f.write('void main(){\n\n}\n \n')
 
 
 def write_py_file_with_bad_style(file):
     with open(file, 'w') as f:
-        f.write('def main():\tpass\n\n\n ')
+        f.write('def main():\tpass\n\n\n \n')
 
 
 @pytest.fixture()
@@ -73,7 +73,7 @@ def test_bad_style(repo_with_style_errors):
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
-def test_dirty_style(repo_with_style_errors, monkeypatch):
+def test_dirty_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
@@ -84,6 +84,24 @@ def test_dirty_style(repo_with_style_errors, monkeypatch):
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert result.exit_code
         assert result.output.endswith('1 files with violations in 1 files\n')
+        result = runner.invoke(zazu.cli.cli, ['style', '--cached', '-v'])
+        assert result.output.endswith('1 files fixed in 1 files\n')
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
+        assert not result.exit_code
+        assert result.output.endswith('0 files with violations in 1 files\n')
+        repo_with_style_errors.git.add('temp.cpp')
+        with open('temp.cpp', 'a') as f:
+            f.write('//comment\n')
+        result = runner.invoke(zazu.cli.cli, ['style', '--cached', '-v'])
+        assert result.output.endswith('1 files fixed in 2 files\n')
+        # File with missing newline at end of file.
+        with open('temp.h', 'a') as f:
+            f.write('//comment')
+        repo_with_style_errors.git.add('temp.h')
+        with open('temp.h', 'a') as f:
+            f.write('//another')
+        result = runner.invoke(zazu.cli.cli, ['style', '--cached'])
+        assert result.output.endswith('File "temp.h" must have a trailing newline\n')
 
 
 def test_style_no_config(repo_with_missing_style):
