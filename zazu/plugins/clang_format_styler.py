@@ -16,11 +16,7 @@ class ClangFormatStyler(zazu.styler.Styler):
     def style_string(self, string):
         """Fix a string to be within style guidelines."""
         args = ['clang-format'] + self.options
-        p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate(string)
-        if p.returncode:
-            raise subprocess.CalledProcessError(stderr)
-        return stdout
+        return zazu.util.check_popen(args=args, stdinput_str=string)
 
     @staticmethod
     def default_extensions():

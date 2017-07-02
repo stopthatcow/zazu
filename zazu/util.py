@@ -49,7 +49,7 @@ __copyright__ = "Copyright 2016"
 
 
 def check_output(*args, **kwargs):
-    """Like subprocess.check_output but raises an exception if it cannot be found."""
+    """Like subprocess.check_output but raises an exception if the program cannot be found."""
     try:
         return subprocess.check_output(*args, **kwargs)
     except OSError:
@@ -57,11 +57,35 @@ def check_output(*args, **kwargs):
 
 
 def call(*args, **kwargs):
-    """Like subprocess.call but raise an exception if it cannot be found."""
+    """Like subprocess.call but raise an exception if the program cannot be found."""
     try:
         return subprocess.call(*args, **kwargs)
     except OSError:
         raise_uninstalled(args[0][0])
+
+
+def check_popen(args, stdinput_str='', *other_args, **kwargs):
+    """Like subprocess.Popen but raises an exception if the program cannot be found.
+
+    Args:
+        args: passed to Popen.
+        stdinput_str: a string that will be sent to std input via communicate().
+        other_args: other arguments passed to Popen.
+        kwargs: other kwargs passed to Popen.
+    Raises:
+        CalledProcessError: on non zero return from the child process.
+        click.ClickException: if the program can't be found.
+    """
+    try:
+        p = subprocess.Popen(args=args, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             *other_args, **kwargs)
+        stdout, stderr = p.communicate(stdinput_str)
+    except OSError:
+        raise_uninstalled(args[0][0])
+    if p.returncode:
+        raise subprocess.CalledProcessError(p.returncode, args, stderr)
+    return stdout
 
 
 @contextlib.contextmanager

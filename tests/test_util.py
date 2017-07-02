@@ -2,6 +2,7 @@
 import click
 import os
 import pytest
+import subprocess
 import tempfile
 import zazu.util
 try:
@@ -38,15 +39,35 @@ def test_scan_tree():
 def test_check_output(mocker):
     mocker.patch('subprocess.check_output', side_effect=OSError(''))
     with pytest.raises(click.ClickException):
-        zazu.util.check_output('foo')
-        subprocess.check_output.assert_called_once_with('foo')
+        zazu.util.check_output(['foo'])
+        subprocess.check_output.assert_called_once_with(['foo'])
 
 
 def test_call(mocker):
     mocker.patch('subprocess.call', side_effect=OSError(''))
     with pytest.raises(click.ClickException):
-        zazu.util.call('foo')
-        subprocess.call.assert_called_once_with('foo')
+        zazu.util.call(['foo'])
+        subprocess.call.assert_called_once_with(['foo'])
+
+
+def test_check_popen_not_found(mocker):
+    mocker.patch('subprocess.Popen', side_effect=OSError(''))
+    with pytest.raises(click.ClickException):
+        zazu.util.check_popen(['foo'])
+        subprocess.call.assert_called_once_with(['foo'])
+
+
+def test_check_popen(mocker):
+    mocked_process = mocker.Mock()
+    mocked_process.returncode = 1
+    mocked_process.communicate = mocker.Mock(return_value=('out', 'err'))
+    mocker.patch('subprocess.Popen', return_value=mocked_process)
+    with pytest.raises(subprocess.CalledProcessError):
+        zazu.util.check_popen(stdinput_str='input', args=['foo'])
+        subprocess.Popen.assert_called_once_with(['foo'])
+        mocked_process.communicate.assert_called_once_with('input')
+    mocked_process.returncode = 0
+    assert 'out' = zazu.util.check_popen(stdinput_str='input', args=['foo'])
 
 
 def call(*args, **kwargs):
