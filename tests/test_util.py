@@ -59,15 +59,19 @@ def test_check_popen_not_found(mocker):
 
 def test_check_popen(mocker):
     mocked_process = mocker.Mock()
-    mocked_process.returncode = 1
     mocked_process.communicate = mocker.Mock(return_value=('out', 'err'))
     mocker.patch('subprocess.Popen', return_value=mocked_process)
-    with pytest.raises(subprocess.CalledProcessError):
-        zazu.util.check_popen(stdinput_str='input', args=['foo'])
-        subprocess.Popen.assert_called_once_with(['foo'])
-        mocked_process.communicate.assert_called_once_with('input')
     mocked_process.returncode = 0
-    assert 'out' = zazu.util.check_popen(stdinput_str='input', args=['foo'])
+    assert 'out' == zazu.util.check_popen(stdinput_str='input', args=['foo'])
+    subprocess.Popen.assert_called_once_with(args=['foo'], stderr=subprocess.PIPE,
+                                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    mocked_process.communicate.assert_called_once_with('input')
+    with pytest.raises(subprocess.CalledProcessError) as e:
+        mocked_process.returncode = 1
+        zazu.util.check_popen(stdinput_str='input', args=['foo'])
+    assert e.value.returncode == 1
+    assert e.value.cmd == ['foo']
+    assert e.value.output == 'err'
 
 
 def call(*args, **kwargs):
