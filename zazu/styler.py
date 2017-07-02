@@ -25,16 +25,8 @@ class Styler(object):
         self.excludes = excludes
         self.includes = includes
 
-    def style_one(self, path, read_fn, write_fn):
-        input_string = read_fn(path)
-        styled_string = self.style_string(input_string)
-        violation = styled_string != input_string
-        if violation and callable(write_fn):
-            write_fn(path, input_string, styled_string)
-        return path, violation
-
     def style_string(self, string):
-        """Style a string and return a diff of requested changes
+        """Style a string and return a diff of requested changes.
 
         Args:
             string: the string to style
@@ -44,6 +36,7 @@ class Styler(object):
 
         Raises:
             NotImplementedError
+
         """
         raise NotImplementedError('All style plugins must implement style_string')
 

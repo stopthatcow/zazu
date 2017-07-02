@@ -53,6 +53,23 @@ def stage_patch(path, input_string, styled_string):
         write_file(path, _, styled_string)
 
 
+def style_file(styler, path, read_fn, write_fn):
+    """Style a file.
+
+    Args:
+        styler: the styler to use to style the file.
+        path: the file path.
+        read_fn: function used to read in the file contents.
+        write_fn: function used to write out the styled file, or None
+    """
+    input_string = read_fn(path)
+    styled_string = styler.style_string(input_string)
+    violation = styled_string != input_string
+    if violation and callable(write_fn):
+        write_fn(path, input_string, styled_string)
+    return path, violation
+
+
 @click.command()
 @click.pass_context
 @click.option('-v', '--verbose', is_flag=True, help='print files that are dirty')
@@ -84,7 +101,7 @@ def style(ctx, verbose, check, cached):
                 write_fn = None
             file_count += len(files)
             with zazu.util.cd(ctx.obj.repo_root):
-                checked_files = zazu.util.dispatch([functools.partial(s.style_one, f, read_fn, write_fn) for f in files])
+                checked_files = zazu.util.dispatch([functools.partial(style_file, s, f, read_fn, write_fn) for f in files])
                 for f, violation in checked_files:
                     if verbose:
                         click.echo(zazu.util.format_checklist_item(not violation, text='({}) {}'.format(s.type(), f)))

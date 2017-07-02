@@ -23,6 +23,7 @@ def cli(ctx):
 
 
 def init():
+    """Run on startup to allow zazu to be run as a module."""
     if __name__ == "__main__":
         cli()
 

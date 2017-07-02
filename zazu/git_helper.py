@@ -107,5 +107,5 @@ def filter_undeletable(branches):
 
 
 def read_staged(path):
-    """Read the contents of the staged version of the file"""
+    """Read the contents of the staged version of the file."""
     return zazu.util.check_output(['git', 'show', ':{}'.format(path)])
