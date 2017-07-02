@@ -64,7 +64,7 @@ def call(*args, **kwargs):
         raise_uninstalled(args[0][0])
 
 
-def check_popen(args, stdinput_str='', *other_args, **kwargs):
+def check_popen(args, stdin_str='', *other_args, **kwargs):
     """Like subprocess.Popen but raises an exception if the program cannot be found.
 
     Args:
@@ -80,7 +80,7 @@ def check_popen(args, stdinput_str='', *other_args, **kwargs):
         p = subprocess.Popen(args=args, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              *other_args, **kwargs)
-        stdout, stderr = p.communicate(stdinput_str)
+        stdout, stderr = p.communicate(stdin_str)
     except OSError:
         raise_uninstalled(args[0][0])
     if p.returncode:

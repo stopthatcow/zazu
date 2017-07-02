@@ -16,7 +16,7 @@ class ClangFormatStyler(zazu.styler.Styler):
     def style_string(self, string):
         """Fix a string to be within style guidelines."""
         args = ['clang-format'] + self.options
-        return zazu.util.check_popen(args=args, stdinput_str=string)
+        return zazu.util.check_popen(args=args, stdin_str=string)
 
     @staticmethod
     def default_extensions():

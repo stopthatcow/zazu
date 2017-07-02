@@ -7,8 +7,7 @@ zazu.util.lazy_import(locals(), [
     'click',
     'difflib',
     'functools',
-    'os',
-    'subprocess'
+    'os'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -54,12 +53,7 @@ def stage_patch(path, input_string, styled_string):
             # This is to address a bizarre issue with git apply whereby if the staged file doesn't end in a newline,
             # the patch will fail to apply.
             raise click.ClickException('File "{}" must have a trailing newline'.format(path))
-        p = subprocess.Popen(['git', 'apply', '--cached', '--verbose', '-'],
-                             stdin=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        _, stderr = p.communicate(patch_string)
-        if p.returncode:
-            raise click.ClickException(str(stderr))
+        zazu.util.check_popen(args=['git', 'apply', '--cached', '--verbose', '-'], stdin_str=patch_string)
 
 
 def style_file(styler, path, read_fn, write_fn):
