@@ -42,7 +42,7 @@ def test_astyle():
 def test_autopep8():
     styler = zazu.plugins.autopep8_styler.Autopep8Styler()
     ret = styler.style_string('def foo ():\n  pass')
-    print ret
+    assert ret == 'def foo():\n    pass\n'
     assert ['*.py'] == styler.default_extensions()
 
 
