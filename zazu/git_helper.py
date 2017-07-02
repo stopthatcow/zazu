@@ -104,3 +104,8 @@ def filter_undeletable(branches):
     """Filter out branches that we don't want to delete."""
     undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-', 'HEAD'])
     return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (not b.startswith('origin/HEAD'))]
+
+
+def read_staged(path):
+    """Read the contents of the staged version of the file."""
+    return zazu.util.check_output(['git', 'show', ':{}'.format(path)])

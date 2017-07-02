@@ -25,33 +25,20 @@ class Styler(object):
         self.excludes = excludes
         self.includes = includes
 
-    def run(self, files, verbose, dry_run, working_dir):
-        """Concurrently dispatches multiple workers to perform style_file.
+    def style_string(self, string):
+        """Style a string and return a diff of requested changes.
 
         Args:
-            files: list of files to style.
-            verbose: if true, print style status.
-            dry_run: if true, doesn't touch local files.
-            working_dir: the base directory that files are located in.
-        """
-        abs_files = [os.path.join(working_dir, f) for f in files]
-        work = [functools.partial(self.style_file, f, verbose, dry_run) for f in abs_files]
-        for file_path, violation in zazu.util.dispatch(work):
-            yield os.path.relpath(file_path, working_dir), violation
+            string: the string to style
 
-    def style_file(self, path, verbose, dry_run):
-        """Style a single file.
-
-        Args:
-            path: absolute path to the file to style.
-            verbose: if true, print style status.
-            dry_run: if true, doesn't touch local files.
+        Returns:
+                A unified diff of requested changes or an empty string if no changes are requested.
 
         Raises:
             NotImplementedError
 
         """
-        raise NotImplementedError('All style plugins must implement style_file()')
+        raise NotImplementedError('All style plugins must implement style_string')
 
     @classmethod
     def from_config(cls, config, excludes, includes):

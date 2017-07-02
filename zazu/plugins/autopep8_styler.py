@@ -2,6 +2,9 @@
 """Autopep8Styler plugin for zazu."""
 import zazu.styler
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'subprocess'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -10,21 +13,10 @@ __copyright__ = "Copyright 2016"
 class Autopep8Styler(zazu.styler.Styler):
     """Autopep8 plugin for code styling."""
 
-    def style_file(self, path, verbose, dry_run):
-        """Check a single file to see if it is within style guidelines and optionally fix it."""
-        args = ['autopep8'] + self.options
-
-        check_args = args + ['--diff', path]
-        fix_args = args + ['--in-place', path]
-
-        fix_needed = True
-        if dry_run or verbose:
-            output = zazu.util.check_output(check_args)
-            if not output:
-                fix_needed = False
-        if not dry_run and fix_needed:
-            zazu.util.check_output(fix_args)
-        return path, fix_needed
+    def style_string(self, string):
+        """Fix a string to be within style guidelines."""
+        args = ['autopep8'] + self.options + ['-']
+        return zazu.util.check_popen(args=args, stdin_str=string)
 
     @staticmethod
     def default_extensions():
