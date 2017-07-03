@@ -10,11 +10,6 @@ def test_arch_to_generator():
     assert 'Unix Makefiles' == zazu.cmake_helper.architecture_to_generator('')
 
 
-def test_get_toolchain_file_from_arch():
-    assert zazu.cmake_helper.get_toolchain_file_from_arch('') is None
-    assert zazu.cmake_helper.get_toolchain_file_from_arch('arm32-linux-gnueabihf') is not None
-
-
 def test_configure_cmake(tmp_dir, mocker):
     mocker.patch('zazu.util.call', return_value=0)
     args = {'ZAZU_BUILD_VERSION': '0.0.0.dev'}
@@ -30,21 +25,6 @@ def test_configure_cmake(tmp_dir, mocker):
     # Call again to ensure we cache the args.
     zazu.cmake_helper.configure(tmp_dir, tmp_dir, 'host', 'release', args, echo=lambda x: x)
     zazu.util.call.assert_called_once()
-
-
-def test_configure_cmak_toolchain(tmp_dir, mocker):
-    mocker.patch('zazu.util.call', return_value=0)
-    args = {'ZAZU_BUILD_VERSION': '0.0.0.dev'}
-    zazu.cmake_helper.configure(tmp_dir, tmp_dir, 'arm32-linux-gnueabihf', 'release', args, echo=lambda x: x)
-    expected_call = [
-        'cmake',
-        tmp_dir,
-        '-G', 'Unix Makefiles', '-DCMAKE_BUILD_TYPE=Release',
-        '-DCPACK_SYSTEM_NAME=arm32-linux-gnueabihf', '-DCPACK_PACKAGE_VERSION=0.0.0.dev',
-        '-DZAZU_BUILD_VERSION=0.0.0.dev',
-        '-DCMAKE_TOOLCHAIN_FILE={}'.format(zazu.cmake_helper.get_toolchain_file_from_arch('arm32-linux-gnueabihf'))
-    ]
-    zazu.util.call.assert_called_once_with(expected_call)
 
 
 def test_build_cmake_posix(tmp_dir, mocker):
