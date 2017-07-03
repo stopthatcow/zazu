@@ -12,14 +12,19 @@ def tmp_dir():
 
 
 @pytest.fixture
-def git_repo(tmp_dir):
-    repo = git.Repo.init(tmp_dir)
-    readme = os.path.join(tmp_dir, 'README.md')
+def empty_repo(tmp_dir):
+    return git.Repo.init(tmp_dir)
+
+
+@pytest.fixture
+def git_repo(empty_repo):
+    dir = empty_repo.working_tree_dir
+    readme = os.path.join(dir, 'README.md')
     with open(readme, 'w'):
         pass
-    repo.index.add([readme])
-    repo.index.commit('initial readme')
-    return repo
+    empty_repo.index.add([readme])
+    empty_repo.index.commit('initial readme')
+    return empty_repo
 
 
 @pytest.fixture
@@ -48,17 +53,24 @@ def repo_with_style(git_repo):
 @pytest.fixture()
 def repo_with_build_config(git_repo):
     root = git_repo.working_tree_dir
-    style_config = {
+    config = {
         'components': [
             {
                 'name': 'zazu',
+                'description': 'A description',
                 'goals': [
                     {
                         'name': 'echo_foobar',
+                        'description': 'echo_foobar description',
                         'builds': [
                             {
-                                'arch': 'python',
-                                'script': ['echo "foobar"']
+                                'arch': 'host',
+                                'description': 'echo_foobar build description',
+                                'script': ['echo "foobar"'],
+                                'artifacts': ['artifact.zip']
+                            },
+                            {
+                                'arch': 'arm-linux-gnueabihf'
                             }
                         ]
                     },
@@ -75,7 +87,7 @@ def repo_with_build_config(git_repo):
         ]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(style_config))
+        file.write(yaml.dump(config))
     return git_repo
 
 
@@ -101,6 +113,14 @@ def repo_with_missing_style(git_repo):
 @pytest.fixture()
 def repo_with_github_as_origin(git_repo):
     git_repo.create_remote('origin', 'http://github.com/stopthatcow/zazu')
+    return git_repo
+
+
+@pytest.fixture()
+def git_repo_with_local_origin(git_repo):
+    temp_dir = tempfile.mkdtemp()
+    git.Repo.init(temp_dir, bare=True)
+    git_repo.create_remote('origin', temp_dir)
     return git_repo
 
 
