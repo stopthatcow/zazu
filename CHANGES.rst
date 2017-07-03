@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.10.0
+--------------
+
+- ReadTheDocs support.
+- Increase code coverage to 92%.
+- Styling now automatic via git hook.
 
 Version 0.9.2
 -------------
