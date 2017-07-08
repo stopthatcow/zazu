@@ -103,7 +103,7 @@ def init(ctx, nohooks):
         yaml.dump(zazu_yaml_obj, file('zazu.yaml', 'w'), default_flow_style=False)
     # check for git repo in cwd
     try:
-        repo = git.Repo(os.getcwd())
+        repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
     except git.InvalidGitRepositoryError:
         repo_name = click.prompt('No existing git repo found, Name your new repo:')
 
