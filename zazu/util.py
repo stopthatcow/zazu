@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
-<<<<<<< HEAD
 """utility functions for zazu"""
-<<<<<<< HEAD
 import zazu.plugins
-=======
-"""Utility functions for zazu."""
->>>>>>> develop
-=======
-import platform
 import zazu.plugins
->>>>>>> 05b94a4f11b189243a35b2b4e7c762401d155bbe
 
 try:
     import readline  # NOQA
@@ -169,20 +161,13 @@ def prompt(text, default=None, expected_type=str):
     return expected_type(result)
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 def pick(choices, message, allow_multiple=False):
-    """select from a list of possibilities."""
-=======
-def pick(choices, message):
     """Interactively allow user to pick among a set of choices.
 
     Args:
         choices: list of possible choices.
         message: the message to display to the user.
-
     """
->>>>>>> develop
     if not choices:
         return None
     if allow_multiple:
@@ -190,26 +175,6 @@ def pick(choices, message):
     if len(choices) > 1:
         click.clear()
         questions = [inquirer.List(' ', message=message, choices=choices)]
-=======
-def pick(choices, message, checkbox=False):
-    if len(choices) > 1:
-        click.clear()
-        if not checkbox:
-            questions = [
-                inquirer.List(' ',
-                              message=message,
-                              choices=choices,
-                              ),
-            ]
-        else:
-            questions = [
-                inquirer.Checkbox(' ',
-                             message = message,
-                             choices = choices,
-                             ),
-            ]
-
->>>>>>> 05b94a4f11b189243a35b2b4e7c762401d155bbe
         response = inquirer.prompt(questions)
         if response is None:
             raise KeyboardInterrupt
@@ -226,7 +191,7 @@ def pick_multiple(choices, message):
         raise KeyboardInterrupt
     return response[' ']
 
- 
+
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
     """List files recursively that match any of the include glob patterns but are not in an excluded pattern.
 
