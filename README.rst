@@ -1,5 +1,5 @@
-Zazu (at your service)
-======================
+Getting Started
+===============
 |buildBadge| |coverageBadge|
 |ReleaseBadge|  |FormatBadge|
 |LicenseBadge| |PythonVersionBadge|
@@ -21,6 +21,8 @@ Zazu (at your service)
 
 .. |FormatBadge| image:: https://img.shields.io/pypi/format/zazu.svg
     :target: https://coveralls.io/github/stopthatcow/zazu
+
+Complete documentation is available at `zazu.readthedocs.io <http://zazu.readthedocs.io>`__.
 
 Zazu is a CLI development workflow management tool that combines
 elements of git flow with CI and issue tracking.

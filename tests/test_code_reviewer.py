@@ -32,3 +32,7 @@ def test_code_review():
         uut.base
     with pytest.raises(NotImplementedError):
         uut.id
+    with pytest.raises(NotImplementedError):
+        uut.merged
+    with pytest.raises(NotImplementedError):
+        uut.browse_url

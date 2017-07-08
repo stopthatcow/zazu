@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
 import click
-import tests.conftest
 import distutils.spawn
 import pytest
 import zazu.cli
 import zazu.style
+import zazu.util
 
 
 def write_c_file_with_bad_style(file):
     with open(file, 'w') as f:
-        f.write('void main(){\n\n}\n ')
+        f.write('void main(){\n\n}\n \n')
 
 
 def write_py_file_with_bad_style(file):
     with open(file, 'w') as f:
-        f.write('def main():\tpass\n\n\n ')
+        f.write('def main():\tpass\n\n\n \n')
 
 
 @pytest.fixture()
 def repo_with_style_errors(repo_with_style):
     dir = repo_with_style.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         write_c_file_with_bad_style('temp.c')
         write_c_file_with_bad_style('temp.cc')
         write_c_file_with_bad_style('temp.cpp')
@@ -32,58 +32,34 @@ def repo_with_style_errors(repo_with_style):
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
                     reason="requires astyle")
-def test_astyle(git_repo):
-    dir = git_repo.working_tree_dir
-    with tests.conftest.working_directory(dir):
-        bad_file_name = 'temp.c'
-        write_c_file_with_bad_style(bad_file_name)
-        styler = zazu.plugins.astyle_styler.AstyleStyler()
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=False, dry_run=False, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
-        assert not any(dict(ret).values())
-        assert styler.default_extensions()
+def test_astyle():
+    styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
+    ret = styler.style_string('void main ( ) {}')
+    assert ret == 'void main() {}'
+    assert styler.default_extensions()
 
 
-def test_autopep8(git_repo):
-    dir = git_repo.working_tree_dir
-    with tests.conftest.working_directory(dir):
-        bad_file_name = 'temp.py'
-        write_py_file_with_bad_style(bad_file_name)
-        styler = zazu.plugins.autopep8_styler.Autopep8Styler()
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=False, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
-        assert not any(dict(ret).values())
-        assert ['*.py'] == styler.default_extensions()
+def test_autopep8():
+    styler = zazu.plugins.autopep8_styler.Autopep8Styler()
+    ret = styler.style_string('def foo ():\n  pass')
+    assert ret == 'def foo():\n    pass\n'
+    assert ['*.py'] == styler.default_extensions()
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
-def test_clang_format(git_repo):
-    dir = git_repo.working_tree_dir
-    with tests.conftest.working_directory(dir):
-        bad_file_name = 'temp.c'
-        write_c_file_with_bad_style(bad_file_name)
-        styler = zazu.plugins.clang_format_styler.ClangFormatStyler(['-style=google'])
-        ret = styler.run([bad_file_name], verbose=False, dry_run=True, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=False, working_dir=dir)
-        assert dict(ret)[bad_file_name]
-        ret = styler.run([bad_file_name], verbose=True, dry_run=True, working_dir=dir)
-        assert not dict(ret)[bad_file_name]
-        assert styler.default_extensions()
+def test_clang_format():
+    styler = zazu.plugins.clang_format_styler.ClangFormatStyler(options=['-style=google'])
+    ret = styler.style_string('void  main ( ) { }')
+    assert ret == 'void main() {}'
+    assert styler.default_extensions()
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
 def test_bad_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '-v'])
         assert result.exit_code
@@ -97,22 +73,40 @@ def test_bad_style(repo_with_style_errors):
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
-def test_dirty_style(repo_with_style_errors, monkeypatch):
+def test_dirty_style(repo_with_style_errors):
     dir = repo_with_style_errors.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty', '-v'])
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert result.exit_code == 0
         assert result.output == '0 files with violations in 0 files\n'
-        monkeypatch.setattr('zazu.git_helper.get_touched_files', lambda x: ['temp.c'])
-        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--dirty', '-v'])
+        repo_with_style_errors.git.add('temp.c')
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert result.exit_code
         assert result.output.endswith('1 files with violations in 1 files\n')
+        result = runner.invoke(zazu.cli.cli, ['style', '--cached', '-v'])
+        assert result.output.endswith('1 files fixed in 1 files\n')
+        result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
+        assert not result.exit_code
+        assert result.output.endswith('0 files with violations in 1 files\n')
+        repo_with_style_errors.git.add('temp.cpp')
+        with open('temp.cpp', 'a') as f:
+            f.write('//comment\n')
+        result = runner.invoke(zazu.cli.cli, ['style', '--cached', '-v'])
+        assert result.output.endswith('1 files fixed in 2 files\n')
+        # File with missing newline at end of file.
+        with open('temp.h', 'a') as f:
+            f.write('//comment')
+        repo_with_style_errors.git.add('temp.h')
+        with open('temp.h', 'a') as f:
+            f.write('//another')
+        result = runner.invoke(zazu.cli.cli, ['style', '--cached'])
+        assert result.output.endswith('File "temp.h" must have a trailing newline\n')
 
 
 def test_style_no_config(repo_with_missing_style):
     dir = repo_with_missing_style.working_tree_dir
-    with tests.conftest.working_directory(dir):
+    with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style'])
         assert result.output == 'no style settings found\n'
@@ -122,4 +116,4 @@ def test_style_no_config(repo_with_missing_style):
 def test_styler():
     uut = zazu.styler.Styler()
     with pytest.raises(NotImplementedError):
-        uut.style_file('', False, False)
+        uut.style_string('')

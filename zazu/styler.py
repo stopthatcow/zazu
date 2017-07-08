@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Styler class for zazu"""
+"""Styler class for zazu."""
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'functools',
@@ -11,25 +11,48 @@ __copyright__ = "Copyright 2016"
 
 
 class Styler(object):
-    """Parent of all style plugins"""
+    """Parent of all style plugins."""
 
     def __init__(self, options=[], excludes=[], includes=[]):
+        """Constructor.
+
+        Args:
+            options: array of flags to pass to the styler.
+            excludes: list of file patterns to exclude from styling.
+            includes: list of file patterns to include for styling.
+        """
         self.options = options
         self.excludes = excludes
         self.includes = includes
 
-    def run(self, files, verbose, dry_run, working_dir):
-        """Concurrently dispatches multiple workers to perform style_file."""
-        abs_files = [os.path.join(working_dir, f) for f in files]
-        work = [functools.partial(self.style_file, f, verbose, dry_run) for f in abs_files]
-        for file_path, violation in zazu.util.dispatch(work):
-            yield os.path.relpath(file_path, working_dir), violation
+    def style_string(self, string):
+        """Style a string and return a diff of requested changes.
 
-    def style_file(self, path, verbose, dry_run):
-        raise NotImplementedError('All style plugins must implement style_file()')
+        Args:
+            string: the string to style
+
+        Returns:
+                A unified diff of requested changes or an empty string if no changes are requested.
+
+        Raises:
+            NotImplementedError
+
+        """
+        raise NotImplementedError('All style plugins must implement style_string')
 
     @classmethod
     def from_config(cls, config, excludes, includes):
+        """Create a Styler based on a configuration dictionary.
+
+        Args:
+            config: the configuration dictionary.
+            excludes: patterns to exclude.
+            includes: patterns to include.
+
+        Returns:
+            Styler with config options set.
+
+        """
         obj = cls(config.get('options', []),
                   excludes + config.get('excludes', []),
                   includes + config.get('includes', []))
