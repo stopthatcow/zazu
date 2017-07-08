@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """utility functions for zazu"""
-import platform
 import zazu.plugins
 
 try:
@@ -92,30 +91,34 @@ def prompt(text, default=None, expected_type=str):
         result = builtins.input('{}: '.format(text))
     return expected_type(result)
 
-def pick(choices, message, checkbox=False):
+
+def pick(choices, message, allow_multiple=False):
+    """select from a list of possibilities."""
+    if not choices:
+        return None
+    if allow_multiple:
+        choices = [None] + choices
     if len(choices) > 1:
         click.clear()
-        if not checkbox:
-            questions = [
-                inquirer.List(' ',
-                              message=message,
-                              choices=choices,
-                              ),
-            ]
-        else:
-            questions = [
-                inquirer.Checkbox(' ',
-                             message = message,
-                             choices = choices,
-                             ),
-            ]
-
+        questions = [inquirer.List(' ', message=message, choices=choices)]
         response = inquirer.prompt(questions)
         if response is None:
             raise KeyboardInterrupt
         return response[' ']
+    return choices[0]
 
 
+def pick_multiple(choices, message):
+    """interactivly pick multiple items from a list of possibilities."""
+    if not choices:
+        return None
+    click.clear()
+    response = inquirer.prompt([inquirer.Checkbox(' ', message=message, choices=choices)])
+    if response is None:
+        raise KeyboardInterrupt
+    return response[' ']
+
+ 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
     """List files recursively that match any of the include glob patterns but are not in an excluded pattern."""
     files = []
