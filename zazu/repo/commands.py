@@ -96,7 +96,7 @@ def init(ctx, nohooks):
         else:
             zazu_yaml_obj = {}
         if stylers:
-            zazu_yaml_obj['style'] = {key: {'options': [None]} for key in stylers}
+            zazu_yaml_obj['style'] = {key: {'options': ' '} for key in stylers}
             click.echo('Reminder: please specify styler options in  zazu.yaml')
         yaml.dump(zazu_yaml_obj, file('zazu.yaml', 'w'), default_flow_style=False)
     # check for git repo in cwd
@@ -127,7 +127,7 @@ def init(ctx, nohooks):
             owner = click.prompt('Please enter an owner for issues created from this repo')
             tracker_dict['issueTracker'] = {'owner': owner, 'repo': repo_name, 'type': tracker_choice}
 
-        styler_choice = zazu.util.pick(stylers, 'Pick some stylers', checkbox=True)
+        styler_choice = zazu.util.pick_multiple(stylers, 'Pick some stylers')
         if not styler_choice and tracker_choice is 'None':
             click.clear()
             click.echo('No issue tracker or stylers chosen, exiting')
