@@ -128,7 +128,6 @@ def init(ctx, nohooks):
         if tracker_choice is not 'None':
             owner = click.prompt('Please enter an owner for issues created from this repo')
             tracker_dict['issueTracker'] = {'owner': owner, 'repo': repo_name, 'type': tracker_choice}
-
         styler_choice = zazu.util.pick_multiple(stylers, 'Pick some stylers')
         if not styler_choice and tracker_choice is 'None':
             click.clear()
