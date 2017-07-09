@@ -248,7 +248,14 @@ def raise_uninstalled(pkg_name):
 
 
 def get_plugin_list(plugin_subclass):
-    """helper function to pull lists of plugins"""
+    """Helper function to pull lists of plugins
+ 
+    Args:
+        plugin_subclass (obj): the subclass of the plugin in question
+
+    Returns:
+       known_types (dict): dictionary of the known types of the plugin in question 
+    """
     plugins = straight.plugin.load('zazu.plugins', subclasses=plugin_subclass)
     known_types = {p.type().lower(): p.from_config for p in plugins}
     return known_types
