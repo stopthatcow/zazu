@@ -110,25 +110,23 @@ def init(ctx, nohooks):
         try:
             os.mkdir(repo_name)
             repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'), bare=True)
-            os.chdir(repo_name)
+            util.cd(repo_name)
         except OSError as err:
             raise click.ClickException(str(err))
 
     if click.confirm("Configure zazu.yaml?", abort=True):
-        click.echo("Configuring Zazu for: " + os.getcwd())
-        if os.path.isfile('zazu.yaml'):
+        click.echo("Configuring Zazu")
+        if os.path.isfile('{}/zazu.yaml'.format(repo.working_tree_dir)):
             click.confirm('zazu.yaml file found, continuing will overwrite, continue?', abort=True)
         repo_name = os.path.basename(os.path.normpath(os.getcwd()))
-
         trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
-        trackers.append('None')
         stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
-        tracker_choice = zazu.util.pick(trackers, 'Pick an Issue Tracker')
+        tracker_choice = zazu.util.pick(trackers.keys(), 'Pick an Issue Tracker', True)
         tracker_dict = {}
-        if tracker_choice is not 'None':
+        if tracker_choice is not None:
             owner = click.prompt('Please enter an owner for issues created from this repo')
             tracker_dict['issueTracker'] = {'owner': owner, 'repo': repo_name, 'type': tracker_choice}
-        styler_choice = zazu.util.pick_multiple(stylers, 'Pick some stylers')
+        styler_choice = zazu.util.pick_multiple(stylers.keys(), 'Pick some stylers')
         if not styler_choice and tracker_choice is 'None':
             click.clear()
             click.echo('No issue tracker or stylers chosen, exiting')

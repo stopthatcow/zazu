@@ -251,4 +251,4 @@ def get_plugin_list(plugin_subclass):
     """helper function to pull lists of plugins"""
     plugins = straight.plugin.load('zazu.plugins', subclasses=plugin_subclass)
     known_types = {p.type().lower(): p.from_config for p in plugins}
-    return known_types.keys()
+    return known_types
