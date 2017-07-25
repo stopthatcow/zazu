@@ -91,7 +91,7 @@ def clone(repository_url, nohooks, nosubmodules):
 @click.pass_context
 def init(ctx, nohooks):
     """Initialize repo directory structure"""
-    def _zazu_yaml(issue_tracker={}, stylers=[]):
+    def _zazu_yaml(repo_name, issue_tracker={}, stylers=[]):
         """builds zazu.yaml file"""
         if issue_tracker:
             zazu_yaml_obj = issue_tracker
@@ -101,24 +101,25 @@ def init(ctx, nohooks):
             zazu_yaml_obj['style'] = {key: {'options': ' '} for key in stylers}
             click.echo('Reminder: please specify styler options in  zazu.yaml')
         yaml.dump(zazu_yaml_obj, file('zazu.yaml', 'w'), default_flow_style=False)
+        os.chdir('../')
     # check for git repo in cwd
     try:
         repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
+        repo_name = os.path.basename(os.path.dirname(repo.working_dir))
     except git.InvalidGitRepositoryError:
-        repo_name = click.prompt('No existing git repo found, Name your new repo:')
+        repo_name = click.prompt('No existing git repo found, Name your new repo')
 
         try:
             os.mkdir(repo_name)
             repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'), bare=True)
-            util.cd(repo_name)
+            repo_name = os.path.basename(os.path.dirname(repo.working_dir))
+            os.chdir(repo_name)
         except OSError as err:
             raise click.ClickException(str(err))
-
     if click.confirm("Configure zazu.yaml?", abort=True):
         click.echo("Configuring Zazu")
-        if os.path.isfile('{}/zazu.yaml'.format(repo.working_tree_dir)):
+        if os.path.isfile('zazu.yaml'):
             click.confirm('zazu.yaml file found, continuing will overwrite, continue?', abort=True)
-        repo_name = os.path.basename(os.path.normpath(os.getcwd()))
         trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
         stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
         tracker_choice = zazu.util.pick(trackers.keys(), 'Pick an Issue Tracker', True)
@@ -131,7 +132,7 @@ def init(ctx, nohooks):
             click.clear()
             click.echo('No issue tracker or stylers chosen, exiting')
             exit()
-        _zazu_yaml(tracker_dict, styler_choice)
+        _zazu_yaml(repo_name, tracker_dict, styler_choice)
         if not nohooks:
             click.echo('Installing Git Hooks')
             zazu.git_helper.install_git_hooks(repo.working_dir)
