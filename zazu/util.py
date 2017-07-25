@@ -168,7 +168,7 @@ def pick(choices, message, allow_multiple=False):
         choices: list of possible choices.
         message: the message to display to the user.
     """
-    if not choices:
+    if choices <= 1:
         return None
     if allow_multiple:
         choices = [None] + choices
