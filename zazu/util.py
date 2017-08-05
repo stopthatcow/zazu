@@ -168,11 +168,9 @@ def pick(choices, message, allow_multiple=False):
         choices: list of possible choices.
         message: the message to display to the user.
     """
-    if choices < 1:
-        return None
     if allow_multiple:
         choices = [None] + choices
-    if len(choices) > 1:
+    if len(choices) >= 1:
         click.clear()
         questions = [inquirer.List(' ', message=message, choices=choices)]
         response = inquirer.prompt(questions)
