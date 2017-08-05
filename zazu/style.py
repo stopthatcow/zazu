@@ -7,7 +7,8 @@ zazu.util.lazy_import(locals(), [
     'click',
     'difflib',
     'functools',
-    'os'
+    'os',
+    'threading'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -31,6 +32,9 @@ def write_file(path, _, styled_string):
         return f.write(styled_string)
 
 
+git_lock = threading.Lock()
+
+
 def stage_patch(path, input_string, styled_string):
     """Create a patch between input_string and output_string and add the patch to the git staging area.
 
@@ -42,7 +46,8 @@ def stage_patch(path, input_string, styled_string):
     # If the input was the same as the current file contents, apply the styling locally and add it.
     if read_file(path) == input_string:
         write_file(path, '', styled_string)
-        zazu.util.check_output(['git', 'add', path])
+        with git_lock:
+            zazu.util.check_output(['git', 'add', path])
     else:
         # The file is partially staged. We must apply a patch to the staging area.
         input_lines = input_string.splitlines()
@@ -53,7 +58,8 @@ def stage_patch(path, input_string, styled_string):
             # This is to address a bizarre issue with git apply whereby if the staged file doesn't end in a newline,
             # the patch will fail to apply.
             raise click.ClickException('File "{}" must have a trailing newline'.format(path))
-        zazu.util.check_popen(args=['git', 'apply', '--cached', '--verbose', '-'], stdin_str=patch_string)
+        with git_lock:
+            zazu.util.check_popen(args=['git', 'apply', '--cached', '--verbose', '-'], stdin_str=patch_string)
 
 
 def style_file(styler, path, read_fn, write_fn):
