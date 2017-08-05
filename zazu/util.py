@@ -170,13 +170,14 @@ def pick(choices, message, allow_multiple=False):
     """
     if allow_multiple:
         choices = [None] + choices
-    if len(choices) >= 1:
+    if len(choices) > 1:
         click.clear()
         questions = [inquirer.List(' ', message=message, choices=choices)]
         response = inquirer.prompt(questions)
         if response is None:
             raise KeyboardInterrupt
         return response[' ']
+    return choices[0]
 
 
 def pick_multiple(choices, message):
