@@ -101,42 +101,49 @@ def init(ctx, nohooks):
             zazu_yaml_obj['style'] = {key: {'options': ' '} for key in stylers}
             click.echo('Reminder: please specify styler options in  zazu.yaml')
         yaml.dump(zazu_yaml_obj, file('zazu.yaml', 'w'), default_flow_style=False)
-        os.chdir('../')
+
+    def _zazu_config(repo_name):
+        """Configures zazu"""
+        if click.confirm("Configure zazu.yaml?", abort=True):
+            click.echo("Configuring Zazu")
+            if os.path.isfile('zazu.yaml'):
+                click.confirm('zazu.yaml file found, continuing will overwrite, continue?', abort=True)
+            trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
+            stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
+            tracker_choice = zazu.util.pick(trackers.keys(), 'Pick an Issue Tracker', True)
+            tracker_dict = {}
+            if tracker_choice is not None:
+                owner = click.prompt('Please enter an owner for issues created from this repo')
+                tracker_dict['issueTracker'] = {'owner': owner, 'repo': repo_name, 'type': tracker_choice}
+            styler_choice = zazu.util.pick_multiple(stylers.keys(), 'Pick some stylers')
+            if not styler_choice and tracker_choice is 'None':
+                click.clear()
+                click.echo('No issue tracker or stylers chosen, exiting')
+                exit()
+            _zazu_yaml(repo_name, tracker_dict, styler_choice)
+            if not nohooks:
+                click.echo('Installing Git Hooks')
+                zazu.git_helper.install_git_hooks(repo.working_dir)
+            click.echo('Creating zazu.yaml')
+            return
+
     # check for git repo in cwd
     try:
         repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
         repo_name = os.path.basename(os.path.dirname(repo.working_dir))
     except git.InvalidGitRepositoryError:
         repo_name = click.prompt('No existing git repo found, Name your new repo')
-
         try:
             os.mkdir(repo_name)
             repo = git.Repo.init('{}/{}/.'.format(repo_name, '.git'), bare=True)
             repo_name = os.path.basename(os.path.dirname(repo.working_dir))
-            os.chdir(repo_name)
         except OSError as err:
             raise click.ClickException(str(err))
-    if click.confirm("Configure zazu.yaml?", abort=True):
-        click.echo("Configuring Zazu")
-        if os.path.isfile('zazu.yaml'):
-            click.confirm('zazu.yaml file found, continuing will overwrite, continue?', abort=True)
-        trackers = zazu.util.get_plugin_list(zazu.issue_tracker.IssueTracker)
-        stylers = zazu.util.get_plugin_list(zazu.styler.Styler)
-        tracker_choice = zazu.util.pick(trackers.keys(), 'Pick an Issue Tracker', True)
-        tracker_dict = {}
-        if tracker_choice is not None:
-            owner = click.prompt('Please enter an owner for issues created from this repo')
-            tracker_dict['issueTracker'] = {'owner': owner, 'repo': repo_name, 'type': tracker_choice}
-        styler_choice = zazu.util.pick_multiple(stylers.keys(), 'Pick some stylers')
-        if not styler_choice and tracker_choice is 'None':
-            click.clear()
-            click.echo('No issue tracker or stylers chosen, exiting')
-            exit()
-        _zazu_yaml(repo_name, tracker_dict, styler_choice)
-        if not nohooks:
-            click.echo('Installing Git Hooks')
-            zazu.git_helper.install_git_hooks(repo.working_dir)
-        click.echo('Creating zazu.yaml')
+    if not os.path.basename(os.getcwd()) == repo_name:
+        with zazu.util.cd(repo_name):
+            _zazu_config(repo_name)
+    else:
+        _zazu_config(repo_name)
 
 
 @repo.command()
