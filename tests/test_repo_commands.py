@@ -27,6 +27,12 @@ def test_init():
     assert result.exit_code != 0
 
 
+def test_init_nohooks():
+    runner = click.testing.CliRunner()
+    result = runner.invoke(zazu.cli.cli, ['repo', 'init', '--nohooks'])
+    assert result.exit_code != 0
+
+
 def test_cleanup_no_develop(git_repo):
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
