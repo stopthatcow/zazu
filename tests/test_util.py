@@ -133,3 +133,7 @@ def test_pick_interupted(monkeypatch):
     monkeypatch.setattr('inquirer.prompt', lambda x: None)
     with pytest.raises(KeyboardInterrupt):
         zazu.util.pick(choices, 'foo')
+
+
+def test_pick_multiple():
+    assert zazu.util.pick_multiple([], 'foo') is None

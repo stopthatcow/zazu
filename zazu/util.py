@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Utility functions for zazu."""
+"""utility functions for zazu"""
+import zazu.plugins
+import zazu.plugins
 
 try:
     import readline  # NOQA
@@ -42,7 +44,8 @@ lazy_import(locals(), [
     'inquirer',
     'multiprocessing',
     'os',
-    'subprocess'
+    'subprocess',
+    'straight'
 ])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -158,29 +161,36 @@ def prompt(text, default=None, expected_type=str):
     return expected_type(result)
 
 
-def pick(choices, message):
+def pick(choices, message, allow_multiple=False):
     """Interactively allow user to pick among a set of choices.
 
     Args:
         choices: list of possible choices.
         message: the message to display to the user.
-
     """
     if not choices:
         return None
+    if allow_multiple:
+        choices = [None] + choices
     if len(choices) > 1:
         click.clear()
-        questions = [
-            inquirer.List(' ',
-                          message=message,
-                          choices=choices,
-                          ),
-        ]
+        questions = [inquirer.List(' ', message=message, choices=choices)]
         response = inquirer.prompt(questions)
         if response is None:
             raise KeyboardInterrupt
         return response[' ']
     return choices[0]
+
+
+def pick_multiple(choices, message):
+    """interactivly pick multiple items from a list of possibilities."""
+    if not choices:
+        return None
+    click.clear()
+    response = inquirer.prompt([inquirer.Checkbox(' ', message=message, choices=choices)])
+    if response is None:
+        raise KeyboardInterrupt
+    return response[' ']
 
 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
@@ -236,3 +246,17 @@ def raise_uninstalled(pkg_name):
 
     """
     raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
+
+
+def get_plugin_list(plugin_subclass):
+    """Helper function to pull lists of plugins
+ 
+    Args:
+        plugin_subclass (obj): the subclass of the plugin in question
+
+    Returns:
+       known_types (dict): dictionary of the known types of the plugin in question 
+    """
+    plugins = straight.plugin.load('zazu.plugins', subclasses=plugin_subclass)
+    known_types = {p.type().lower(): p.from_config for p in plugins}
+    return known_types
