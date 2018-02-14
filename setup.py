@@ -4,19 +4,20 @@ import setuptools
 import os.path
 import sys
 
+sys.path.insert(0, os.path.abspath('.'))
+import zazu.build
+
 root_path = os.path.dirname(os.path.abspath(__file__))
 version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
 
 with open('README.rst', 'r') as f:
     description = f.read()
 
-try:
-    with open(version_file_path, 'r') as version_file:
-        version = version_file.read().strip()
-except IOError:
-    version = '0.0.0.dev0'
-    with open(version_file_path, 'w') as version_file:
-        version_file.write(version)
+# Generate PEP-440 version string.
+semver = zazu.build.make_semver('.', 0)
+version = zazu.build.pep440_from_semver(semver)
+with open(version_file_path, 'w') as version_file:
+    version_file.write(version)
 
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner>=2.0'] if needs_pytest else []

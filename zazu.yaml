@@ -5,8 +5,7 @@ components:
         builds:
           - arch: python
             script:
-              - echo "$ZAZU_BUILD_VERSION_PEP440" > zazu/version.txt &&
-                rm -rf dist &&
+              - rm -rf dist &&
                 python setup.py build_sphinx bdist_wheel
       - name: coverage
         builds:
