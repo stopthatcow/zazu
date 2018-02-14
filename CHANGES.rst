@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.10.1
+--------------
+
+- Update dependencies (old GitPython was broken).
+- Fix up documentation.
+
 Version 0.10.0
 --------------
 

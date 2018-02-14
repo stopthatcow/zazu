@@ -3,8 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Zazu
-====
+Zazu Documentation
+==================
+
+.. _PEP-440: https://www.python.org/dev/peps/pep-0440/
+
+Version: |version|
 
 .. toctree::
    :maxdepth: 2
