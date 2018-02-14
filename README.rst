@@ -61,7 +61,6 @@ From PyPi
 
 ::
 
-    sudo pip install --upgrade pip
     sudo pip install zazu
 
 If you get an error about a package called "six" use the following
