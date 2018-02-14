@@ -6,8 +6,6 @@
 Zazu Documentation
 ==================
 
-.. _PEP-440: https://www.python.org/dev/peps/pep-0440/
-
 Version: |version|
 
 .. toctree::
