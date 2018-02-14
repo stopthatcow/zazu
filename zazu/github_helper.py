@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-"""github functions for zazu"""
-import click
-import getpass
-import github
-import keyring
-import re
-import requests
-import socket
+"""Github functions for zazu."""
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'getpass',
+    'github',
+    're',
+    'requests',
+    'socket'
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-def get_gh_token():
-    """Make new GitHub token"""
+def make_gh_token():
+    """Make new GitHub token."""
     api_url = 'https://api.github.com'
     add_auth = {
         "scopes": [
@@ -29,7 +30,7 @@ def get_gh_token():
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
-                headers = {'X-GitHub-OTP': click.prompt('GitHub two-factor code (6 digits)', type=str)}
+                headers = {'X-GitHub-OTP': zazu.util.prompt('GitHub two-factor code (6 digits)', expected_type=str)}
                 r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
             else:
                 click.echo("Invalid username or password!")
@@ -46,17 +47,19 @@ def get_gh_token():
 
 
 def make_gh():
+    """Make github object with token from the keychain."""
+    import keyring  # For some reason this doesn't play nicely with threads on lazy import.
     token = keyring.get_password('https://api.github.com', 'token')
     if token is None:
         click.echo("No saved GitHub token found in keychain, lets add one...")
-        token = get_gh_token()
+        token = make_gh_token()
         keyring.set_password('https://api.github.com', 'token', token)
     gh = github.Github(token)
     return gh
 
 
 def parse_github_url(url):
-    """Parses github url into organization and repo name"""
+    """Parse github url into organization and repo name."""
     tokens = re.split('/|:', url.replace('.git', ''))
     repo = tokens.pop()
     organization = tokens.pop()

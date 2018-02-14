@@ -1,0 +1,22 @@
+dist: trusty
+sudo: required
+
+language: python
+python:
+  - "2.7"
+
+# We must install astyle because 14.04's apt version is too old (doesn't support --dry-run)
+before_install:
+  - curl -L "https://downloads.sourceforge.net/project/astyle/astyle/astyle%203.0/astyle_3.0_linux.tar.gz?r=&ts=1492151403&use_mirror=pilotfiber" | tar xvz
+  - pushd astyle/build/gcc && make -j$(getconf _NPROCESSORS_ONLN) all && sudo make install && popd
+
+# command to install dependencies
+install: pip install tox-travis
+# command to run tests
+script:
+  tox
+
+
+notifications:
+  email:
+    on_success: never
