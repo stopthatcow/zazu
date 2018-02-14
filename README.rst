@@ -54,26 +54,29 @@ Pre-requsites (linux)
 
 ::
 
-    sudo apt-get install python-dev libssl-dev libffi-dev
+    sudo apt-get install python-dev python-pip libssl-dev libffi-dev
 
 From PyPi
 ~~~~~~~~~
 
 ::
 
-    sudo pip install zazu
+    pip install zazu
 
 If you get an error about a package called "six" use the following
 command instead: ``sudo pip install --upgrade --ignore-installed zazu``
 
 From Source
 ~~~~~~~~~~~
+Zazu is fastest when installed in wheel form.
 
 ::
 
     git clone git@github.com:stopthatcow/zazu.git
     cd zazu
-    sudo pip install .
+    pip install --upgrade pip setuptools wheel
+    python setup.py bdist_wheel
+    pip install dist/*.whl
 
 Command overview
 ----------------
