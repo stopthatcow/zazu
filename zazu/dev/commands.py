@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
-import click
-import concurrent.futures
-import webbrowser
-import urllib
-import textwrap
-import git
-import os
+
+"""Dev subcommand for zazu."""
+import zazu.git_helper
 import zazu.github_helper
 import zazu.config
 import zazu.util
+zazu.util.lazy_import(locals(), [
+    'click',
+    'concurrent.futures',
+    'git',
+    'os',
+    'webbrowser',
+    'textwrap',
+    'urllib'
+
+])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -128,12 +134,15 @@ def rename_branch(repo, old_branch, new_branch):
         pass
     repo.git.push(['-u'])
 
-def list_branch_names(ctx, **kwargs):
+
+def complete_git_branch(ctx, args, incomplete):
+    """Completion fn that returns current branch list."""
     repo = git.Repo(os.getcwd())
-    return [b.name for b in repo.branches]
+    return zazu.git_helper.get_undeletable_branches(repo)
+
 
 @dev.command()
-@click.argument('name', autocompletion=list_branch_names)
+@click.argument('name', autocompletion=complete_git_branch)
 @click.pass_context
 def rename(ctx, name):
     """Renames the current branch, locally and remotely"""
