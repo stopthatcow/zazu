@@ -4,8 +4,6 @@ import setuptools
 import os.path
 import sys
 
-sys.path.insert(0, os.path.abspath('.'))
-import zazu.build
 
 root_path = os.path.dirname(os.path.abspath(__file__))
 version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
@@ -13,9 +11,16 @@ version_file_path = os.path.join(root_path, 'zazu', 'version.txt')
 with open('README.rst', 'r') as f:
     description = f.read()
 
-# Generate PEP-440 version string.
-semver = zazu.build.make_semver('.', 0)
-version = zazu.build.pep440_from_semver(semver)
+# Generate PEP-440 version string. This requires zazu dependencies i.e. zazu needs to already be installed.
+try:
+    sys.path.insert(0, os.path.abspath('.'))
+    import zazu.build
+    semver = zazu.build.make_semver('.', 0)
+    version = zazu.build.pep440_from_semver(semver)
+except ImportError:
+    # Missing dependencies at this point.
+    version = '0.0.0'
+
 with open(version_file_path, 'w') as version_file:
     version_file.write(version)
 
