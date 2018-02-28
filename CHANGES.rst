@@ -1,8 +1,14 @@
 Changelog
 =========
 
-Version 0.10.0
---------------
+Version 0.10.1 (bugfixes, not yet released)
+-------------------------------------------
+
+- Update dependencies (old GitPython was broken).
+- Fix up documentation.
+
+Version 0.10.0 (Released Jul 2, 2017)
+-------------------------------------
 
 - ReadTheDocs support.
 - Increase code coverage to 92%.
