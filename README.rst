@@ -54,18 +54,29 @@ Pre-requsites (linux)
 
 ::
 
-    sudo apt-get install python-dev libssl-dev libffi-dev
+    apt-get install python-dev python-pip libssl-dev libffi-dev
 
-All platforms
-~~~~~~~~~~~~~
+From PyPi
+~~~~~~~~~
 
 ::
 
-    sudo pip install --upgrade pip
-    sudo pip install zazu
+    pip install zazu
 
 If you get an error about a package called "six" use the following
-command instead: ``sudo pip install --upgrade --ignore-installed zazu``
+command instead: ``pip install --upgrade --ignore-installed zazu``
+
+From Source
+~~~~~~~~~~~
+Zazu is fastest when installed in wheel form.
+
+::
+
+    git clone git@github.com:stopthatcow/zazu.git
+    cd zazu
+    pip install --upgrade pip setuptools wheel
+    python setup.py bdist_wheel
+    pip install dist/*.whl
 
 Command overview
 ----------------
@@ -73,9 +84,6 @@ The following diagram shows the available subcommands of zazu.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
       "zazu" -> "build"
-      "zazu" -> "tool"
-      "tool" -> "install"
-      "tool" -> "uninstall"
       "zazu" -> "style"
       "zazu" -> "repo"
       "repo" -> "setup"
@@ -150,18 +158,6 @@ You may pass extra variables to the build using key=value pairs.
 ``zazu build --arch=arm32-linux-gnueabihf package FOO=bar`` This sets
 the environement variable *FOO* to the value *bar* during the build.
 
-Build tool installation
------------------------
-
-Zazu will automatically try to obtain required build tools needed for
-each target as specified in the zazu.yaml file. These may be
-installed/uninstalled manually as well:
-
--  ``zazu tool install <tool==version>``
--  ``zazu tool uninstall <tool==version>``
-
-These tools will be installed to the ``~/.zazu/tools/`` folder.
-
 zazu.yaml file
 --------------
 
@@ -185,9 +181,6 @@ requirements for each goal.
             buildType: minSizeRel
             builds:
               - arch: arm32-linux-gnueabihf
-                requires:
-                  zazu:
-                    - gcc-linaro-arm-linux-gnueabihf==4.9
               - arch: x86_64-linux-gcc
 
     issueTracker:
@@ -215,7 +208,7 @@ requirements for each goal.
         options:
           - "--max-line-length=150" # options passed to autopep8
 
-      zazu: 0.2.0 # optional required zazu version
+      zazu: 0.10.0 # optional required zazu version
 
 Compiler tuples
 ~~~~~~~~~~~~~~~
@@ -276,3 +269,4 @@ Handy aliases
     alias zdb="zazu dev builds"
     alias zs="zazu style"
     alias zb="zazu build"
+

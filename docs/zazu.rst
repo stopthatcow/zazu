@@ -9,7 +9,6 @@ Subpackages
     zazu.dev
     zazu.plugins
     zazu.repo
-    zazu.tool
 
 Submodules
 ----------
