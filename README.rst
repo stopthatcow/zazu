@@ -54,7 +54,7 @@ Pre-requsites (linux)
 
 ::
 
-    sudo apt-get install python-dev python-pip libssl-dev libffi-dev
+    apt-get install python-dev python-pip libssl-dev libffi-dev
 
 From PyPi
 ~~~~~~~~~
@@ -64,7 +64,7 @@ From PyPi
     pip install zazu
 
 If you get an error about a package called "six" use the following
-command instead: ``sudo pip install --upgrade --ignore-installed zazu``
+command instead: ``pip install --upgrade --ignore-installed zazu``
 
 From Source
 ~~~~~~~~~~~
