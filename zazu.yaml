@@ -5,8 +5,7 @@ components:
         builds:
           - arch: python
             script:
-              - echo "$ZAZU_BUILD_VERSION_PEP440" > zazu/version.txt &&
-                rm -rf dist &&
+              - rm -rf dist &&
                 python setup.py build_sphinx bdist_wheel
       - name: coverage
         builds:
@@ -30,10 +29,11 @@ codeReviewer:
     repo: zazu
 
 style:
-  exclude:
-    - dependency/
-    - build/
-    - dist/
+  include:
+    - setup.py
+    - docs/**/*.py
+    - tests/**/*.py
+    - zazu/**/*.py
   autopep8:
     options:
       - "--max-line-length=150"
