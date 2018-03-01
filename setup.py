@@ -64,7 +64,7 @@ setuptools.setup(
                       'gcovr>=3.4',               # BSD
                       'teamcity-messages>=1.21',  # Apache 2.0
                       'future>=0.16.0',           # MIT
-                      'futures>=3.2.0',           # PSF
+                      'futures>=3.2.0; python_version == "2.7"',
                       'inquirer>=2.2.0',          # MIT
                       'Importing>=1.10',          # PSF
                       'straight.plugin>=1.5.0'],  # MIT
