@@ -238,10 +238,10 @@ def flatten_dict(d, separator='.', prefix=''):
         dict: a dictionary with keys compressed and separated by separator.
 
     """
-    return { prefix + separator + k if prefix else k : v
-             for kk, vv in d.items()
-             for k, v in flatten_dict(vv, separator, kk).items()
-             } if isinstance(d, dict) else { prefix : d }
+    return {prefix + separator + k if prefix else k: v
+            for kk, vv in d.items()
+            for k, v in flatten_dict(vv, separator, kk).items()
+            } if isinstance(d, dict) else {prefix: d}
 
 
 def open_file(filepath):

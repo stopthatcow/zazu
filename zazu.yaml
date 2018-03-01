@@ -31,9 +31,9 @@ codeReviewer:
 style:
   include:
     - setup.py
-    - docs/**/*.py
-    - tests/**/*.py
-    - zazu/**/*.py
+    - docs/**.py
+    - tests/**.py
+    - zazu/**.py
   autopep8:
     options:
       - "--max-line-length=150"

@@ -229,6 +229,7 @@ DEFAULT_USER_CONFIG = """ \
 
 """
 
+
 @click.command()
 @click.pass_context
 @click.option('-l', '--list', is_flag=True, help='list config')
@@ -248,5 +249,3 @@ def config(ctx, list, edit, show_origin):
         flattened = zazu.util.flatten_dict(config_dict)
         for k, v in flattened.items():
             print('{}{}={}'.format(source, k, v))
-
-
