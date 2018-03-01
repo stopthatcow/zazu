@@ -61,7 +61,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists."""
     try:
         issue = issue_tracker.issue(ticket_id)
-        click.echo("Found ticket {}: {}".format(ticket_id, issue.name))
+        click.echo("Found ticket {}: {}".format(issue.id, issue.name))
     except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket for id "{}"'.format(ticket_id))
 
