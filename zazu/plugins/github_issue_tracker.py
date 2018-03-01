@@ -68,6 +68,13 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
+    def issues(self):
+        """Get all issues."""
+        try:
+            return [GitHubIssueAdaptor(i, self) for i in self._github_repo().get_issues() if i.pull_request is None]
+        except github.GithubException as e:
+            raise zazu.issue_tracker.IssueTrackerError(str(e))
+
     def default_project(self):
         """Meaningless for GitHub."""
         return ''

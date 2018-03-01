@@ -135,14 +135,36 @@ def rename_branch(repo, old_branch, new_branch):
         pass
 
 
+def pass_context(fn):
+    """Decorator that adds the normal zazu config object to the click context"""
+    def inner(*args, **kwargs):
+        if 'ctx' in kwargs:
+            kwargs['ctx'].obj = zazu.config.Config(zazu.git_helper.get_repo_root(os.getcwd()))
+        return fn(*args, **kwargs)
+    return inner
+
+
 def complete_git_branch(ctx, args, incomplete):
     """Completion fn that returns current branch list."""
     repo = git.Repo(os.getcwd())
-    return zazu.git_helper.get_undeletable_branches(repo)
+    return [b.name for b in repo.branches]
+
+
+@pass_context
+def complete_issue(ctx, args, incomplete):
+    """Completion fn that returns ids for open issues."""
+    tracker = ctx.obj.issue_tracker()
+    return [(i.id, i.name) for i in tracker.issues()]
+
+
+@pass_context
+def complete_feature(ctx, args, incomplete):
+    """Completion fn that returns feature/<id> for open issues."""
+    return [('feature/{}'.format(id), description) for id, description in complete_issue(ctx, args, incomplete)]
 
 
 @dev.command()
-@click.argument('name', autocompletion=complete_git_branch)
+@click.argument('name', autocompletion=complete_feature)
 @click.pass_context
 def rename(ctx, name):
     """Rename the current branch, locally and remotely."""
@@ -152,7 +174,7 @@ def rename(ctx, name):
 
 
 @dev.command()
-@click.argument('name', required=False)
+@click.argument('name', required=False, autocompletion=complete_issue)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
 @click.option('--head', is_flag=True, help='Branch off of the current head rather than develop')
 @click.option('rename_flag', '--rename', is_flag=True, help='Rename the current branch rather than making a new one')
@@ -217,10 +239,11 @@ def wrap_text(text, width=90, indent=''):
 
 
 @dev.command()
+@click.argument('name', required=False, autocompletion=complete_issue)
 @click.pass_context
-def status(ctx):
-    """Get status of this branch."""
-    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id
+def status(ctx, name):
+    """Get status of a issue."""
+    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if name is None else name
     # Dispatch REST calls asynchronously
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
@@ -252,7 +275,7 @@ def status(ctx):
 
 @dev.command()
 @click.pass_context
-@click.option('--base', help='The base branch to target')
+@click.option('--base', help='The base branch to target', autocompletion=complete_git_branch)
 @click.option('--head', help='The head branch (defaults to current branch and origin organization)')
 def review(ctx, base, head):
     """Create or display pull request."""
@@ -281,10 +304,10 @@ def review(ctx, base, head):
 
 @dev.command()
 @click.pass_context
-@click.argument('ticket', default='')
+@click.argument('ticket', required=False, autocompletion=complete_issue)
 def ticket(ctx, ticket):
     """Open the ticket for the current feature or the one supplied in the ticket argument."""
-    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if not ticket else ticket
+    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if ticket is None else ticket
     verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
     url = ctx.obj.issue_tracker().browse_url(issue_id)
     click.echo('Opening "{}"'.format(url))

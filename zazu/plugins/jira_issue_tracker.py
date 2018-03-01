@@ -38,7 +38,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _jira(self):
         if self._jira_handle is None:
-            username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
+            self._username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
             self._jira_handle = jira.JIRA(self._base_url,
                                           basic_auth=(username, password),
                                           options={'check_update': False}, max_retries=0)
@@ -86,6 +86,11 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             return JiraIssueAdaptor(issue, self)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
+
+    def issues(self):
+        """List all open issues"""
+        issues = self._jira().search_issues('assignee={}'.format(self._username))
+        return [JiraIssueAdaptor(i) for i in issues]
 
     def default_project(self):
         """JIRA project associated with this tracker."""
