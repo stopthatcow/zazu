@@ -225,6 +225,23 @@ def pprint_list(data):
     return '\n  - {}'.format('\n  - '.join(data))
 
 
+def flatten_dict(d, separator='.', prefix=''):
+    """Flatten nested dictionary.
+
+    Args:
+        d (dist): nested dictionary to flatten.
+        separator (str): the separator to use between keys.
+        prefix (str): key prefix
+    Returns:
+        dict: a dictionary with keys compressed and separated by separator.
+
+    """
+    return { prefix + separator + k if prefix else k : v
+             for kk, vv in d.items()
+             for k, v in flatten_dict(vv, separator, kk).items()
+             } if isinstance(d, dict) else { prefix : d }
+
+
 def raise_uninstalled(pkg_name):
     """Raise an exception for a missing package.
 

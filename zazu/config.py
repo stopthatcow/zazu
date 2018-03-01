@@ -9,6 +9,8 @@ zazu.util.lazy_import(locals(), [
     'git',
     'os',
     'straight.plugin',
+    'subprocess',
+    'sys',
     'yaml'
 ])
 
@@ -202,3 +204,47 @@ class Config(object):
         """Check that the config has a valid repo set."""
         if self.repo_root is None or self.repo is None:
             raise click.UsageError('The current working directory is not in a git repo')
+
+
+def open_editor(filepath):
+    if sys.platform.startswith('darwin'):
+        subprocess.call(('open', filepath))
+    elif os.name == 'nt':
+        os.startfile(filepath)
+    elif os.name == 'posix':
+        subprocess.call(('xdg-open', filepath))
+    else:
+        raise click.ClickException('Not sure how to open a file on this machine')
+
+
+default_user_config = """ \
+# Default user configuration for zazu
+
+# scm:
+#  name: github
+#  type: github
+#  user: github_username
+
+"""
+
+@click.command()
+@click.pass_context
+@click.option('-l', '--list', is_flag=True, help='list config')
+@click.option('-e', '--edit', is_flag=True, help='open config file in an editor')
+@click.option('--show-origin', is_flag=True, help='show origin of config')
+def config(list, edit, show_origin):
+    """Manage zazu user configuration."""
+    user_config_file = os.path.join(os.path.expanduser("~"), '.zazuconfig')
+    if not os.path.isfile(user_config_file):
+        with open(user_config_file, 'w') as f:
+            f.write(default_user_config)
+    if edit:
+        open_editor(user_config_file)
+    elif list:
+        source = '{}\t'.format(user_config_file) if show_origin else ''
+        config_dict = load_yaml_file([os.path.expanduser("~")], ['.zazuconfig'])
+        flattened = zazu.util.flatten_dict(config_dict)
+        for k, v in flattened.items():
+            print('{}{}={}'.format(source, k, v))
+
+
