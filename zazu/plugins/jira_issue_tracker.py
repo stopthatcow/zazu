@@ -51,9 +51,10 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def issue(self, id):
         """Get an issue by id."""
-        self.validate_id_format(id)
+        normalized_id = id.upper()  # Normalize id to uppercase.
+        self.validate_id_format(normalized_id)
         try:
-            ret = self._jira().issue(id)
+            ret = self._jira().issue(normalized_id)
             # Only show description up to the separator
             if ret.fields.description is None:
                 ret.fields.description = ''

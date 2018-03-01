@@ -170,7 +170,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
-    issue = make_issue_descriptor(name.upper())
+    issue = make_issue_descriptor(name)
     if not no_verify:
         verify_ticket_exists(ctx.obj.issue_tracker(), issue.id)
     if not issue.description:
