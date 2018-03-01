@@ -42,7 +42,8 @@ lazy_import(locals(), [
     'inquirer',
     'multiprocessing',
     'os',
-    'subprocess'
+    'subprocess',
+    'sys'
 ])
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -232,6 +233,7 @@ def flatten_dict(d, separator='.', prefix=''):
         d (dist): nested dictionary to flatten.
         separator (str): the separator to use between keys.
         prefix (str): key prefix
+
     Returns:
         dict: a dictionary with keys compressed and separated by separator.
 
@@ -240,6 +242,21 @@ def flatten_dict(d, separator='.', prefix=''):
              for kk, vv in d.items()
              for k, v in flatten_dict(vv, separator, kk).items()
              } if isinstance(d, dict) else { prefix : d }
+
+
+def open_file(filepath):
+    """Open a file.
+
+    Args: filepath: the file to open.
+    """
+    if sys.platform.startswith('darwin'):
+        subprocess.call(('open', filepath))
+    elif os.name == 'nt':
+        os.startfile(filepath)
+    elif os.name == 'posix':
+        subprocess.call(('xdg-open', filepath))
+    else:
+        raise click.ClickException('Not sure how to open a file on this machine')
 
 
 def raise_uninstalled(pkg_name):

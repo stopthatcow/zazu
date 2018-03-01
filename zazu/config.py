@@ -92,25 +92,38 @@ def make_col_indicator(index):
     return '{}^'.format(' ' * index)
 
 
-def load_yaml_file(search_paths, file_names):
-    """Load a project yaml file."""
+def find_file(search_paths, file_names):
     searched = path_gen(search_paths, file_names)
     for file_name in searched:
         try:
             with open(file_name, 'r') as f:
-                try:
-                    config = yaml.load(f)
-                except yaml.YAMLError as e:
-                    if hasattr(e, 'problem_mark'):
-                        error_line = get_line(file_name, e.problem_mark.line)
-                        col_indicator = make_col_indicator(e.problem_mark.column)
-                        error_string = "invalid_syntax: '{}'\n" \
-                                       "                 {}".format(error_line, col_indicator)
-                    raise click.ClickException('unable to parse config file \'{}\'\n{}'.format(file_name, error_string))
-                return config
+                return file_name
         except IOError:
             pass
-    # need a new generator
+    return None
+
+
+def load_yaml_file(filepath):
+    """Load a yaml file."""
+    with open(filepath, 'r') as f:
+        try:
+            config = yaml.load(f)
+        except yaml.YAMLError as e:
+            error_string = ''
+            if hasattr(e, 'problem_mark'):
+                error_line = get_line(filepath, e.problem_mark.line)
+                col_indicator = make_col_indicator(e.problem_mark.column)
+                error_string = "invalid_syntax: '{}'\n" \
+                               "                 {}".format(error_line, col_indicator)
+            raise click.ClickException('unable to parse file \'{}\'\n{}'.format(filepath, error_string))
+        return config
+
+
+def find_and_load_yaml_file(search_paths, file_names):
+    """Find and load a yaml file."""
+    filepath = find_file(search_paths, file_names)
+    if filepath is not None:
+        return load_yaml_file(filepath)
     searched = path_gen(search_paths, file_names)
     raise click.ClickException('no yaml file found, searched:{}'.format(zazu.util.pprint_list(searched)))
 
@@ -183,7 +196,7 @@ class Config(object):
         """Parse and return the zazu yaml configuration file."""
         if self._project_config is None:
             self.check_repo()
-            self._project_config = load_yaml_file([self.repo_root], PROJECT_FILE_NAMES)
+            self._project_config = find_and_load_yaml_file([self.repo_root], PROJECT_FILE_NAMES)
             required_zazu_version = self._project_config.get('zazu', '')
             if required_zazu_version and required_zazu_version != zazu.__version__:
                 click.secho('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). '
@@ -206,18 +219,7 @@ class Config(object):
             raise click.UsageError('The current working directory is not in a git repo')
 
 
-def open_editor(filepath):
-    if sys.platform.startswith('darwin'):
-        subprocess.call(('open', filepath))
-    elif os.name == 'nt':
-        os.startfile(filepath)
-    elif os.name == 'posix':
-        subprocess.call(('xdg-open', filepath))
-    else:
-        raise click.ClickException('Not sure how to open a file on this machine')
-
-
-default_user_config = """ \
+DEFAULT_USER_CONFIG = """ \
 # Default user configuration for zazu
 
 # scm:
@@ -232,17 +234,17 @@ default_user_config = """ \
 @click.option('-l', '--list', is_flag=True, help='list config')
 @click.option('-e', '--edit', is_flag=True, help='open config file in an editor')
 @click.option('--show-origin', is_flag=True, help='show origin of config')
-def config(list, edit, show_origin):
+def config(ctx, list, edit, show_origin):
     """Manage zazu user configuration."""
-    user_config_file = os.path.join(os.path.expanduser("~"), '.zazuconfig')
-    if not os.path.isfile(user_config_file):
-        with open(user_config_file, 'w') as f:
-            f.write(default_user_config)
+    user_config_filepath = os.path.join(os.path.expanduser("~"), '.zazuconfig')
+    if not os.path.isfile(user_config_filepath):
+        with open(user_config_filepath, 'w') as f:
+            f.write(DEFAULT_USER_CONFIG)
     if edit:
-        open_editor(user_config_file)
+        zazu.util.open_file(user_config_filepath)
     elif list:
-        source = '{}\t'.format(user_config_file) if show_origin else ''
-        config_dict = load_yaml_file([os.path.expanduser("~")], ['.zazuconfig'])
+        source = '{}\t'.format(user_config_filepath) if show_origin else ''
+        config_dict = load_yaml_file(user_config_filepath)
         flattened = zazu.util.flatten_dict(config_dict)
         for k, v in flattened.items():
             print('{}{}={}'.format(source, k, v))
