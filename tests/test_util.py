@@ -144,4 +144,4 @@ def test_flatten_dict():
 
 
 def test_unflatten_dict():
-    assert UNFLATTENED_DICT == zazu.util.flatten_dict(FLATTENED_DICT)
+    assert UNFLATTENED_DICT == zazu.util.unflatten_dict(FLATTENED_DICT)
