@@ -133,3 +133,15 @@ def test_pick_interupted(monkeypatch):
     monkeypatch.setattr('inquirer.prompt', lambda x: None)
     with pytest.raises(KeyboardInterrupt):
         zazu.util.pick(choices, 'foo')
+
+
+UNFLATTENED_DICT = {'a': {'b': {'c': 5}, 'd': 6}}
+FLATTENED_DICT = {'a.b.c': 5, 'a.d.': 6}
+
+
+def test_flatten_dict():
+    assert FLATTENED_DICT == zazu.util.flatten_dict(UNFLATTENED_DICT)
+
+
+def test_unflatten_dict():
+    assert UNFLATTENED_DICT == zazu.util.flatten_dict(FLATTENED_DICT)
