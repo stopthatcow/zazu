@@ -136,7 +136,7 @@ def test_pick_interupted(monkeypatch):
 
 
 UNFLATTENED_DICT = {'a': {'b': {'c': 5}, 'd': 6}}
-FLATTENED_DICT = {'a.b.c': 5, 'a.d.': 6}
+FLATTENED_DICT = {'a.b.c': 5, 'a.d': 6}
 
 
 def test_flatten_dict():
