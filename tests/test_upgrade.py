@@ -3,7 +3,7 @@ import click.testing
 import os
 import pip
 import pytest
-import yaml
+import ruamel.yaml as yaml
 import zazu.cli
 
 __author__ = "Nicholas Wiles"
@@ -17,7 +17,7 @@ def config_with_required_zazu(git_repo):
         'zazu': '1.2.3'
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(zazu_version_config))
+        yaml.dump(zazu_version_config, file)
     return git_repo
 
 

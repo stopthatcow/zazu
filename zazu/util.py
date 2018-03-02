@@ -244,6 +244,30 @@ def flatten_dict(d, separator='.', prefix=''):
             } if isinstance(d, dict) else {prefix: d}
 
 
+def unflatten_dict(d, separator='.'):
+    """Unflatten nested dictionary.
+
+    Args:
+        d (dist): nested dictionary to flatten.
+        separator (str): the separator to use between keys.
+        prefix (str): key prefix
+
+    Returns:
+        dict: a expanded dictionary with keys uncompressed and unseparated by separator.
+
+    """
+    ret = dict()
+    for key, value in d.iteritems():
+        parts = key.split(separator)
+        d = ret
+        for part in parts[:-1]:
+            if part not in d:
+                d[part] = dict()
+            d = d[part]
+        d[parts[-1]] = value
+    return ret
+
+
 def open_file(filepath):
     """Open a file.
 

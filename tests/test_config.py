@@ -2,7 +2,7 @@
 import click
 import os
 import pytest
-import yaml
+import ruamel.yaml as yaml
 import zazu.config
 
 __author__ = "Nicholas Wiles"
@@ -19,7 +19,7 @@ def repo_with_teamcity(git_repo):
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(teamcity_config))
+        yaml.dump(teamcity_config, file)
     return git_repo
 
 
@@ -32,7 +32,7 @@ def repo_with_invalid_ci(git_repo):
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(teamcity_config))
+        yaml.dump(teamcity_config, file)
     return git_repo
 
 
@@ -48,7 +48,7 @@ def repo_with_jira(git_repo):
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(jira_config))
+        yaml.dump(jira_config, file)
     return git_repo
 
 

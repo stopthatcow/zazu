@@ -3,7 +3,7 @@ import click.testing
 import git
 import os
 import tests.conftest
-import yaml
+import ruamel.yaml as yaml
 import zazu.cli
 import zazu.git_helper
 
@@ -70,9 +70,9 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         with open('zazu.yaml', 'a') as file:
-            file.write(yaml.dump({'issueTracker': {'type': 'github',
-                                                   'owner': 'foo',
-                                                   'repo': 'bar'}}))
+            yaml.dump({'issueTracker': {'type': 'github',
+                                        'owner': 'foo',
+                                        'repo': 'bar'}}, file)
         git_repo.git.checkout('HEAD', b='develop')
         git_repo.git.checkout('HEAD', b='feature/F00-1')
         with open('README.md', 'w') as f:

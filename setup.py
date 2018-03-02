@@ -56,7 +56,7 @@ setuptools.setup(
                       'jira>=1.0.11',             # BSD
                       'GitPython>=2.1.8',         # BSD
                       'pyteamcity>=0.1.1',        # MIT
-                      'pyyaml>=3.12',             # MIT
+                      'ruamel.yaml<=0.15',        # MIT
                       'keyring>=11.0',            # MIT
                       'keyrings.alt>=2.3',        # MIT
                       'autopep8>=1.3.4',          # MIT

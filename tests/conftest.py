@@ -3,7 +3,7 @@ import git
 import tempfile
 import os
 import pytest
-import yaml
+import ruamel.yaml as yaml
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def repo_with_style(git_repo):
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(style_config))
+        yaml.dump(style_config, file)
     return git_repo
 
 
@@ -87,7 +87,7 @@ def repo_with_build_config(git_repo):
         ]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(config))
+        yaml.dump(config, file)
     return git_repo
 
 
@@ -106,7 +106,7 @@ def repo_with_missing_style(git_repo):
         'components': [{'name': 'zazu'}]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(config))
+        yaml.dump(config, file)
     return git_repo
 
 

@@ -8,10 +8,10 @@ zazu.util.lazy_import(locals(), [
     'click',
     'git',
     'os',
+    'ruamel.yaml',
     'straight.plugin',
     'subprocess',
-    'sys',
-    'yaml'
+    'sys'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -107,8 +107,9 @@ def load_yaml_file(filepath):
     """Load a yaml file."""
     with open(filepath, 'r') as f:
         try:
+            yaml = ruamel.yaml.YAML()
             config = yaml.load(f)
-        except yaml.YAMLError as e:
+        except ruamel.yaml.YAMLError as e:
             error_string = ''
             if hasattr(e, 'problem_mark'):
                 error_line = get_line(filepath, e.problem_mark.line)
@@ -219,13 +220,12 @@ class Config(object):
             raise click.UsageError('The current working directory is not in a git repo')
 
 
-DEFAULT_USER_CONFIG = """ \
-# Default user configuration for zazu
+DEFAULT_USER_CONFIG = """# Default user configuration for zazu
 
 # scm:
-#  name: github
-#  type: github
-#  user: github_username
+#  github:
+#    type: github
+#    user: username
 
 """
 
@@ -233,19 +233,58 @@ DEFAULT_USER_CONFIG = """ \
 @click.command()
 @click.pass_context
 @click.option('-l', '--list', is_flag=True, help='list config')
+@click.option('--show-origin', is_flag=True, help='show origin of each config variable, (implies --list)')
 @click.option('-e', '--edit', is_flag=True, help='open config file in an editor')
-@click.option('--show-origin', is_flag=True, help='show origin of config')
-def config(ctx, list, edit, show_origin):
+@click.option('--add', is_flag=True, help='add a new variable')
+@click.option('--unset', is_flag=True, help='remove a variable')
+@click.argument('param_name', required=False)
+@click.argument('param_value', required=False)
+def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
     """Manage zazu user configuration."""
+    if not any([list, edit, add, show_origin, param_name, param_value]):
+        print(ctx.get_help())
+        ctx.exit(-1)
+    if (add + unset + list + edit) > 1:
+        raise click.UsageError('--add, --unset, --list, --edit are mutually exclusive')
+    if (add or unset) and param_name is None:
+        raise click.UsageError('--add and --unset requires a param name')
+    if add and param_value is None:
+        raise click.UsageError('--add requires a param value')
+    if (list or show_origin) and param_name is not None:
+        raise click.UsageError('--list and --show_origin can\'t be used with a param name')
+
     user_config_filepath = os.path.join(os.path.expanduser("~"), '.zazuconfig')
     if not os.path.isfile(user_config_filepath):
         with open(user_config_filepath, 'w') as f:
             f.write(DEFAULT_USER_CONFIG)
     if edit:
         zazu.util.open_file(user_config_filepath)
-    elif list:
+        return
+    config_dict = load_yaml_file(user_config_filepath)
+    flattened = zazu.util.flatten_dict(config_dict)
+
+    if param_name is not None:
+        if param_value is None:
+            param_value = flattened.get(param_name, None)
+            if param_value is None:
+                ctx.exit(-1)
+            if unset:
+                del flattened[param_name]
+            else:
+                print(param_value)
+                return
+        else:
+            # Write the new parameter value.
+            if not add and flattened.get(param_name, None) is None:
+                raise click.ClickException('Param {} is unknown, use --add to add it'.format(param_name))
+            flattened[param_name] = str(param_value)
+        # Update config file.
+        config_dict.update(zazu.util.unflatten_dict(flattened))
+        yaml = ruamel.yaml.YAML()
+        with open(user_config_filepath, 'w') as f:
+            yaml.dump(config_dict, f)
+
+    elif list or show_origin:
         source = '{}\t'.format(user_config_filepath) if show_origin else ''
-        config_dict = load_yaml_file(user_config_filepath)
-        flattened = zazu.util.flatten_dict(config_dict)
         for k, v in flattened.items():
             print('{}{}={}'.format(source, k, v))
