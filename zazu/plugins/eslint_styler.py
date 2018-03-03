@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""eslint plugin for zazu."""
+"""ESLint plugin for zazu."""
 import zazu.styler
 zazu.util.lazy_import(locals(), [
     'subprocess',
@@ -11,7 +11,7 @@ __author__ = "Patrick Moore"
 __copyright__ = "Copyright 2018"
 
 
-class eslintStyler(zazu.styler.Styler):
+class ESLintStyler(zazu.styler.Styler):
     """ESLint plugin for code styling."""
 
     def style_string(self, string):
