@@ -99,7 +99,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         """Components that are associated with this tracker."""
         return self._components
 
-    def validate_id_format(self, d):
+    def validate_id_format(self, id):
         """Validate that an id is the proper format for Jira.
 
         Args:
