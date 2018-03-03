@@ -10,8 +10,9 @@ before_install:
   - sudo apt-get install -y nodejs
 
 # command to install dependencies
-install: pip install tox-travis
-install: npm install -g eslint
+install:
+  - pip install tox-travis
+  - npm install -g eslint
 # command to run tests
 script:
   tox
