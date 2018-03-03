@@ -6,6 +6,7 @@ Version 0.10.1 (bugfixes, not yet released)
 
 - Update dependencies (old GitPython was broken).
 - Fix up documentation.
+- JIRA issue fetching normalizes ticket IDs to be uppercase. See #84.
 
 Version 0.10.0 (Released Jul 2, 2017)
 -------------------------------------
