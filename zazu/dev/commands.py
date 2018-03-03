@@ -61,7 +61,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists."""
     try:
         issue = issue_tracker.issue(ticket_id)
-        click.echo("Found ticket {}: {}".format(ticket_id, issue.name))
+        click.echo("Found ticket {}: {}".format(issue.id, issue.name))
     except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket for id "{}"'.format(ticket_id))
 
@@ -234,7 +234,7 @@ def status(ctx):
         click.echo('    {} matching reviews'.format(len(matches)))
         if matches:
             for p in matches:
-                click.echo('{} {}'.format(click.style('    Review: '.format(type.capitalize()), fg='green'), p.name))
+                click.echo('{} {}'.format(click.style('    Review:', fg='green'), p.name))
                 click.echo('{} {}, {}'.format(click.style('    Status:', fg='green'), p.status, 'merged' if p.merged else 'unmerged'))
                 click.echo('{} {} -> {}'.format(click.style('    Branches:', fg='green'), p.head, p.base))
                 click.echo(click.style('    Description:\n', fg='green') + wrap_text(p.description, indent='    '))
