@@ -38,6 +38,11 @@ def test_astyle():
     assert ret == 'void main() {}'
     assert styler.default_extensions()
 
+def test_eslint():
+    styler = zazu.plugins.astyle_styler.ESLintStyler(options=[''])
+    ret = styler.style_string("const request = require( 'request' );")
+    assert ret == "const request = require('request');"
+    assert styler.default_extensions()
 
 def test_autopep8():
     styler = zazu.plugins.autopep8_styler.Autopep8Styler()
