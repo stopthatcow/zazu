@@ -39,7 +39,7 @@ def test_astyle():
     assert styler.default_extensions()
 
 def test_eslint():
-    styler = zazu.plugins.astyle_styler.ESLintStyler(options=[''])
+    styler = zazu.plugins.eslint_styler.ESLintStyler(options=[''])
     ret = styler.style_string("const request = require( 'request' );")
     assert ret == "const request = require('request');"
     assert styler.default_extensions()
