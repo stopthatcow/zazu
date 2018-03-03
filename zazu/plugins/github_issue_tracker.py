@@ -80,7 +80,6 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         """Meaningless for GitHub."""
         return []
 
-    @staticmethod
     def validate_id_format(id):
         """Validate that an id is the proper format for GitHub.
 
@@ -90,9 +89,12 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         Raises:
             zazu.issue_tracker.IssueTrackerError: if the id is not valid.
 
+        Returns:
+            normalized id string
         """
         if not id.isdigit():
             raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not numeric'.format(id))
+        return id
 
     @staticmethod
     def from_config(config):

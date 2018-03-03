@@ -46,14 +46,12 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def browse_url(self, id):
         """Get the url to open to display the issue."""
-        self.validate_id_format(id)
-        normalized_id = id.upper()  # Normalize id to uppercase.
+        normalized_id = self.validate_id_format(id)
         return '{}/browse/{}'.format(self._base_url, normalized_id)
 
     def issue(self, id):
         """Get an issue by id."""
-        self.validate_id_format(id)
-        normalized_id = id.upper()  # Normalize id to uppercase.
+        normalized_id = self.validate_id_format(id)
         try:
             ret = self._jira().issue(normalized_id)
             # Only show description up to the separator
@@ -101,7 +99,6 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         """Components that are associated with this tracker."""
         return self._components
 
-    @staticmethod
     def validate_id_format(id):
         """Validate that an id is the proper format for Jira.
 
@@ -111,9 +108,18 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         Raises:
             zazu.issue_tracker.IssueTrackerError: if the id is not valid.
 
+        Returns:
+            normalized id string
         """
-        if not re.match('[A-Za-z]+-[0-9]+$', id):
-            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not of the form PROJ-#'.format(id))
+        components = id.split('-', 1)
+        number = components.pop()
+        project = components.pop().upper() if components else self._default_project
+        if project != self._default_project:
+            raise zazu.issue_tracker.IssueTrackerError('project "{}" is not "{}"'.format(project, self._default_project))
+
+        if not re.match('[0-9]+$', number):
+            raise zazu.issue_tracker.IssueTrackerError('issue number is not numeric')
+        return '{}-{}'.format(project, number)
 
     @staticmethod
     def from_config(config):
