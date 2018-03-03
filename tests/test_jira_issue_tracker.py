@@ -117,7 +117,7 @@ def test_jira_validate_id_format():
     assert uut.validate_id_format('zz-10') == 'ZZ-10'
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
         uut.validate_id_format('3-10')
-    assert str(e.value) == 'issue id "3-10" is not of the form PROJ-#'
+    assert str(e.value) == 'project "3" is not "ZZ"'
     with pytest.raises(zazu.issue_tracker.IssueTrackerError):
         uut.validate_id_format('ZZ1-10')
     with pytest.raises(zazu.issue_tracker.IssueTrackerError):
