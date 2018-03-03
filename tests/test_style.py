@@ -39,9 +39,10 @@ def test_astyle():
     assert styler.default_extensions()
 
 def test_eslint():
-    styler = zazu.plugins.eslint_styler.ESLintStyler(options=[''])
-    ret = styler.style_string("const request = require( 'request' );")
-    assert ret == "const request = require('request');"
+    rule = '"space-in-parens: [error, never]"'
+    styler = zazu.plugins.eslint_styler.ESLintStyler(options=['--rule', rule])
+    ret = styler.style_string('const request = require( "request" );')
+    assert ret == 'const request = require("request");'
     assert styler.default_extensions()
 
 def test_autopep8():
