@@ -47,12 +47,13 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
     def browse_url(self, id):
         """Get the url to open to display the issue."""
         self.validate_id_format(id)
-        return '{}/browse/{}'.format(self._base_url, id)
+        normalized_id = id.upper()  # Normalize id to uppercase.
+        return '{}/browse/{}'.format(self._base_url, normalized_id)
 
     def issue(self, id):
         """Get an issue by id."""
+        self.validate_id_format(id)
         normalized_id = id.upper()  # Normalize id to uppercase.
-        self.validate_id_format(normalized_id)
         try:
             ret = self._jira().issue(normalized_id)
             # Only show description up to the separator
@@ -111,7 +112,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             zazu.issue_tracker.IssueTrackerError: if the id is not valid.
 
         """
-        if not re.match('[A-Z]+-[0-9]+$', id):
+        if not re.match('[A-Za-z]+-[0-9]+$', id):
             raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not of the form PROJ-#'.format(id))
 
     @staticmethod
