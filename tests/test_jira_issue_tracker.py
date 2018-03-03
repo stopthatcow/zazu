@@ -113,9 +113,11 @@ def test_from_config_no_url():
 def test_jira_validate_id_format():
     uut = tracker_mock()
     uut.validate_id_format('LC-10')
+    uut.validate_id_format('Lc-10')
+    uut.validate_id_format('lc-10')
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
-        uut.validate_id_format('lc-10')
-    assert str(e.value) == 'issue id "lc-10" is not of the form PROJ-#'
+        uut.validate_id_format('3-10')
+    assert str(e.value) == 'issue id "3-10" is not of the form PROJ-#'
     with pytest.raises(zazu.issue_tracker.IssueTrackerError):
         uut.validate_id_format('LC1-10')
     with pytest.raises(zazu.issue_tracker.IssueTrackerError):
