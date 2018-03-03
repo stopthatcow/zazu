@@ -3,6 +3,7 @@
 import zazu.build_server
 import zazu.code_reviewer
 import zazu.issue_tracker
+import zazu.scm_host
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
@@ -38,8 +39,7 @@ class PluginFactory(object):
         plugins = straight.plugin.load('zazu.plugins', subclasses=self._subclass)
         known_types = {p.type().lower(): p.from_config for p in plugins}
         if 'type' in config:
-            type = config['type']
-            type = type.lower()
+            type = config['type'].lower()
             if type in known_types:
                 return known_types[type](config)
             else:
@@ -53,6 +53,25 @@ class PluginFactory(object):
 issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker)
 code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer)
 build_server_factory = PluginFactory('buildServer', zazu.build_server.BuildServer)
+
+
+def scm_host_factory(config):
+    """Make and initialize the ScmHosts from the config."""
+    hosts = {}
+    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.scm_host.ScmHost)
+    known_types = {p.type(): p for p in plugins}
+    for name, config in config.iteritems():
+        if 'type' in config:
+            type = config['type'].lower()
+            if type in known_types:
+                hosts[name] = known_types[type].from_config(config)
+            else:
+                raise click.ClickException('{} is not a known ScmHost, please choose from {}'.format(type,
+                                                                                                     sorted(known_types.keys())))
+        else:
+            raise click.ClickException('scmHost config requires a "type" field')
+
+    return hosts
 
 
 def styler_factory(config):
@@ -129,6 +148,10 @@ def find_and_load_yaml_file(search_paths, file_names):
     raise click.ClickException('no yaml file found, searched:{}'.format(zazu.util.pprint_list(searched)))
 
 
+def user_config_filepath():
+    return os.path.join(os.path.expanduser("~"), '.zazuconfig')
+
+
 class Config(object):
     """Hold all zazu configuration info."""
 
@@ -142,8 +165,10 @@ class Config(object):
                 self.repo = None
         self._issue_tracker = None
         self._code_reviewer = None
+        self._scm_hosts = None
         self._build_server = None
         self._project_config = None
+        self._user_config = None
         self._stylers = None
         self._tc = None
 
@@ -193,6 +218,18 @@ class Config(object):
             self._code_reviewer = code_reviewer_factory.from_config(self.code_reviewer_config())
         return self._code_reviewer
 
+    def scm_host_config(self):
+        try:
+            return self.user_config()['scmHost']
+        except KeyError:
+            raise click.ClickException("no scm config found")
+
+    def scm_hosts(self):
+        """Lazily create and return scm host list."""
+        if self._scm_hosts is None:
+            self._scm_hosts = scm_host_factory(self.scm_host_config())
+        return self._scm_hosts
+
     def project_config(self):
         """Parse and return the zazu yaml configuration file."""
         if self._project_config is None:
@@ -203,6 +240,12 @@ class Config(object):
                 click.secho('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). '
                             'Use "zazu upgrade" to fix this'.format(required_zazu_version, zazu.__version__), fg='red')
         return self._project_config
+
+    def user_config(self):
+        """Parse and return the global zazu yaml configuration file."""
+        if self._user_config is None:
+            self._user_config = load_yaml_file(user_config_filepath())
+        return self._user_config
 
     def stylers(self):
         """Lazily create Styler objects from the style config."""
@@ -253,17 +296,17 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
     if (list or show_origin) and param_name is not None:
         raise click.UsageError('--list and --show_origin can\'t be used with a param name')
 
-    user_config_filepath = os.path.join(os.path.expanduser("~"), '.zazuconfig')
-    if not os.path.isfile(user_config_filepath):
-        with open(user_config_filepath, 'w') as f:
+    user_config_path = user_config_filepath()
+    if not os.path.isfile(user_config_path):
+        with open(user_config_path, 'w') as f:
             f.write(DEFAULT_USER_CONFIG)
 
-    config_dict = load_yaml_file(user_config_filepath)
+    config_dict = load_yaml_file(user_config_path)
     flattened = zazu.util.flatten_dict(config_dict)
     write_config = False
 
     if list or show_origin:
-        source = '{}\t'.format(user_config_filepath) if show_origin else ''
+        source = '{}\t'.format(user_config_path) if show_origin else ''
         for k, v in flattened.items():
             print('{}{}={}'.format(source, k, v))
 
@@ -299,5 +342,5 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
         # Update config file.
         config_dict.update(zazu.util.unflatten_dict(flattened))
         yaml = ruamel.yaml.YAML()
-        with open(user_config_filepath, 'w') as f:
+        with open(user_config_path, 'w') as f:
             yaml.dump(config_dict, f)

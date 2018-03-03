@@ -195,7 +195,3 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     def id(self):
         """Get the string id of the issue."""
         return self._jira_issue.key
-
-    def __str__(self):
-        """Return the id as the string representation."""
-        return self.id

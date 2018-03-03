@@ -54,3 +54,11 @@ class Issue(object):
     def id(self):
         """Get the string id of the issue."""
         raise NotImplementedError('Must implement id')
+
+    def __str__(self):
+        """Return the id as the string representation."""
+        return self.id
+
+    def __repr__(self):
+        """Return the id as the string representation."""
+        return self.id

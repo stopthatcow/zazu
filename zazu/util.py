@@ -223,7 +223,7 @@ def pprint_list(data):
         str: a newline separated pretty printed list.
 
     """
-    return '\n  - {}'.format('\n  - '.join(data))
+    return '\n  - {}'.format('\n  - '.join(str(x) for x in data))
 
 
 def flatten_dict(d, separator='.', prefix=''):
