@@ -80,7 +80,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         """Meaningless for GitHub."""
         return []
 
-    def validate_id_format(id):
+    def validate_id_format(self, id):
         """Validate that an id is the proper format for GitHub.
 
         Args:
