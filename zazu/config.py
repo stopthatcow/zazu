@@ -257,13 +257,28 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
     if not os.path.isfile(user_config_filepath):
         with open(user_config_filepath, 'w') as f:
             f.write(DEFAULT_USER_CONFIG)
-    if edit:
-        zazu.util.open_file(user_config_filepath)
-        return
+
     config_dict = load_yaml_file(user_config_filepath)
     flattened = zazu.util.flatten_dict(config_dict)
+    write_config = False
 
-    if param_name is not None:
+    if list or show_origin:
+        source = '{}\t'.format(user_config_filepath) if show_origin else ''
+        for k, v in flattened.items():
+            print('{}{}={}'.format(source, k, v))
+
+    elif edit:
+        while True:
+            params = ['{}={}'.format(k, v) for k, v in flattened.iteritems()]
+            picked = zazu.util.pick(params + ['Done'], 'Choose a parameter to edit')
+            param_name = picked.split('=', 1)[0]
+            if param_name is 'Done':
+                break
+            param_value = zazu.util.prompt('New value for {}'.format(param_name))
+            flattened[param_name] = str(param_value)
+            write_config = True
+
+    elif param_name is not None:
         if param_value is None:
             param_value = flattened.get(param_name, None)
             if param_value is None:
@@ -278,13 +293,11 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
             if not add and flattened.get(param_name, None) is None:
                 raise click.ClickException('Param {} is unknown, use --add to add it'.format(param_name))
             flattened[param_name] = str(param_value)
+            write_config = True
+
+    if write_config:
         # Update config file.
         config_dict.update(zazu.util.unflatten_dict(flattened))
         yaml = ruamel.yaml.YAML()
         with open(user_config_filepath, 'w') as f:
             yaml.dump(config_dict, f)
-
-    elif list or show_origin:
-        source = '{}\t'.format(user_config_filepath) if show_origin else ''
-        for k, v in flattened.items():
-            print('{}{}={}'.format(source, k, v))

@@ -229,6 +229,8 @@ def pprint_list(data):
 def flatten_dict(d, separator='.', prefix=''):
     """Flatten nested dictionary.
 
+    Transforms {'a': {'b': {'c': 5}, 'd': 6}} into {'a.b.c': 5, 'a.d': 6}
+
     Args:
         d (dist): nested dictionary to flatten.
         separator (str): the separator to use between keys.
@@ -247,13 +249,15 @@ def flatten_dict(d, separator='.', prefix=''):
 def unflatten_dict(d, separator='.'):
     """Unflatten nested dictionary.
 
+    Transforms {'a.b.c': 5, 'a.d': 6} into {'a': {'b': {'c': 5}, 'd': 6}}
+
     Args:
-        d (dist): nested dictionary to flatten.
+        d (dict): nested dictionary to flatten.
         separator (str): the separator to use between keys.
         prefix (str): key prefix
 
     Returns:
-        dict: a expanded dictionary with keys uncompressed and unseparated by separator.
+        dict: a expanded dictionary with keys uncompressed.
 
     """
     ret = dict()
