@@ -33,7 +33,7 @@ def repo_with_style_errors(repo_with_style):
 @pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
                     reason="requires astyle")
 def test_astyle():
-    styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
+    styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-unpad‑paren'])
     ret = styler.style_string('void main ( ) {}')
     assert ret == 'void main() {}'
     assert styler.default_extensions()

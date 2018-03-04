@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
+import inquirer
 import os
 import pytest
 import subprocess
