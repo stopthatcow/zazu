@@ -54,7 +54,7 @@ def check_output(*args, **kwargs):
     try:
         return subprocess.check_output(*args, **kwargs)
     except OSError:
-        raise_uninstalled(args[0][0])
+        raise_uninstalled(args[0])
 
 
 def call(*args, **kwargs):
@@ -62,7 +62,7 @@ def call(*args, **kwargs):
     try:
         return subprocess.call(*args, **kwargs)
     except OSError:
-        raise_uninstalled(args[0][0])
+        raise_uninstalled(args[0])
 
 
 def check_popen(args, stdin_str='', *other_args, **kwargs):
@@ -84,7 +84,7 @@ def check_popen(args, stdin_str='', *other_args, **kwargs):
                              *other_args, **kwargs)
         stdout, stderr = p.communicate(stdin_str)
     except OSError:
-        raise_uninstalled(args[0][0])
+        raise_uninstalled(args[0])
     if p.returncode:
         raise subprocess.CalledProcessError(p.returncode, args, stderr)
     return stdout
