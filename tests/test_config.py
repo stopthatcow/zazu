@@ -103,6 +103,27 @@ def test_unknown_styler():
         uut.stylers()
 
 
+def test_unknown_scm_host():
+    uut = zazu.config.Config('')
+    uut._user_config = {'scmHost': {'gh': {'type': ''}}}
+    with pytest.raises(click.ClickException):
+        uut.scm_hosts()
+
+
+def test_no_type_scm_host():
+    uut = zazu.config.Config('')
+    uut._user_config = {'scmHost': {'gh': {}}}
+    with pytest.raises(click.ClickException):
+        uut.scm_hosts()
+
+
+def test_github_scm_host():
+    uut = zazu.config.Config('')
+    uut._user_config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
+    assert uut.scm_hosts()
+    assert uut.scm_hosts()['gh']
+
+
 def test_no_issue_tracker():
     uut = zazu.config.Config('')
     uut._project_config = {}
