@@ -117,6 +117,13 @@ def test_no_type_scm_host():
         uut.scm_hosts()
 
 
+def test_no_scm_host():
+    uut = zazu.config.Config('')
+    uut._user_config = {}
+    with pytest.raises(click.ClickException):
+        uut.scm_hosts()
+
+
 def test_github_scm_host():
     uut = zazu.config.Config('')
     uut._user_config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
