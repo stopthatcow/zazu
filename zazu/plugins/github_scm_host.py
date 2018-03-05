@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Clasess that adapt GitHub for use as a zazu VersionControlHost."""
+"""Clasess that adapt GitHub for use as a zazu ScmHost."""
 import zazu.github_helper
 import zazu.scm_host
 import zazu.util
@@ -12,11 +12,11 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-class GitHubVersionControlHost(zazu.scm_host.ScmHost):
-    """Implements zazu VersionControlHost interface for GitHub."""
+class GitHubScmHost(zazu.scm_host.ScmHost):
+    """Implements zazu SCM host interface for GitHub."""
 
     def __init__(self, user):
-        """Create a GitHubVersionControlHost.
+        """Create a GitHubScmHost.
 
         Args:
             user (str): the github username.
@@ -43,13 +43,13 @@ class GitHubVersionControlHost(zazu.scm_host.ScmHost):
 
     @staticmethod
     def from_config(config):
-        """Make a GitHubVersionControlHost from a config."""
+        """Make a GitHubScmHost from a config."""
         # Get URL from current git repo:
-        return GitHubVersionControlHost(user=config['user'])
+        return GitHubScmHost(user=config['user'])
 
     @staticmethod
     def type():
-        """Return the name of this VersionControlHost type."""
+        """Return the name of this ScmHost type."""
         return 'github'
 
 
@@ -81,7 +81,7 @@ class GitHubScmRepoAdaptor(zazu.scm_host.ScmHostRepo):
 
     @property
     def browse_url(self):
-        """Get the url to open to display the issue."""
+        """Get the url to open to display the repo."""
         return self._github_repo.html_url
 
     @property

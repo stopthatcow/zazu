@@ -294,7 +294,7 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
     if add and param_value is None:
         raise click.UsageError('--add requires a param value')
     if (list or show_origin) and param_name is not None:
-        raise click.UsageError('--list and --show_origin can\'t be used with a param name')
+        raise click.UsageError('--list and --show-origin can\'t be used with a param name')
 
     user_config_path = user_config_filepath()
     if not os.path.isfile(user_config_path):
@@ -307,8 +307,8 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
 
     if list or show_origin:
         source = '{}\t'.format(user_config_path) if show_origin else ''
-        for k, v in flattened.items():
-            print('{}{}={}'.format(source, k, v))
+        for k in sorted(flattened):
+            click.echo('{}{}={}'.format(source, k, flattened[k]))
 
     elif edit:
         while True:
@@ -328,8 +328,9 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
                 ctx.exit(-1)
             if unset:
                 del flattened[param_name]
+                write_config = True
             else:
-                print(param_value)
+                click.echo(param_value)
                 return
         else:
             # Write the new parameter value.

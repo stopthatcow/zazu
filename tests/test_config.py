@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import click
+import click.testing
 import os
 import pytest
 import ruamel.yaml as yaml
+import zazu.cli
 import zazu.config
+import zazu.util
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
@@ -21,6 +24,15 @@ def repo_with_teamcity(git_repo):
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
         yaml.dump(teamcity_config, file)
     return git_repo
+
+
+@pytest.fixture()
+def temp_user_config(tmp_dir):
+    config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
+    path = os.path.join(tmp_dir, '.zazuconfig')
+    with open(path, 'w') as file:
+        yaml.dump(config, file)
+    return path
 
 
 @pytest.fixture()
@@ -131,6 +143,14 @@ def test_github_scm_host():
     assert uut.scm_hosts()['gh']
 
 
+def test_github_user_config(mocker, temp_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
+    uut = zazu.config.Config('')
+    assert uut.scm_hosts()
+    print uut.scm_hosts()
+    assert uut.scm_hosts()['gh']
+
+
 def test_no_issue_tracker():
     uut = zazu.config.Config('')
     uut._project_config = {}
@@ -149,3 +169,78 @@ def test_valid_code_reviewer():
     uut = zazu.config.Config('')
     uut._project_config = {'codeReviewer': {'type': 'github'}}
     assert uut.code_reviewer()
+
+
+def test_user_config_filepath():
+    assert zazu.config.user_config_filepath() == os.path.join(os.path.expanduser("~"), '.zazuconfig')
+
+
+def test_config_bad_options(mocker, temp_user_config):
+    runner = click.testing.CliRunner()
+    result = runner.invoke(zazu.cli.cli, ['config'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--add'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--add', 'foo'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--add', '--unset'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--unset'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--list', 'foo'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--show-origin', 'foo'])
+    assert result.exit_code != 0
+
+
+def test_config_list(mocker, temp_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
+    runner = click.testing.CliRunner()
+    result = runner.invoke(zazu.cli.cli, ['config', '--list'])
+    assert result.output == '''scmHost.gh.type=github\nscmHost.gh.user=user\n'''
+    assert result.exit_code == 0
+    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    assert result.output == 'user\n'
+    assert result.exit_code == 0
+
+
+def test_config_add_unset(mocker, temp_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
+    runner = click.testing.CliRunner()
+    result = runner.invoke(zazu.cli.cli, ['config', '--unset', 'scmHost.gh.user'])
+    assert result.exit_code == 0
+    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user', 'user'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--add', 'scmHost.gh.user', 'user'])
+    assert result.exit_code == 0
+    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    assert result.exit_code == 0
+
+
+def test_config_create(mocker, tmp_dir):
+    path = os.path.join(tmp_dir, '.zazuconfig')
+    mocker.patch('zazu.config.user_config_filepath', return_value=path)
+    assert not os.path.isfile(path)
+    runner = click.testing.CliRunner()
+    result = runner.invoke(zazu.cli.cli, ['config', '--list'])
+    assert result.exit_code == 0
+    assert os.path.isfile(path)
+
+
+def test_config_edit(mocker, temp_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
+    mocker.patch('zazu.util.prompt', return_value='foo')
+    mocker.patch('zazu.util.pick', side_effect=['scmHost.gh.user', 'Done'])
+    runner = click.testing.CliRunner()
+    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    assert result.output == 'user\n'
+    assert result.exit_code == 0
+    result = runner.invoke(zazu.cli.cli, ['config', '--edit'])
+    assert result.exit_code == 0
+    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    assert result.output == 'foo\n'
+    assert result.exit_code == 0
