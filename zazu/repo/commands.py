@@ -54,13 +54,6 @@ def ci(ctx):
 
 
 @repo.command()
-@click.pass_context
-def list(ctx):
-    for name, host in ctx.obj.scm_hosts().iteritems():
-        print('Host {}: {}'.format(name, zazu.util.pprint_list(host.repos())))
-
-
-@repo.command()
 @click.argument('repository_url')
 @click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.option('--nosubmodules', is_flag=True, help='does not update submodules')
