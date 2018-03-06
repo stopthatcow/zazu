@@ -29,7 +29,7 @@ def repo_with_teamcity(git_repo):
 @pytest.fixture()
 def temp_user_config(tmp_dir):
     config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
-    path = os.path.join(tmp_dir, '.zazuconfig')
+    path = os.path.join(tmp_dir, '.zazuconfig.yaml')
     with open(path, 'w') as file:
         yaml.dump(config, file)
     return path
@@ -199,7 +199,7 @@ def test_valid_code_reviewer():
 
 
 def test_user_config_filepath():
-    assert zazu.config.user_config_filepath() == os.path.join(os.path.expanduser("~"), '.zazuconfig')
+    assert zazu.config.user_config_filepath() == os.path.join(os.path.expanduser("~"), '.zazuconfig.yaml')
 
 
 def test_config_bad_options(mocker, temp_user_config):
@@ -249,7 +249,7 @@ def test_config_add_unset(mocker, temp_user_config):
 
 
 def test_config_create(mocker, tmp_dir):
-    path = os.path.join(tmp_dir, '.zazuconfig')
+    path = os.path.join(tmp_dir, '.zazuconfig.yaml')
     mocker.patch('zazu.config.user_config_filepath', return_value=path)
     assert not os.path.isfile(path)
     runner = click.testing.CliRunner()

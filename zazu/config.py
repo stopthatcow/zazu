@@ -163,7 +163,7 @@ def find_and_load_yaml_file(search_paths, file_names):
 
 
 def user_config_filepath():
-    return os.path.join(os.path.expanduser("~"), '.zazuconfig')
+    return os.path.join(os.path.expanduser("~"), '.zazuconfig.yaml')
 
 
 class Config(object):
@@ -298,13 +298,13 @@ class Config(object):
             raise click.UsageError('The current working directory is not in a git repo')
 
 
-DEFAULT_USER_CONFIG = """# Default user configuration for zazu
+DEFAULT_USER_CONFIG = """  # User configuration file for zazu.
 
-# scm:
-#  github:
-#    type: github
-#    user: username
-
+# SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
+# scmHost:
+#    default:                # This is the default SCM host.
+#        type: github        # Type of this SCM host.
+#        user: user          # GitHub username
 """
 
 

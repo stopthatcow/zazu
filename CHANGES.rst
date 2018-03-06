@@ -1,12 +1,14 @@
 Changelog
 =========
 
-Version 0.10.1 (bugfixes, not yet released)
+Version 0.11 (Not yet released)
 -------------------------------------------
 
 - Update dependencies (old GitPython was broken).
 - Fix up documentation.
 - JIRA issue fetching normalizes ticket IDs to be uppercase. See #84.
+- Support ``zazu config`` subcommand to edit ~/.zazuconfig.yaml file. See #100.
+- Enable SCM hosting shortcuts for ``zazu repo clone``.
 
 Version 0.10.0 (Released Jul 2, 2017)
 -------------------------------------
