@@ -237,7 +237,7 @@ class Config(object):
         try:
             return self.user_config()['scmHost']
         except KeyError:
-            raise click.ClickException("no scm config found")
+            raise click.ClickException("no scmHost config found in ~/zazuconfig.yaml")
 
     def scm_hosts(self):
         """Lazily create and return scm host list."""
@@ -279,7 +279,11 @@ class Config(object):
     def user_config(self):
         """Parse and return the global zazu yaml configuration file."""
         if self._user_config is None:
-            self._user_config = load_yaml_file(user_config_filepath())
+            user_config_path = user_config_filepath()
+            maybe_write_default_user_config(user_config_path)
+            self._user_config = load_yaml_file(user_config_path)
+            if self._user_config is None:
+                self._user_config = {}
         return self._user_config
 
     def stylers(self):
@@ -298,14 +302,18 @@ class Config(object):
             raise click.UsageError('The current working directory is not in a git repo')
 
 
-DEFAULT_USER_CONFIG = """  # User configuration file for zazu.
-
+def maybe_write_default_user_config(path):
+    DEFAULT_USER_CONFIG = """# User configuration file for zazu.
+    
 # SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
 # scmHost:
 #    default:                # This is the default SCM host.
 #        type: github        # Type of this SCM host.
 #        user: user          # GitHub username
 """
+    if not os.path.isfile(path):
+        with open(path, 'w') as f:
+            f.write(DEFAULT_USER_CONFIG)
 
 
 @click.command()
@@ -332,9 +340,7 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
         raise click.UsageError('--list and --show-origin can\'t be used with a param name')
 
     user_config_path = user_config_filepath()
-    if not os.path.isfile(user_config_path):
-        with open(user_config_path, 'w') as f:
-            f.write(DEFAULT_USER_CONFIG)
+    maybe_write_default_user_config(user_config_path)
 
     config_dict = load_yaml_file(user_config_path)
     flattened = zazu.util.flatten_dict(config_dict)

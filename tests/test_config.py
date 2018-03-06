@@ -36,6 +36,14 @@ def temp_user_config(tmp_dir):
 
 
 @pytest.fixture()
+def empty_user_config(tmp_dir):
+    path = os.path.join(tmp_dir, '.zazuconfig.yaml')
+    with open(path, 'w'):
+        pass
+    return path
+
+
+@pytest.fixture()
 def repo_with_invalid_ci(git_repo):
     root = git_repo.working_tree_dir
     teamcity_config = {
@@ -176,6 +184,13 @@ def test_github_user_config(mocker, temp_user_config):
     assert uut.scm_hosts()
     print uut.scm_hosts()
     assert uut.scm_hosts()['gh']
+
+
+def test_empty_user_config(mocker, empty_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=empty_user_config)
+    uut = zazu.config.Config('')
+    with pytest.raises(click.ClickException) as e:
+        uut.scm_hosts()
 
 
 def test_no_issue_tracker():

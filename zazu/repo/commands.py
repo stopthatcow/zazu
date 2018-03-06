@@ -70,11 +70,16 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
     """
     try:
         scm_repo = ctx.obj.scm_host_repo(repository)
-        repository_url = scm_repo.ssh_url if scm_repo is not None else repository
+    except click.ClickException:
+        scm_repo = None
 
-        if destination is None:
-            destination = repository_url.rsplit('/', 1)[-1].replace('.git', '')
-        click.echo('Cloning {} into {}'.format(repository_url, destination))
+    repository_url = scm_repo.ssh_url if scm_repo is not None else repository
+
+    if destination is None:
+        destination = repository_url.rsplit('/', 1)[-1].replace('.git', '')
+    click.echo('Cloning {} into {}'.format(repository_url, destination))
+
+    try:
         repo = git.Repo.clone_from(repository_url, destination)
         click.echo('Repository successfully cloned')
 
