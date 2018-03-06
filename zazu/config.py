@@ -280,8 +280,10 @@ class Config(object):
         """Parse and return the global zazu yaml configuration file."""
         if self._user_config is None:
             user_config_path = user_config_filepath()
-            maybe_write_default_user_config(user_config_path)
-            self._user_config = load_yaml_file(user_config_path)
+            try:
+                self._user_config = load_yaml_file(user_config_path)
+            except IOError:
+                self._user_config = None
             if self._user_config is None:
                 self._user_config = {}
         return self._user_config
