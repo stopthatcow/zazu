@@ -24,47 +24,6 @@ mock_repo_dict = {
 mock_repo = conftest.dict_to_obj(mock_repo_dict)
 
 
-# @pytest.fixture
-# def mocked_github_issue_tracker(mocker, tracker_mock):
-#     github_mock = mocker.Mock('github.Github', autospec=True)
-#     mocker.patch('zazu.github_helper.make_gh', return_value=github_mock)
-#     repo_obj_mock = mocker.Mock('github.Repository', autospec=True)
-#     mocker.patch('zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo', return_value=[mock_repo])
-#     tracker_mock._github = repo_obj_mock
-#     return tracker_mock
-#
-
-#
-#
-# def test_github_issue_tracker_issue(mocker, mocked_github_issue_tracker):
-#     mocked_github_issue_tracker._github.get_issue = mocker.Mock(return_value=mock_issue)
-#     mocked_github_issue_tracker.connect()
-#     mocked_github_issue_tracker.issue('1')
-#     assert mocked_github_issue_tracker._github.get_issue.call_count == 1
-#     mocked_github_issue_tracker._github.get_issue.assert_called_once_with(1)
-#
-#
-# def test_github_issue_tracker_issue_error(mocker, mocked_github_issue_tracker):
-#     mocked_github_issue_tracker._github.get_issue = mocker.Mock(side_effect=github.GithubException(404, {}))
-#     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
-#         mocked_github_issue_tracker.issue('1')
-#     assert '404' in str(e.value)
-#
-#
-# def test_github_issue_tracker_create_issue_error(mocker, mocked_github_issue_tracker):
-#     mocked_github_issue_tracker._github.create_issue = mocker.Mock(side_effect=github.GithubException(404, {}))
-#     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
-#         mocked_github_issue_tracker.create_issue('', '', '', '', '')
-#     assert '404' in str(e.value)
-#
-#
-# def test_github_issue_tracker_create_issue(mocker, mocked_github_issue_tracker):
-#     mocked_github_issue_tracker._github.create_issue = mocker.Mock(return_value=mock_issue)
-#     mocked_github_issue_tracker.create_issue('project', 'issue_type', 'summary', 'description', 'component')
-#     zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo.create_issue.call_count == 1
-#
-
-
 def test_github_scm_host_get_repos(mocker, scm_host_mock):
     github_mock = mocker.Mock('github.Github', autospec=True)
     user_mock = mocker.Mock('github.NamedUser.NamedUser', autospec=True)

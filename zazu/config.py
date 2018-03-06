@@ -58,20 +58,34 @@ build_server_factory = PluginFactory('buildServer', zazu.build_server.BuildServe
 def scm_host_factory(config):
     """Make and initialize the ScmHosts from the config."""
     hosts = {}
+    default_host = ''
     plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.scm_host.ScmHost)
     known_types = {p.type(): p for p in plugins}
-    for name, config in config.iteritems():
-        if 'type' in config:
-            type = config['type'].lower()
+    for name, value in config.iteritems():
+        # The "default" host is unique.
+        if name == 'default':
+            if isinstance(value, dict):
+                default_host = 'default'
+            else:
+                default_host = value
+                continue
+        if 'type' in value:
+            type = value['type'].lower()
             if type in known_types:
-                hosts[name] = known_types[type].from_config(config)
+                hosts[name] = known_types[type].from_config(value)
             else:
                 raise click.ClickException('{} is not a known ScmHost, please choose from {}'.format(type,
                                                                                                      sorted(known_types.keys())))
         else:
             raise click.ClickException('scmHost config requires a "type" field')
 
-    return hosts
+    if default_host:
+        if default_host not in hosts:
+            raise click.ClickException('default scmHost \'{}\' not found'.format(default_host))
+    elif len(hosts) == 1:  # Only 1 known host makes it the default.
+        default_host = hosts.keys()[0]
+
+    return hosts, default_host
 
 
 def styler_factory(config):
@@ -166,6 +180,7 @@ class Config(object):
         self._issue_tracker = None
         self._code_reviewer = None
         self._scm_hosts = None
+        self._default_scm_host = None
         self._build_server = None
         self._project_config = None
         self._user_config = None
@@ -213,7 +228,7 @@ class Config(object):
             raise click.ClickException("no codeReviewer config found")
 
     def code_reviewer(self):
-        """Lazily create and return code reviewr object."""
+        """Lazily create and return code reviewer object."""
         if self._code_reviewer is None:
             self._code_reviewer = code_reviewer_factory.from_config(self.code_reviewer_config())
         return self._code_reviewer
@@ -227,8 +242,28 @@ class Config(object):
     def scm_hosts(self):
         """Lazily create and return scm host list."""
         if self._scm_hosts is None:
-            self._scm_hosts = scm_host_factory(self.scm_host_config())
+            self._scm_hosts, self._default_scm_host = scm_host_factory(self.scm_host_config())
         return self._scm_hosts
+
+    def default_scm_host(self):
+        self.scm_hosts()
+        return self._default_scm_host
+
+    def scm_host_repo(self, repository):
+        """Find a scm_host repo with a given name."""
+        if repository.startswith('.') or repository.startswith('/') or ':' in repository:
+            return None
+
+        default_prefixed_id = '/'.join([self.default_scm_host(), repository])
+
+        def match_host(host, id):
+            full_id = '/'.join([host, id])
+            return full_id == repository or full_id == default_prefixed_id
+
+        for host_name, host in self.scm_hosts().iteritems():
+            scm_repo = next((r for r in host.repos() if match_host(host_name, r.id)), None)
+            if scm_repo is not None:
+                return scm_repo
 
     def project_config(self):
         """Parse and return the zazu yaml configuration file."""
@@ -277,7 +312,7 @@ DEFAULT_USER_CONFIG = """# Default user configuration for zazu
 @click.pass_context
 @click.option('-l', '--list', is_flag=True, help='list config')
 @click.option('--show-origin', is_flag=True, help='show origin of each config variable, (implies --list)')
-@click.option('-e', '--edit', is_flag=True, help='open config file in an editor')
+@click.option('-e', '--edit', is_flag=True, help='edit config file interactively')
 @click.option('--add', is_flag=True, help='add a new variable')
 @click.option('--unset', is_flag=True, help='remove a variable')
 @click.argument('param_name', required=False)

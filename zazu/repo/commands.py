@@ -54,19 +54,27 @@ def ci(ctx):
 
 
 @repo.command()
-@click.argument('repository_url')
+@click.argument('repository')
+@click.argument('destination', required=False)
 @click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.option('--nosubmodules', is_flag=True, help='does not update submodules')
-def clone(repository_url, nohooks, nosubmodules):
+@click.pass_context
+def clone(ctx, repository, destination, nohooks, nosubmodules):
     """Clone and initialize a repo.
 
     Args:
-        repository_url (str): url of the repository to clone.
+        repository (str): name or url of the repository to clone.
+        destination (str): path to clone the repo to.
         nohooks (bool): if True, git hooks are not installed.
         nosubmodules (bool): if True submodules are not initialized.
     """
     try:
-        destination = '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', ''))
+        scm_repo = ctx.obj.scm_host_repo(repository)
+        repository_url = scm_repo.ssh_url if scm_repo is not None else repository
+
+        if destination is None:
+            destination = repository_url.rsplit('/', 1)[-1].replace('.git', '')
+        click.echo('Cloning {} into {}'.format(repository_url, destination))
         repo = git.Repo.clone_from(repository_url, destination)
         click.echo('Repository successfully cloned')
 

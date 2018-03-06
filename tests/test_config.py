@@ -141,6 +141,33 @@ def test_github_scm_host():
     uut._user_config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
     assert uut.scm_hosts()
     assert uut.scm_hosts()['gh']
+    assert uut.default_scm_host() == 'gh'
+
+
+def test_default_string_scm_host():
+    uut = zazu.config.Config('')
+    uut._user_config = {'scmHost': {'default': 'gh2',
+                                    'gh': {'type': 'github', 'user': 'user'},
+                                    'gh2': {'type': 'github', 'user': 'user'}}}
+    assert len(uut.scm_hosts()) == 2
+    assert uut.default_scm_host() == 'gh2'
+
+
+def test_default_dict_scm_host():
+    uut = zazu.config.Config('')
+    uut._user_config = {'scmHost': {'default': {'type': 'github', 'user': 'user'},
+                                    'gh': {'type': 'github', 'user': 'user'}}}
+    assert len(uut.scm_hosts()) == 2
+    assert uut.default_scm_host() == 'default'
+
+
+def test_bad_default_scm_host():
+    uut = zazu.config.Config('')
+    uut._user_config = {'scmHost': {'default': 'foo',
+                                    'gh': {'type': 'github', 'user': 'user'}}}
+    with pytest.raises(click.ClickException) as e:
+        assert uut.default_scm_host()
+        assert str(e.value) == 'default scmHost \'foo\' not found'
 
 
 def test_github_user_config(mocker, temp_user_config):

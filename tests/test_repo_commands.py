@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import click.testing
+import conftest
 import git
 import os
-import tests.conftest
 import ruamel.yaml as yaml
 import zazu.cli
 import zazu.git_helper
@@ -122,7 +122,26 @@ def test_clone(mocker, git_repo):
         assert not result.exception
     git.Repo.clone_from.assert_called_once()
     assert git.Repo.clone_from.call_args[0][0] == 'http://foo/bar/baz.git'
-    assert os.path.join(dir, 'baz') in git.Repo.clone_from.call_args[0][1]
+    assert 'baz' == git.Repo.clone_from.call_args[0][1]
+
+
+def test_clone_hosted(mocker, git_repo):
+    mocker.patch('git.Repo.clone_from', return_value=git_repo)
+    mocker.patch('zazu.config.Config.default_scm_host', return_value='foo')
+    moch_scm_host = mocker.patch('zazu.scm_host.ScmHost', autospec=True)
+    mock_host_repo = conftest.dict_to_obj({'id': 'bar',
+                                           'ssh_url': 'http://github.com/foo/bar.git'})
+    moch_scm_host.repos = mocker.Mock(return_value=[mock_host_repo])
+
+    mocker.patch('zazu.config.Config.scm_hosts', return_value={'foo': moch_scm_host})
+    dir = git_repo.working_tree_dir
+    with zazu.util.cd(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'foo/bar'])
+        assert result.exit_code == 0
+    git.Repo.clone_from.assert_called_once()
+    assert git.Repo.clone_from.call_args[0][0] == 'http://github.com/foo/bar.git'
+    assert 'bar' == git.Repo.clone_from.call_args[0][1]
 
 
 def test_clone_error(mocker, git_repo):
