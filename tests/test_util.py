@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import click
+import functools
 import inquirer
 import os
 import pytest
 import subprocess
 import tempfile
+import time
 import zazu.util
 try:
     import __builtin__ as builtins  # NOQA
@@ -146,3 +148,40 @@ def test_flatten_dict():
 
 def test_unflatten_dict():
     assert UNFLATTENED_DICT == zazu.util.unflatten_dict(FLATTENED_DICT)
+
+
+def test_readline_fallback(mocker):
+    old_import = __import__
+
+    def new_import(*args, **kwargs):
+        if args[0] == 'readline':
+            raise ImportError
+        elif args[0] == 'pyreadline':
+            pass
+        else:
+            return old_import(*args, **kwargs)
+
+    mocker.patch('__builtin__.__import__', side_effect=new_import)
+    reload(zazu.util)
+    imports = [arg[0][0] for arg in builtins.__import__.call_args_list]
+    assert 'readline' in imports
+    assert 'pyreadline' in imports
+
+
+def test_cd(tmp_dir):
+    old_dir = os.getcwd()
+    with zazu.util.cd(tmp_dir):
+        assert os.path.realpath(os.getcwd()) == os.path.realpath(tmp_dir)
+    assert os.getcwd() == old_dir
+
+
+def test_dispatch():
+    def wait(t):
+        time.sleep(t)
+        return t
+    times = [0.1, 0.2, 0.3]
+    work = [functools.partial(wait, t) for t in times]
+    start_time = time.time()
+    assert sorted(zazu.util.dispatch(work)) == sorted(times)
+    time_taken = time.time() - start_time
+    assert time_taken < sum(times)
