@@ -31,9 +31,11 @@ codeReviewer:
 style:
   include:
     - setup.py
-    - docs/**/*.py
-    - tests/**/*.py
-    - zazu/**/*.py
-  autopep8:
+    - docs/**.py
+    - tests/**.py
+    - zazu/**.py
+  pyformat:
     options:
-      - "--max-line-length=150"
+  # autopep8:
+  #  options:
+  #    - "--max-line-length=150"
