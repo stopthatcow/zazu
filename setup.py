@@ -55,7 +55,7 @@ setuptools.setup(
                       'PyGithub>=1.36.0',              # LGPL 3
                       'jira>=1.0.11',                  # BSD
                       'GitPython>=2.1.8',              # BSD
-                      'dict-recursive-update>=1.1.0',  # MIT
+                      'dict-recursive-update>=1.0.1',  # MIT
                       'pyteamcity>=0.1.1',             # MIT
                       'ruamel.yaml<=0.15',             # MIT
                       'keyring>=11.0',                 # MIT
