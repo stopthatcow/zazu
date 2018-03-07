@@ -78,6 +78,17 @@ Zazu is fastest when installed in wheel form.
     python setup.py bdist_wheel
     pip install dist/*.whl
 
+Configuration
+-------------
+Setup your user config file (located in ~/zazuconfig.yaml).
+
+GitHub setup
+~~~~~~~~~~~~
+::
+
+    zazu config --add scmHost.default.type github
+    zazu config --add scmHost.default.user <github username>
+
 Command overview
 ----------------
 The following diagram shows the available subcommands of zazu.
@@ -98,9 +109,9 @@ The following diagram shows the available subcommands of zazu.
       "dev" -> "start"
       "dev" -> "status"
       dev_builds [label=builds, style=dashed]
+      "dev" -> "ticket"
       "dev" -> "dev_builds"
-      "dev" -> "review"
-      "dev" -> "ticket"}
+      "dev" -> "review"}
 
 Note: dashed lines are not yet implemented
 
@@ -160,7 +171,7 @@ You may pass extra variables to the build using key=value pairs.
 the environement variable *FOO* to the value *bar* during the build.
 
 ~/.zazuconfig.yaml file (user level configuration)
----------------------------------------------
+--------------------------------------------------
 
 The .zazuconfig.yaml is a file that lives in your home directory and sets high
 level configuration options for zazu. Most people will likely have a single
@@ -175,7 +186,7 @@ default scmHost entry, though zazu supports multiple named entries.
     default:              # This is the default SCM host.
       type: github        # Type of this SCM host.
       user: stopthatcow   # GitHub username
-    pat:                  # Another SCM host.
+    pat:                  # Optionally: another SCM host named "pat".
       type: github        # Type of this SCM host.
       user: moorepatrick  # GitHub username
 

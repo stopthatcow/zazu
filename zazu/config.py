@@ -251,9 +251,6 @@ class Config(object):
 
     def scm_host_repo(self, repository):
         """Find a scm_host repo with a given name."""
-        if repository.startswith('.') or repository.startswith('/') or ':' in repository:
-            return None
-
         default_prefixed_id = '/'.join([self.default_scm_host(), repository])
 
         def match_host(host, id):
@@ -261,7 +258,11 @@ class Config(object):
             return full_id == repository or full_id == default_prefixed_id
 
         for host_name, host in self.scm_hosts().iteritems():
-            scm_repo = next((r for r in host.repos() if match_host(host_name, r.id)), None)
+            try:
+                scm_repo = next((r for r in host.repos() if match_host(host_name, r.id)), None)
+            except IOError:
+                click.echo('Warning: unable to connect to {} SCH host'.format(host_name))
+                scm_repo = None
             if scm_repo is not None:
                 return scm_repo
 
@@ -368,7 +369,7 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
         if param_value is None:
             param_value = flattened.get(param_name, None)
             if param_value is None:
-                ctx.exit(-1)
+                raise click.ClickException('Param {} is unknown'.format(param_name))
             if unset:
                 del flattened[param_name]
                 write_config = True

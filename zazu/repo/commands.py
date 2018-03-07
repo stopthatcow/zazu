@@ -8,7 +8,8 @@ zazu.util.lazy_import(locals(), [
     'click',
     'functools',
     'git',
-    'os'
+    'os',
+    'socket'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -68,12 +69,15 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
         nohooks (bool): if True, git hooks are not installed.
         nosubmodules (bool): if True submodules are not initialized.
     """
-    try:
+    if os.path.isdir(repository) or ':' in repository:
+        repository_url = repository
+    elif ctx.obj.scm_hosts():
         scm_repo = ctx.obj.scm_host_repo(repository)
-    except click.ClickException:
-        scm_repo = None
-
-    repository_url = scm_repo.ssh_url if scm_repo is not None else repository
+        if scm_repo is None:
+            raise click.ClickException('Unable to find hosted SCM repo {}'.format(repository))
+        repository_url = scm_repo.ssh_url
+    else:
+        raise click.ClickException('Unable to clone {}'.format(repository))
 
     if destination is None:
         destination = repository_url.rsplit('/', 1)[-1].replace('.git', '')
