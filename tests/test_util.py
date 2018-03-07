@@ -150,6 +150,27 @@ def test_unflatten_dict():
     assert UNFLATTENED_DICT == zazu.util.unflatten_dict(FLATTENED_DICT)
 
 
+def test_dict_get_nested():
+    d = {'a': {'b': 's', 'c': {'d': 'e'}}}
+    assert zazu.util.dict_get_nested(d, ['a', 'b'], None) == 's'
+    assert zazu.util.dict_get_nested(d, ['a', 'c'], None) == {'d': 'e'}
+    assert zazu.util.dict_get_nested(d, ['a', 'c', 'e'], None) is None
+
+
+def test_dict_del_nested():
+    d = {'a': {'b': 's', 'c': {'d': 'e'}}}
+    zazu.util.dict_del_nested(d, ['a', 'b'])
+    assert d == {'a': {'c': {'d': 'e'}}}
+    zazu.util.dict_del_nested(d, ['a'])
+    assert d == {}
+
+
+def test_dict_update_nested():
+    d = {'a': {'b': 's', 'c': {'d': 'e'}}}
+    zazu.util.dict_update_nested(d, {'a': {'b': {'c': 'd'}}})
+    assert d == {'a': {'b': {'c': 'd'}, 'c': {'d': 'e'}}}
+
+
 def test_readline_fallback(mocker):
     old_import = __import__
 

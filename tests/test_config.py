@@ -144,6 +144,16 @@ def test_no_scm_host():
         uut.scm_hosts()
 
 
+def test_scm_host_repo(mocker, temp_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
+    uut = zazu.config.Config('')
+    mock_scm_host = mocker.Mock('zazu.scm_host.ScmHost', autospec=True)
+    mock_scm_host.repos = mocker.Mock(side_effect=IOError)
+    uut._scm_hosts = {'foo': mock_scm_host}
+    uut._default_scm_host = 'foo'
+    assert uut.scm_host_repo('foo/bar') == None
+
+
 def test_github_scm_host():
     uut = zazu.config.Config('')
     uut._user_config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
@@ -217,6 +227,12 @@ def test_user_config_filepath():
     assert zazu.config.user_config_filepath() == os.path.join(os.path.expanduser("~"), '.zazuconfig.yaml')
 
 
+def test_missing_user_config(mocker, tmp_dir):
+    mocker.patch('zazu.config.user_config_filepath', return_value=tmp_dir)
+    uut = zazu.config.Config('')
+    assert uut.user_config() == {}
+
+
 def test_config_bad_options(mocker, temp_user_config):
     runner = click.testing.CliRunner()
     result = runner.invoke(zazu.cli.cli, ['config'])
@@ -271,18 +287,3 @@ def test_config_create(mocker, tmp_dir):
     result = runner.invoke(zazu.cli.cli, ['config', '--list'])
     assert result.exit_code == 0
     assert os.path.isfile(path)
-
-
-def test_config_edit(mocker, temp_user_config):
-    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
-    mocker.patch('zazu.util.prompt', return_value='foo')
-    mocker.patch('zazu.util.pick', side_effect=['scmHost.gh.user', 'Done'])
-    runner = click.testing.CliRunner()
-    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
-    assert result.output == 'user\n'
-    assert result.exit_code == 0
-    result = runner.invoke(zazu.cli.cli, ['config', '--edit'])
-    assert result.exit_code == 0
-    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
-    assert result.output == 'foo\n'
-    assert result.exit_code == 0

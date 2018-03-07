@@ -38,6 +38,7 @@ lazy_import(locals(), [
     'click',
     'concurrent.futures',
     'contextlib',
+    'dict_recursive_update',
     'fnmatch',
     'inquirer',
     'multiprocessing',
@@ -270,6 +271,55 @@ def unflatten_dict(d, separator='.'):
             d = d[part]
         d[parts[-1]] = value
     return ret
+
+
+def dict_get_nested(d, keys, alt_ret):
+    """Get a nested dictionary entry given a list of keys.
+
+    Equivalent to d[keys[0]][keys[1]]...etc.
+
+    Args:
+        d (dict): nested dictionary to search.
+        keys (list): keys to search one by one.
+        alt_ret: returned if the specified item is not found.
+
+    Returns:
+          item matching the chain of keys in d.
+    """
+    item = d.get(keys[0], alt_ret)
+    for k in keys[1:]:
+        item = item.get(k, alt_ret)
+    return item
+
+
+def dict_del_nested(d, keys):
+    """Delete a nested dictionary entry given a list of keys.
+
+    Equivalent to del d[keys[0]][keys[1]]...etc.
+
+    Args:
+        d (dict): nested dictionary to search.
+        keys (list): keys to search one by one.
+
+    Raises:
+        KeyError: if the key couldn't be found in d.
+    """
+    item = d
+    if keys:
+        for k in keys[:-1]:
+            item = item[k]
+        del item[keys[-1]]
+
+
+def dict_update_nested(d, update):
+    """Updated a nested dictionary given an update dictionary.
+
+    Args:
+        d (dict): dictionary to add the update to.
+        update (dict): update to apply to the dictionary.
+
+    """
+    dict_recursive_update.recursive_update(d, update)
 
 
 def raise_uninstalled(pkg_name):

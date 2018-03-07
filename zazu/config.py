@@ -7,6 +7,7 @@ import zazu.scm_host
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
+    'dict_recursive_update',
     'git',
     'os',
     'ruamel.yaml',
@@ -261,7 +262,7 @@ class Config(object):
             try:
                 scm_repo = next((r for r in host.repos() if match_host(host_name, r.id)), None)
             except IOError:
-                click.echo('Warning: unable to connect to {} SCH host'.format(host_name))
+                click.secho('Warning: unable to connect to "{}" SCM host'.format(host_name), fg='red')
                 scm_repo = None
             if scm_repo is not None:
                 return scm_repo
@@ -323,17 +324,16 @@ def maybe_write_default_user_config(path):
 @click.pass_context
 @click.option('-l', '--list', is_flag=True, help='list config')
 @click.option('--show-origin', is_flag=True, help='show origin of each config variable, (implies --list)')
-@click.option('-e', '--edit', is_flag=True, help='edit config file interactively')
 @click.option('--add', is_flag=True, help='add a new variable')
 @click.option('--unset', is_flag=True, help='remove a variable')
-@click.argument('param_name', required=False)
-@click.argument('param_value', required=False)
-def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
+@click.argument('param_name', required=False, type=str)
+@click.argument('param_value', required=False, type=str)
+def config(ctx, list, add, unset, show_origin, param_name, param_value):
     """Manage zazu user configuration."""
-    if not any([list, edit, add, show_origin, param_name, param_value]):
+    if not any([list, add, show_origin, param_name, param_value]):
         print(ctx.get_help())
         ctx.exit(-1)
-    if (add + unset + list + edit) > 1:
+    if (add + unset + list) > 1:
         raise click.UsageError('--add, --unset, --list, --edit are mutually exclusive')
     if (add or unset) and param_name is None:
         raise click.UsageError('--add and --unset requires a param name')
@@ -346,46 +346,36 @@ def config(ctx, list, edit, add, unset, show_origin, param_name, param_value):
     maybe_write_default_user_config(user_config_path)
 
     config_dict = load_yaml_file(user_config_path)
-    flattened = zazu.util.flatten_dict(config_dict)
     write_config = False
 
     if list or show_origin:
         source = '{}\t'.format(user_config_path) if show_origin else ''
+        flattened = zazu.util.flatten_dict(config_dict)
         for k in sorted(flattened):
             click.echo('{}{}={}'.format(source, k, flattened[k]))
 
-    elif edit:
-        while True:
-            params = ['{}={}'.format(k, v) for k, v in flattened.iteritems()]
-            picked = zazu.util.pick(params + ['Done'], 'Choose a parameter to edit')
-            param_name = picked.split('=', 1)[0]
-            if param_name is 'Done':
-                break
-            param_value = zazu.util.prompt('New value for {}'.format(param_name))
-            flattened[param_name] = str(param_value)
-            write_config = True
-
     elif param_name is not None:
+        param_name_keys = param_name.split('.')
         if param_value is None:
-            param_value = flattened.get(param_name, None)
+            param_value = zazu.util.dict_get_nested(config_dict, param_name_keys, None)
             if param_value is None:
                 raise click.ClickException('Param {} is unknown'.format(param_name))
             if unset:
-                del flattened[param_name]
+                zazu.util.dict_del_nested(config_dict, param_name_keys)
                 write_config = True
             else:
                 click.echo(param_value)
                 return
         else:
             # Write the new parameter value.
-            if not add and flattened.get(param_name, None) is None:
+            if not add and zazu.util.dict_get_nested(config_dict, param_name_keys, None) is None:
                 raise click.ClickException('Param {} is unknown, use --add to add it'.format(param_name))
-            flattened[param_name] = str(param_value)
+            new_param_dict = zazu.util.unflatten_dict({param_name: param_value})
+            zazu.util.dict_update_nested(config_dict, new_param_dict)
             write_config = True
 
     if write_config:
         # Update config file.
-        config_dict.update(zazu.util.unflatten_dict(flattened))
         yaml = ruamel.yaml.YAML()
         with open(user_config_path, 'w') as f:
             yaml.dump(config_dict, f)
