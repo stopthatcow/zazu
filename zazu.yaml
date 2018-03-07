@@ -34,8 +34,6 @@ style:
     - docs/**.py
     - tests/**.py
     - zazu/**.py
-  pyformat:
+  autopep8:
     options:
-  # autopep8:
-  #  options:
-  #    - "--max-line-length=150"
+      - "--max-line-length=150"
