@@ -46,6 +46,13 @@ def test_autopep8():
     assert ['*.py'] == styler.default_extensions()
 
 
+def test_pyformat():
+    styler = zazu.plugins.pyformat_styler.PyformatStyler()
+    ret = ''.join(styler.style_string('def foo ():\n  pass'))
+    assert ret == 'def foo():\n    pass\n'
+    assert ['*.py'] == styler.default_extensions()
+
+
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
 def test_clang_format():
