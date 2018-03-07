@@ -213,8 +213,8 @@ def make_semver(repo_root, build_number):
     if tags:
         # There are git tags to consider. Parse them all then choose the one that is latest (sorted by semver rules)
         return sorted([make_version_number(branch_name, build_number, tag, sha) for tag in tags])[-1]
-    else:
-        return make_version_number(branch_name, build_number, None, sha)
+
+    return make_version_number(branch_name, build_number, None, sha)
 
 
 def parse_describe(repo_root):

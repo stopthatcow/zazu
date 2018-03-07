@@ -70,7 +70,7 @@ def offer_to_stash_changes(repo):
     """Offer to stash local changes if there are any."""
     diff = repo.index.diff(None)
     status = repo.git.status('-s', '-uno')
-    if len(diff) and len(status):
+    if diff and status:
         click.echo(status)
         if click.confirm('Local changes detected, stash first?', default=True):
             repo.git.stash()
