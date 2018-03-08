@@ -10,7 +10,7 @@ __copyright__ = "Copyright 2018"
 
 
 class DocformatterStyler(zazu.styler.Styler):
-    """Pyformat plugin for code styling."""
+    """Docformatter plugin for code styling."""
 
     def style_string(self, string):
         """Fix a string to be within style guidelines."""
