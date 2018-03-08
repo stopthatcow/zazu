@@ -35,7 +35,6 @@ style:
     - tests/**.py
     - zazu/**.py
     stylers:
-#      - type: docformatter
       - type: autopep8
         options:
           - "--max-line-length=150"
