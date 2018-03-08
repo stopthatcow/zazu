@@ -74,6 +74,15 @@ def test_goimports(mocker):
     assert styler.default_extensions() == ['*.go']
 
 
+def test_esformatter(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
+    styler = zazu.plugins.esformatter_styler.EsformatterStyler(options=['-U'])
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['esformatter', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == ['*.js', '*.es', '*.es6']
+
+
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
 def test_clang_format():
