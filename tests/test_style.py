@@ -52,17 +52,9 @@ def test_autopep8():
     assert ['*.py'] == styler.default_extensions()
 
 
-def test_pyformat():
-    styler = zazu.plugins.pyformat_styler.PyformatStyler()
-    ret = ''.join(styler.style_string('def foo ():\n  pass'))
-    assert ret == 'def foo():\n    pass\n'
-    assert ['*.py'] == styler.default_extensions()
-
-
 def test_docformatter():
     styler = zazu.plugins.docformatter_styler.DocformatterStyler()
-    ret = ''.join(styler.style_string('def foo ():\n"""doc"""\n  pass'))
-    print ret
+    ret = styler.style_string('def foo ():\n"""doc"""\n  pass')
     assert ret == 'def foo ():\n"""doc"""\n  pass'
     assert ['*.py'] == styler.default_extensions()
 

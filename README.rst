@@ -209,7 +209,7 @@ requirements for each goal.
             options:
               - "--max-line-length=150" # options passed to autopep8
 
-      zazu: 0.10.0 # optional required zazu version
+      zazu: 0.11.0 # optional required zazu version
 
 Compiler tuples
 ~~~~~~~~~~~~~~~
