@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""DocformatterStyler plugin for zazu."""
+"""GoimportsStyler plugin for zazu."""
 import zazu.styler
 import zazu.util
 zazu.util.lazy_import(locals(), [
@@ -9,18 +9,15 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2018"
 
 
-class DocformatterStyler(zazu.styler.Styler):
-    """Docformatter plugin for code styling."""
+class GoimportsStyler(zazu.styler.Styler):
+    """Goimports plugin for code styling."""
+
     @staticmethod
     def default_extensions():
         """Return the list of file extensions that are compatible with this Styler."""
-        return ['*.py']
+        return ['*.go']
 
     @staticmethod
     def type():
         """Return the name of this Styler."""
-        return 'docformatter'
-
-    @staticmethod
-    def required_options():
-        return ['-']
+        return 'goimports'

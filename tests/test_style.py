@@ -58,6 +58,22 @@ def test_docformatter():
     assert ['*.py'] == styler.default_extensions()
 
 
+def test_docformatter():
+    styler = zazu.plugins.docformatter_styler.DocformatterStyler()
+    ret = styler.style_string('def foo ():\n"""doc"""\n  pass')
+    assert ret == 'def foo ():\n"""doc"""\n  pass'
+    assert ['*.py'] == styler.default_extensions()
+
+
+def test_goimports(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
+    styler = zazu.plugins.goimports_styler.GoimportsStyler(options=['-U'])
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['goimports', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == ['*.go']
+
+
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
 def test_clang_format():

@@ -13,11 +13,6 @@ __copyright__ = "Copyright 2017"
 class ClangFormatStyler(zazu.styler.Styler):
     """ClangFormat plugin for code styling."""
 
-    def style_string(self, string):
-        """Fix a string to be within style guidelines."""
-        args = ['clang-format'] + self.options
-        return zazu.util.check_popen(args=args, stdin_str=string)
-
     @staticmethod
     def default_extensions():
         """Return the list of file extensions that are compatible with this Styler."""

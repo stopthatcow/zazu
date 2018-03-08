@@ -24,21 +24,20 @@ class Styler(object):
         self.options = [] if options is None else options
         self.excludes = [] if excludes is None else excludes
         self.includes = [] if includes is None else includes
+        self.options += self.required_options()
 
     def style_string(self, string):
-        """Style a string and return a diff of requested changes.
+        """Fix a string to be within style guidelines.
 
         Args:
-            string: the string to style
+            string (str): the string to style
 
         Returns:
-                A unified diff of requested changes or an empty string if no changes are requested.
-
-        Raises:
-            NotImplementedError
+            Styled string.
 
         """
-        raise NotImplementedError('All style plugins must implement style_string')
+        args = [self.type()] + self.options
+        return zazu.util.check_popen(args=args, stdin_str=string)
 
     @classmethod
     def from_config(cls, config, excludes, includes):
@@ -57,3 +56,16 @@ class Styler(object):
                   excludes + config.get('excludes', []),
                   includes + config.get('includes', []))
         return obj
+
+    @staticmethod
+    def required_options():
+        """Options required to make the tool use stdin for input and output styled version to stdout"""
+        return []
+
+    @staticmethod
+    def default_extensions():
+        raise NotImplementedError('Must implement default_extensions()')
+
+    @staticmethod
+    def type():
+        raise NotImplementedError('Must implement type()')
