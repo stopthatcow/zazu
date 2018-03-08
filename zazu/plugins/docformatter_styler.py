@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """DocformatterStyler plugin for zazu."""
 import zazu.styler
-import zazu.util
-zazu.util.lazy_import(locals(), [
-])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2018"

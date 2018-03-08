@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """Autopep8Styler plugin for zazu."""
 import zazu.styler
-import zazu.util
-zazu.util.lazy_import(locals(), [
-    'subprocess'
-])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"

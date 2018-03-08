@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """AstyleStyler plugin for zazu."""
 import zazu.styler
-zazu.util.lazy_import(locals(), [
-    'subprocess'
-])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2017"
