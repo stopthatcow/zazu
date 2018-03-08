@@ -6,7 +6,6 @@ import pytest
 import zazu.cli
 import zazu.plugins.clang_format_styler
 import zazu.plugins.astyle_styler
-import zazu.plugins.pyformat_styler
 import zazu.plugins.autopep8_styler
 import zazu.plugins.docformatter_styler
 import zazu.style
