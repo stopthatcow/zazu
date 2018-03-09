@@ -38,3 +38,8 @@ style:
       - type: autopep8
         options:
           - "--max-line-length=150"
+      - type: stdin
+        command: autopep8
+        options:
+          - "-"
+          - "--max-line-length=150"

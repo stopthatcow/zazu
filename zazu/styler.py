@@ -13,7 +13,7 @@ __copyright__ = "Copyright 2016"
 class Styler(object):
     """Parent of all style plugins."""
 
-    def __init__(self, options=None, excludes=None, includes=None):
+    def __init__(self, command=None, options=None, excludes=None, includes=None):
         """Constructor.
 
         Args:
@@ -25,6 +25,7 @@ class Styler(object):
         self.excludes = [] if excludes is None else excludes
         self.includes = [] if includes is None else includes
         self.options += self.required_options()
+        self.command = self.type() if command is None else command
 
     def style_string(self, string):
         """Fix a string to be within style guidelines.
@@ -36,7 +37,7 @@ class Styler(object):
             Styled string.
 
         """
-        args = [self.type()] + self.options
+        args = [self.command] + self.options
         return zazu.util.check_popen(args=args, stdin_str=string)
 
     @classmethod
@@ -52,7 +53,8 @@ class Styler(object):
             Styler with config options set.
 
         """
-        obj = cls(config.get('options', []),
+        obj = cls(config.get('command', None),
+                  config.get('options', []),
                   excludes + config.get('excludes', []),
                   includes + config.get('includes', []))
         return obj
@@ -69,3 +71,6 @@ class Styler(object):
     @staticmethod
     def type():
         raise NotImplementedError('Must implement type()')
+
+    def name(self):
+        return self.command
