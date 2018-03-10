@@ -98,7 +98,9 @@ def test_descriptors_from_branches():
 
 
 def test_get_closed_branches(mocker):
-    mocker.patch('zazu.repo.commands.ticket_is_closed', side_effect=[True, False])
+    def foo1_is_closed(tracker, ticket):
+        return 'FOO-1' == ticket.id
+    mocker.patch('zazu.repo.commands.ticket_is_closed', side_effect=foo1_is_closed)
     issue_tracker = mocker.Mock()
     result = zazu.repo.commands.get_closed_branches(issue_tracker, ['feature/FOO-1', 'feature/FOO-2'])
     assert result == ['feature/FOO-1']
