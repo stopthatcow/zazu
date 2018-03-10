@@ -194,21 +194,22 @@ requirements for each goal.
         repo: zazu
 
     style:
-      exclude:
-        - dependencies/ #list path prefixes here to exclude from style
-        - build/
-      astyle:
-        options:
-          - "--options=astyle.conf" # options passed to astyle
-        include:
-          - src/*.cpp # list of globs of files to style
-          - include/*.h
-          - test/*.cpp
-      autopep8:
-        options:
-          - "--max-line-length=150" # options passed to autopep8
+      - exclude:
+          - dependencies/ #list path prefixes here to exclude from style
+          - build/
+        stylers:
+          - type: astyle
+            options:
+              - "--options=astyle.conf" # options passed to astyle
+            include:
+              - src/*.cpp # list of globs of files to style
+              - include/*.h
+              - test/*.cpp
+          - type: autopep8
+            options:
+              - "--max-line-length=150" # options passed to autopep8
 
-      zazu: 0.10.0 # optional required zazu version
+      zazu: 0.11.0 # optional required zazu version
 
 Compiler tuples
 ~~~~~~~~~~~~~~~
@@ -269,4 +270,3 @@ Handy aliases
     alias zdb="zazu dev builds"
     alias zs="zazu style"
     alias zb="zazu build"
-

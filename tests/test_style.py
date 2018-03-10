@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 import click
+import click.testing
 import distutils.spawn
 import pytest
 import zazu.cli
+import zazu.plugins.clang_format_styler
+import zazu.plugins.astyle_styler
+import zazu.plugins.autopep8_styler
+import zazu.plugins.docformatter_styler
 import zazu.style
 import zazu.util
 
@@ -43,6 +48,13 @@ def test_autopep8():
     styler = zazu.plugins.autopep8_styler.Autopep8Styler()
     ret = styler.style_string('def foo ():\n  pass')
     assert ret == 'def foo():\n    pass\n'
+    assert ['*.py'] == styler.default_extensions()
+
+
+def test_docformatter():
+    styler = zazu.plugins.docformatter_styler.DocformatterStyler()
+    ret = styler.style_string('def foo ():\n"""doc"""\n  pass')
+    assert ret == 'def foo ():\n"""doc"""\n  pass'
     assert ['*.py'] == styler.default_extensions()
 
 

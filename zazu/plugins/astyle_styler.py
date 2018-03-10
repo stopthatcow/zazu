@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""astyle plugin for zazu."""
+"""AstyleStyler plugin for zazu."""
 import zazu.styler
 zazu.util.lazy_import(locals(), [
     'subprocess'
