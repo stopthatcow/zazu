@@ -22,18 +22,11 @@ def repo(ctx):
     pass
 
 
-@repo.group()
+@repo.command()
 @click.pass_context
-def setup(ctx):
-    """Handle repository services setup."""
+def init(ctx):
+    """Install git hooks to repo."""
     ctx.obj.check_repo()
-    pass
-
-
-@setup.command()
-@click.pass_context
-def hooks(ctx):
-    """Install default git hooks."""
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
 
 
@@ -80,12 +73,6 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
 
     except git.GitCommandError as err:
         raise click.ClickException(str(err))
-
-
-@repo.command()
-def init():
-    """Initialize repo directory structure."""
-    raise NotImplementedError
 
 
 @repo.command()
