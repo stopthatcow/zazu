@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Config classes and methods for zazu."""
-import zazu.build_server
 import zazu.code_reviewer
 import zazu.issue_tracker
 import zazu.scm_host
@@ -53,7 +52,6 @@ class PluginFactory(object):
 
 issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker)
 code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer)
-build_server_factory = PluginFactory('buildServer', zazu.build_server.BuildServer)
 
 
 def scm_host_factory(config):
@@ -183,7 +181,6 @@ class Config(object):
         self._code_reviewer = None
         self._scm_hosts = None
         self._default_scm_host = None
-        self._build_server = None
         self._project_config = None
         self._user_config = None
         self._stylers = None
@@ -206,16 +203,6 @@ class Config(object):
             return self.project_config()['issueTracker']
         except KeyError:
             raise click.ClickException("no issueTracker config found")
-
-    def build_server(self):
-        """Lazily create a build server object."""
-        if self._build_server is None:
-            self._build_server = build_server_factory.from_config(self.ci_config())
-        return self._build_server
-
-    def ci_config(self):
-        """Return the CI configuration if one exists."""
-        return self.project_config().get('ci', {})
 
     def code_reviewer_config(self):
         """Return the code reviewer configuration if one exists.

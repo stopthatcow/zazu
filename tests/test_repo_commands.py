@@ -172,12 +172,3 @@ def test_clone_error(mocker, git_repo):
         assert result.exit_code != 0
         assert result.exception
     git.Repo.clone_from.assert_called_once()
-
-
-def test_repo_ci_no_config(repo_with_build_config):
-    dir = repo_with_build_config.working_tree_dir
-    with zazu.util.cd(dir):
-        runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['repo', 'setup', 'ci'])
-        assert result.exit_code != 0
-        assert result.exception
