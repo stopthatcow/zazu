@@ -208,8 +208,8 @@ requirements for each goal.
           - type: autopep8
             options:
               - "--max-line-length=150" # options passed to autopep8
-          # Styler that uses sed to fix common misspellings.
-          - type: stdin
+          # Generic styler that uses sed to fix common misspellings.
+          - type: generic
             command: sed
             options:
               - "s/responce/response/g"
