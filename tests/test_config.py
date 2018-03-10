@@ -34,7 +34,19 @@ def empty_user_config(tmp_dir):
 def repo_with_invalid_issue_tracker(git_repo):
     root = git_repo.working_tree_dir
     config = {
-        'issue_tracker': {
+        'issueTracker': {
+        }
+    }
+    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
+        yaml.dump(config, file)
+    return git_repo
+
+
+@pytest.fixture()
+def repo_with_unknown_issue_tracker(git_repo):
+    root = git_repo.working_tree_dir
+    config = {
+        'issueTracker': {
             'type': 'foobar',
         }
     }
@@ -61,6 +73,12 @@ def repo_with_jira(git_repo):
 
 def test_invalid_issue_tracker(repo_with_invalid_issue_tracker):
     cfg = zazu.config.Config(repo_with_invalid_issue_tracker.working_tree_dir)
+    with pytest.raises(click.ClickException):
+        cfg.issue_tracker()
+
+
+def test_unknown_issue_tracker(repo_with_unknown_issue_tracker):
+    cfg = zazu.config.Config(repo_with_unknown_issue_tracker.working_tree_dir)
     with pytest.raises(click.ClickException):
         cfg.issue_tracker()
 
