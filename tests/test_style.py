@@ -80,6 +80,15 @@ def test_goimports(mocker):
     assert styler.default_extensions() == ['*.go']
 
 
+def test_generic(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
+    styler = zazu.plugins.generic_styler.GenericStyler(command='sed', options=['-U'])
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['sed', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == []
+
+
 def test_esformatter(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.esformatter_styler.EsformatterStyler(options=['-U'])
@@ -157,6 +166,8 @@ def test_style_no_config(repo_with_missing_style):
 
 
 def test_styler():
-    uut = zazu.styler.Styler()
     with pytest.raises(NotImplementedError):
-        uut.style_string('')
+        zazu.styler.Styler()
+    uut = zazu.styler.Styler('foo')
+    with pytest.raises(NotImplementedError):
+        uut.default_extensions()
