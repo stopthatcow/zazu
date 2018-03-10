@@ -29,11 +29,12 @@ codeReviewer:
     repo: zazu
 
 style:
-  include:
+  - include:
     - setup.py
-    - docs/**/*.py
-    - tests/**/*.py
-    - zazu/**/*.py
-  autopep8:
-    options:
-      - "--max-line-length=150"
+    - docs/**.py
+    - tests/**.py
+    - zazu/**.py
+    stylers:
+      - type: autopep8
+        options:
+          - "--max-line-length=150"
