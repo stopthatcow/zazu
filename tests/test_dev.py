@@ -165,11 +165,26 @@ def test_start_make_ticket(git_repo_with_local_origin, mocker):
         result = runner.invoke(zazu.cli.cli, ['dev', 'start'])
         assert not result.exception
         assert result.exit_code == 0
+        assert not zazu.dev.commands.verify_ticket_exists.called
         assert 'feature/foo-1_description' in git_repo.heads
         mocker.patch('zazu.config.Config.issue_tracker', side_effect=zazu.issue_tracker.IssueTrackerError('Invalid ID'))
         result = runner.invoke(zazu.cli.cli, ['dev', 'start'])
         assert result.exit_code != 0
         assert 'Invalid ID' in result.output
+
+
+def test_start_bad_ticket(git_repo_with_local_origin, mocker):
+    mocker.patch('zazu.config.Config.issue_tracker')
+    mocker.patch('zazu.dev.commands.verify_ticket_exists', returns=True)
+    git_repo = git_repo_with_local_origin
+    with zazu.util.cd(git_repo.working_tree_dir):
+        git_repo.git.checkout('HEAD', b='develop')
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'foo-1_description'])
+        assert not result.exception
+        assert result.exit_code == 0
+        zazu.dev.commands.verify_ticket_exists.assert_called_once()
+        assert 'feature/foo-1_description' in git_repo.heads
 
 
 def test_ticket(mocker):

@@ -39,11 +39,14 @@ def git_repo_with_bad_config(git_repo):
 def repo_with_style(git_repo):
     root = git_repo.working_tree_dir
     style_config = {
-        'style': {
-            'exclude': ['dependency'],
-            'autopep8': {},
-            'clang-format': {}
-        }
+        'style': [
+            {'exclude': ['dependency'],
+             'stylers':[
+                {'type': 'autopep8'},
+                {'type': 'clang-format'}
+            ]
+            }
+        ]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
         yaml.dump(style_config, file)

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Autopep8Styler plugin for zazu."""
+"""DocformatterStyler plugin for zazu."""
 import zazu.styler
 
 __author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__copyright__ = "Copyright 2018"
 
 
-class Autopep8Styler(zazu.styler.Styler):
-    """Autopep8 plugin for code styling."""
-
+class DocformatterStyler(zazu.styler.Styler):
+    """Docformatter plugin for code styling."""
     @staticmethod
     def default_extensions():
         """Return the list of file extensions that are compatible with this Styler."""
@@ -17,7 +16,7 @@ class Autopep8Styler(zazu.styler.Styler):
     @staticmethod
     def type():
         """Return the name of this Styler."""
-        return 'autopep8'
+        return 'docformatter'
 
     @staticmethod
     def required_options():

@@ -29,11 +29,17 @@ codeReviewer:
     repo: zazu
 
 style:
-  include:
+  - include:
     - setup.py
     - docs/**.py
     - tests/**.py
     - zazu/**.py
-  autopep8:
-    options:
-      - "--max-line-length=150"
+    stylers:
+      - type: autopep8
+        options:
+          - "--max-line-length=150"
+      # Fix common misspellings.
+      - type: generic
+        command: sed
+        options:
+          - "s/responce/response/g"
