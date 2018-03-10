@@ -35,13 +35,19 @@ def repo_with_style_errors(repo_with_style):
     return repo_with_style
 
 
-@pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
-                    reason="requires astyle")
-def test_astyle():
+def test_astyle(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
-    ret = styler.style_string('void main ( ) {}')
-    assert ret == 'void main() {}'
-    assert styler.default_extensions()
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['astyle', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == ['*.c',
+                                           '*.cc',
+                                           '*.cs',
+                                           '*.cpp',
+                                           '*.h',
+                                           '*.hpp',
+                                           '*.java']
 
 
 def test_autopep8():
