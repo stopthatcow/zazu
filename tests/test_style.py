@@ -167,4 +167,7 @@ def test_style_no_config(repo_with_missing_style):
 
 def test_styler():
     with pytest.raises(NotImplementedError):
-        uut = zazu.styler.Styler()
+        zazu.styler.Styler()
+    uut = zazu.styler.Styler('foo')
+    with pytest.raises(NotImplementedError):
+        uut.default_extensions()
