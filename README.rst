@@ -195,19 +195,28 @@ requirements for each goal.
 
     style:
       - exclude:
-          - dependencies/ #list path prefixes here to exclude from style
+          - dependencies/ # list path prefixes here to exclude from style
           - build/
         stylers:
           - type: astyle
             options:
               - "--options=astyle.conf" # options passed to astyle
             include:
-              - src/*.cpp # list of globs of files to style
-              - include/*.h
-              - test/*.cpp
+              - src/**.cpp # list of globs of files to style
+              - include/**.h
+              - test/**.cpp
           - type: autopep8
             options:
               - "--max-line-length=150" # options passed to autopep8
+          # Styler that uses sed to fix common misspellings.
+          - type: stdin
+            command: sed
+            options:
+              - "s/responce/response/g"
+            include:
+              - src/**
+              - include/**
+              - test/**
 
       zazu: 0.11.0 # optional required zazu version
 

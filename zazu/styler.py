@@ -17,15 +17,16 @@ class Styler(object):
         """Constructor.
 
         Args:
-            options: list of flags to pass to the styler.
-            excludes: list of file patterns to exclude from styling.
-            includes: list of file patterns to include for styling.
+            command (str): command to use when running the styler.
+            options (list): flags to pass to the styler.
+            excludes (list): file patterns to exclude from styling.
+            includes (list): file patterns to include for styling.
         """
+        self.command = self.type() if command is None else command
         self.options = [] if options is None else options
         self.excludes = [] if excludes is None else excludes
         self.includes = [] if includes is None else includes
         self.options += self.required_options()
-        self.command = self.type() if command is None else command
 
     def style_string(self, string):
         """Fix a string to be within style guidelines.
@@ -46,8 +47,8 @@ class Styler(object):
 
         Args:
             config: the configuration dictionary.
-            excludes: patterns to exclude.
-            includes: patterns to include.
+            excludes (list): file patterns to exclude from styling.
+            includes (list): file patterns to include for styling.
 
         Returns:
             Styler with config options set.

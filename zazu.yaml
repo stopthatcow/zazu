@@ -38,8 +38,8 @@ style:
       - type: autopep8
         options:
           - "--max-line-length=150"
+      # Fix common misspellings.
       - type: stdin
-        command: autopep8
+        command: sed
         options:
-          - "-"
-          - "--max-line-length=150"
+          - "s/responce/response/g"
