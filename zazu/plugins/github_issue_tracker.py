@@ -169,7 +169,3 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
     def id(self):
         """Get the string id of the issue."""
         return str(self._github_issue.number)
-
-    def __str__(self):
-        """Return the id as the string representation."""
-        return self.id

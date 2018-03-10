@@ -138,3 +138,4 @@ def test_jira_issue_adaptor(tracker_mock):
     assert uut.browse_url == 'https://jira/browse/ZZ-1'
     assert uut.id == 'ZZ-1'
     assert str(uut) == uut.id
+    assert repr(uut) == uut.id

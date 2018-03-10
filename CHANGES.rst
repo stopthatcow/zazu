@@ -1,7 +1,11 @@
 Changelog
 =========
 
+<<<<<<< HEAD
+Version 0.11 (Not yet released)
+=======
 Version 0.11 (not yet released)
+>>>>>>> develop
 -------------------------------------------
 
 - Update dependencies (old GitPython was broken).
@@ -13,6 +17,8 @@ Version 0.11 (not yet released)
 - Add support for goimports styler. See #108.
 - Add support for generic stdin styler. See #112.
 - Skip ticket verification when making a new ticket. See #114.
+- Support ``zazu config`` subcommand to edit ~/.zazuconfig.yaml file. See #100.
+- Enable SCM hosting shortcuts for ``zazu repo clone``.
 
 Version 0.10.0 (Released Jul 2, 2017)
 -------------------------------------

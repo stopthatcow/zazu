@@ -50,28 +50,29 @@ setuptools.setup(
     keywords='teamcity, jira, git, github',
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['githooks/*', 'version.txt']},
-    install_requires=['click>=6.7',               # BSD
-                      'requests>=2.18.4',         # Apache 2.0
-                      'PyGithub>=1.36.0',         # LGPL 3
-                      'jira>=1.0.11',             # BSD
-                      'GitPython>=2.1.8',         # BSD
-                      'pyteamcity>=0.1.1',        # MIT
-                      'pyyaml>=3.12',             # MIT
-                      'keyring>=11.0',            # MIT
-                      'keyrings.alt>=2.3',        # MIT
-                      'autopep8>=1.3.4',          # MIT
-                      'docformatter>=1.0',        # Expat
-                      'semantic_version>=2.6.0',  # BSD
-                      'gcovr>=3.4',               # BSD
-                      'teamcity-messages>=1.21',  # Apache 2.0
-                      'future>=0.16.0',           # MIT
-                      'futures>=3.2.0',           # PSF
-                      'inquirer>=2.2.0',          # MIT
-                      'Importing>=1.10',          # PSF
-                      'straight.plugin>=1.5.0'],  # MIT
+    install_requires=['click>=6.7',                    # BSD
+                      'requests>=2.18.4',              # Apache 2.0
+                      'PyGithub>=1.36.0',              # LGPL 3
+                      'jira>=1.0.11',                  # BSD
+                      'GitPython>=2.1.8',              # BSD
+                      'dict-recursive-update>=1.0.1',  # MIT
+                      'pyteamcity>=0.1.1',             # MIT
+                      'ruamel.yaml<=0.15',             # MIT
+                      'keyring>=11.0',                 # MIT
+                      'keyrings.alt>=2.3',             # MIT
+                      'autopep8>=1.3.4',               # MIT
+                      'docformatter>=1.0',             # Expat
+                      'semantic_version>=2.6.0',       # BSD
+                      'gcovr>=3.4',                    # BSD
+                      'teamcity-messages>=1.21',       # Apache 2.0
+                      'future>=0.16.0',                # MIT
+                      'futures>=3.2.0',                # PSF
+                      'inquirer>=2.2.0',               # MIT
+                      'Importing>=1.10',               # PSF
+                      'straight.plugin>=1.5.0'],       # MIT
     extras_require={
         ':sys_platform == "win32"': [
-            'pyreadline>=2.1'                     # BSD
+            'pyreadline>=2.1'                          # BSD
         ]
     },
     entry_points='''
