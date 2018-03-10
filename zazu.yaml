@@ -39,7 +39,7 @@ style:
         options:
           - "--max-line-length=150"
       # Fix common misspellings.
-      - type: stdin
+      - type: generic
         command: sed
         options:
           - "s/responce/response/g"

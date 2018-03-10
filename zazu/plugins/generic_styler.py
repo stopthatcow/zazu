@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""StdinStyler plugin for zazu."""
+"""GenericStyler plugin for zazu."""
 import zazu.styler
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2018"
 
 
-class StdinStyler(zazu.styler.Styler):
-    """StdinStyler plugin for code styling."""
+class GenericStyler(zazu.styler.Styler):
+    """GenericStyler plugin for code styling."""
 
     @staticmethod
     def default_extensions():
@@ -17,4 +17,4 @@ class StdinStyler(zazu.styler.Styler):
     @staticmethod
     def type():
         """Return the name of this Styler."""
-        return 'stdin'
+        return 'generic'
