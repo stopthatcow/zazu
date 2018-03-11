@@ -173,10 +173,7 @@ def pick(choices, message):
     if len(choices) > 1:
         click.clear()
         questions = [
-            inquirer.List(' ',
-                          message=message,
-                          choices=choices,
-                          ),
+            inquirer.List(' ', message=message, choices=choices),
         ]
         response = inquirer.prompt(questions)
         if response is None:
