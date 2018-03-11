@@ -62,6 +62,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     try:
         issue = issue_tracker.issue(ticket_id)
         click.echo("Found ticket {}: {}".format(issue.id, issue.name))
+        return issue
     except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket for id "{}"'.format(ticket_id))
 
@@ -70,7 +71,7 @@ def offer_to_stash_changes(repo):
     """Offer to stash local changes if there are any."""
     diff = repo.index.diff(None)
     status = repo.git.status('-s', '-uno')
-    if len(diff) and len(status):
+    if diff and status:
         click.echo(status)
         if click.confirm('Local changes detected, stash first?', default=True):
             repo.git.stash()
@@ -278,8 +279,8 @@ def review(ctx, base, head):
 def ticket(ctx, ticket):
     """Open the ticket for the current feature or the one supplied in the ticket argument."""
     issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if not ticket else ticket
-    verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
-    url = ctx.obj.issue_tracker().browse_url(issue_id)
+    issue = verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
+    url = issue.browse_url
     click.echo('Opening "{}"'.format(url))
     webbrowser.open_new(url)
 

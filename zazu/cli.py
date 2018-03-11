@@ -31,6 +31,7 @@ def init():
 cli.add_command(zazu.upgrade.upgrade)
 cli.add_command(zazu.style.style)
 cli.add_command(zazu.build.build)
+cli.add_command(zazu.config.config)
 cli.add_command(zazu.dev.commands.dev)
 cli.add_command(zazu.repo.commands.repo)
 init()

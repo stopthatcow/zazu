@@ -70,13 +70,6 @@ def test_docformatter():
     assert ['*.py'] == styler.default_extensions()
 
 
-def test_docformatter():
-    styler = zazu.plugins.docformatter_styler.DocformatterStyler()
-    ret = styler.style_string('def foo ():\n"""doc"""\n  pass')
-    assert ret == 'def foo ():\n"""doc"""\n  pass'
-    assert ['*.py'] == styler.default_extensions()
-
-
 def test_goimports(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.goimports_styler.GoimportsStyler(options=['-U'])
@@ -84,6 +77,15 @@ def test_goimports(mocker):
     zazu.util.check_popen.assert_called_once_with(args=['goimports', '-U'], stdin_str='foo')
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.go']
+
+
+def test_generic(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
+    styler = zazu.plugins.generic_styler.GenericStyler(command='sed', options=['-U'])
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['sed', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == []
 
 
 def test_esformatter(mocker):
@@ -163,6 +165,8 @@ def test_style_no_config(repo_with_missing_style):
 
 
 def test_styler():
-    uut = zazu.styler.Styler()
     with pytest.raises(NotImplementedError):
-        uut.style_string('')
+        zazu.styler.Styler()
+    uut = zazu.styler.Styler('foo')
+    with pytest.raises(NotImplementedError):
+        uut.default_extensions()

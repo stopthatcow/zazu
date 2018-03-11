@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 import click
+import click.testing
+import conftest
 import pytest
 import webbrowser
+import zazu.cli
 import zazu.dev.commands
+
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2017"
@@ -173,32 +177,46 @@ def test_start_make_ticket(git_repo_with_local_origin, mocker):
         assert 'Invalid ID' in result.output
 
 
+def test_start_bad_ticket(git_repo_with_local_origin, mocker):
+    mocker.patch('zazu.config.Config.issue_tracker')
+    mocker.patch('zazu.dev.commands.verify_ticket_exists', returns=True)
+    git_repo = git_repo_with_local_origin
+    with zazu.util.cd(git_repo.working_tree_dir):
+        git_repo.git.checkout('HEAD', b='develop')
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'foo-1_description'])
+        assert not result.exception
+        assert result.exit_code == 0
+        zazu.dev.commands.verify_ticket_exists.assert_called_once()
+        assert 'feature/foo-1_description' in git_repo.heads
+
+
 def test_ticket(mocker):
     mocker.patch('webbrowser.open_new')
-    mocker.patch('zazu.dev.commands.verify_ticket_exists')
+    mock_ticket = conftest.dict_to_obj({'browse_url': 'url'})
+    mocker.patch('zazu.dev.commands.verify_ticket_exists', return_value=mock_ticket)
     mocked_tracker = mocker.Mock()
-    mocked_tracker.browse_url = mocker.Mock(return_value='url')
     mocker.patch('zazu.config.Config.issue_tracker', return_value=mocked_tracker)
     runner = click.testing.CliRunner()
     result = runner.invoke(zazu.cli.cli, ['dev', 'ticket', 'foo-1'])
     assert not result.exception
     assert result.exit_code == 0
-    mocked_tracker.browse_url.assert_called_once_with('foo-1')
+    zazu.dev.commands.verify_ticket_exists.assert_called_once_with(mocked_tracker, 'foo-1')
     webbrowser.open_new.assert_called_once_with('url')
 
 
 def test_ticket_from_active_branch(mocker, git_repo):
     mocker.patch('webbrowser.open_new')
-    mocker.patch('zazu.dev.commands.verify_ticket_exists')
+    mock_ticket = conftest.dict_to_obj({'browse_url': 'url'})
+    mocker.patch('zazu.dev.commands.verify_ticket_exists', return_value=mock_ticket)
     mocked_tracker = mocker.Mock()
-    mocked_tracker.browse_url = mocker.Mock(return_value='url')
     mocker.patch('zazu.config.Config.issue_tracker', return_value=mocked_tracker)
     with zazu.util.cd(git_repo.working_tree_dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'ticket'])
         assert not result.exception
         assert result.exit_code == 0
-        mocked_tracker.browse_url.assert_called_once_with('master')
+        zazu.dev.commands.verify_ticket_exists.assert_called_once_with(mocked_tracker, 'master')
         webbrowser.open_new.assert_called_once_with('url')
 
 

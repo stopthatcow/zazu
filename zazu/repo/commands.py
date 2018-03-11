@@ -8,7 +8,8 @@ zazu.util.lazy_import(locals(), [
     'click',
     'functools',
     'git',
-    'os'
+    'os',
+    'socket'
 ])
 
 __author__ = "Nicholas Wiles"
@@ -54,19 +55,35 @@ def ci(ctx):
 
 
 @repo.command()
-@click.argument('repository_url')
+@click.argument('repository')
+@click.argument('destination', required=False)
 @click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.option('--nosubmodules', is_flag=True, help='does not update submodules')
-def clone(repository_url, nohooks, nosubmodules):
+@click.pass_context
+def clone(ctx, repository, destination, nohooks, nosubmodules):
     """Clone and initialize a repo.
 
     Args:
-        repository_url (str): url of the repository to clone.
+        repository (str): name or url of the repository to clone.
+        destination (str): path to clone the repo to.
         nohooks (bool): if True, git hooks are not installed.
         nosubmodules (bool): if True submodules are not initialized.
     """
+    if os.path.isdir(repository) or ':' in repository:
+        repository_url = repository
+    elif ctx.obj.scm_hosts():
+        scm_repo = ctx.obj.scm_host_repo(repository)
+        if scm_repo is None:
+            raise click.ClickException('Unable to find hosted SCM repo {}'.format(repository))
+        repository_url = scm_repo.ssh_url
+    else:
+        raise click.ClickException('Unable to clone {}'.format(repository))
+
+    if destination is None:
+        destination = repository_url.rsplit('/', 1)[-1].replace('.git', '')
+    click.echo('Cloning {} into {}'.format(repository_url, destination))
+
     try:
-        destination = '{}/{}'.format(os.getcwd(), repository_url.rsplit('/', 1)[-1].replace('.git', ''))
         repo = git.Repo.clone_from(repository_url, destination)
         click.echo('Repository successfully cloned')
 
@@ -145,10 +162,10 @@ def descriptors_from_branches(branches):
 
 def get_closed_branches(issue_tracker, branches):
     """Get descriptors of branches that refer to closed branches."""
-    def descriptor_if_closed(tracker, descriptor):
+    def descriptor_if_closed(descriptor):
         return descriptor if ticket_is_closed(issue_tracker, descriptor) else None
 
-    work = [functools.partial(descriptor_if_closed, issue_tracker, d) for d in descriptors_from_branches(branches)]
+    work = [functools.partial(descriptor_if_closed, d) for d in descriptors_from_branches(branches)]
     closed_tickets = zazu.util.dispatch(work)
     return [t.get_branch_name() for t in closed_tickets if t is not None]
 

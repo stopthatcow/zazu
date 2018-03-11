@@ -78,11 +78,23 @@ Zazu is fastest when installed in wheel form.
     python setup.py bdist_wheel
     pip install dist/*.whl
 
+Configuration
+-------------
+Setup your user config file (located in ~/zazuconfig.yaml).
+
+GitHub setup
+~~~~~~~~~~~~
+::
+
+    zazu config --add scmHost.default.type github
+    zazu config --add scmHost.default.user <github username>
+
 Command overview
 ----------------
 The following diagram shows the available subcommands of zazu.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
+      "zazu" -> "config"
       "zazu" -> "build"
       "zazu" -> "style"
       "zazu" -> "repo"
@@ -97,9 +109,9 @@ The following diagram shows the available subcommands of zazu.
       "dev" -> "start"
       "dev" -> "status"
       dev_builds [label=builds, style=dashed]
+      "dev" -> "ticket"
       "dev" -> "dev_builds"
-      "dev" -> "review"
-      "dev" -> "ticket"}
+      "dev" -> "review"}
 
 Note: dashed lines are not yet implemented
 
@@ -158,12 +170,36 @@ You may pass extra variables to the build using key=value pairs.
 ``zazu build --arch=arm32-linux-gnueabihf package FOO=bar`` This sets
 the environement variable *FOO* to the value *bar* during the build.
 
-zazu.yaml file
---------------
+~/.zazuconfig.yaml file (user level configuration)
+--------------------------------------------------
+
+The .zazuconfig.yaml is a file that lives in your home directory and sets high
+level configuration options for zazu. Most people will likely have a single
+default scmHost entry, though zazu supports multiple named entries.
+
+::
+
+  # User configuration file for zazu.
+
+  # SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
+  scmHost:
+    default:              # This is the default SCM host.
+      type: github        # Type of this SCM host.
+      user: stopthatcow   # GitHub username
+    pat:                  # Optionally: another SCM host named "pat".
+      type: github        # Type of this SCM host.
+      user: moorepatrick  # GitHub username
+
+With the above configuration in place the following are allowed:
+
+- ``zazu repo clone stopthatcow/zazu`` Using the default host so we don't need the fully-qualified name.
+- ``zazu repo clone pat/moorepatrick/zazu`` This uses a non-default host so we need the name.
+
+zazu.yaml file (repo level configuration)
+-----------------------------------------
 
 The zazu.yaml file lives at the base of the repo and describes the CI
-goals and architectures to be run. In addition it describes the
-requirements for each goal.
+goals and architectures to be run.
 
 ::
 
@@ -195,19 +231,28 @@ requirements for each goal.
 
     style:
       - exclude:
-          - dependencies/ #list path prefixes here to exclude from style
+          - dependencies/ # list path prefixes here to exclude from style
           - build/
         stylers:
           - type: astyle
             options:
               - "--options=astyle.conf" # options passed to astyle
             include:
-              - src/*.cpp # list of globs of files to style
-              - include/*.h
-              - test/*.cpp
+              - src/**.cpp # list of globs of files to style
+              - include/**.h
+              - test/**.cpp
           - type: autopep8
             options:
               - "--max-line-length=150" # options passed to autopep8
+          # Generic styler that uses sed to fix common misspellings.
+          - type: generic
+            command: sed
+            options:
+              - "s/responce/response/g"
+            include:
+              - src/**
+              - include/**
+              - test/**
 
       zazu: 0.11.0 # optional required zazu version
 

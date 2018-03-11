@@ -5,14 +5,10 @@ language: python
 python:
   - "2.7"
 
-before_install:
-  - curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-  - sudo apt-get install -y nodejs
-
 # command to install dependencies
 install:
   - pip install tox-travis
-  - npm install -g eslint
+
 # command to run tests
 script:
   tox
