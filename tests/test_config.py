@@ -6,6 +6,7 @@ import pytest
 import ruamel.yaml as yaml
 import zazu.cli
 import zazu.config
+import zazu.git_helper
 import zazu.util
 
 __author__ = "Nicholas Wiles"
@@ -118,7 +119,7 @@ def test_missing_syntax_error(git_repo_with_bad_config):
 
 def test_unknown_styler():
     uut = zazu.config.Config('')
-    uut._project_config = {'style': {'foo': {}}}
+    uut._project_config = {'style': [{'stylers': [{'type': 'foo'}]}]}
     with pytest.raises(click.ClickException):
         uut.stylers()
 

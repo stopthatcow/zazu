@@ -117,7 +117,7 @@ def style(ctx, verbose, check, cached):
                 for f, violation in checked_files:
                     if verbose:
                         click.echo(zazu.util.format_checklist_item(not violation,
-                                                                   text='({}) {}'.format(s.type(), f),
+                                                                   text='({}) {}'.format(s.name(), f),
                                                                    tag_formats=tags))
                     violation_count += violation
             if verbose:

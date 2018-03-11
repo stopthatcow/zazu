@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-"""astyle plugin for zazu."""
+"""AstyleStyler plugin for zazu."""
 import zazu.styler
-zazu.util.lazy_import(locals(), [
-    'subprocess'
-])
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2017"
@@ -11,11 +8,6 @@ __copyright__ = "Copyright 2017"
 
 class AstyleStyler(zazu.styler.Styler):
     """Astyle plugin for code styling."""
-
-    def style_string(self, string):
-        """Fix a string to be within style guidelines."""
-        args = ['astyle'] + self.options
-        return zazu.util.check_popen(args=args, stdin_str=string)
 
     @staticmethod
     def default_extensions():

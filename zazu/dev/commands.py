@@ -167,6 +167,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
+            no_verify = True  # Making the ticket implicitly verifies it.
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
