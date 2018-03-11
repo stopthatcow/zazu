@@ -172,13 +172,14 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
-    issue = make_issue_descriptor(name)
+    issue_descriptor = make_issue_descriptor(name)
     if not no_verify:
-        verify_ticket_exists(ctx.obj.issue_tracker(), issue.id)
-    if not issue.description:
-        issue.description = zazu.util.prompt('Enter a short description for the branch')
-    issue.type = type
-    branch_name = issue.get_branch_name()
+        issue = verify_ticket_exists(ctx.obj.issue_tracker(), issue_descriptor.id)
+        ctx.obj.issue_tracker().assign_issue_to_me(issue)
+    if not issue_descriptor.description:
+        issue_descriptor.description = zazu.util.prompt('Enter a short description for the branch')
+    issue_descriptor.type = type
+    branch_name = issue_descriptor.get_branch_name()
     try:
         # Check if the target branch already exists
         ctx.obj.repo.git.checkout(branch_name)

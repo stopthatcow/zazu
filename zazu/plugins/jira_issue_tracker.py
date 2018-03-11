@@ -38,9 +38,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _jira(self):
         if self._jira_handle is None:
-            username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
+            self._username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
             self._jira_handle = jira.JIRA(self._base_url,
-                                          basic_auth=(username, password),
+                                          basic_auth=(self._username, password),
                                           options={'check_update': False}, max_retries=0)
         return self._jira_handle
 
@@ -82,10 +82,15 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             if component is not None:
                 issue_dict['components'] = [{'name': component}]
             issue = self._jira().create_issue(issue_dict)
-            self._jira().assign_issue(issue, issue.fields.reporter.name)
+            self._jira().assign_issue(issue, issue.fields.reporter.key)
             return JiraIssueAdaptor(issue, self)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
+
+    def assign_issue_to_me(self, issue):
+        """Assigns an issue to username of the client"""
+        print self._jira().get_user()
+        self._jira().assign_issue(issue, self._username)
 
     def default_project(self):
         """JIRA project associated with this tracker."""
