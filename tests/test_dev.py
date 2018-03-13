@@ -147,15 +147,21 @@ def test_start(git_repo_with_local_origin, mocker):
         assert 'feature/bar-1_description' in git_repo.heads
         # Test the exists case:
         result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'bar-1', '--no-verify'])
-        assert not result.exception
-        assert result.exit_code == 0
-        assert 'Branch feature/bar-1_description already exists!' in result.output
+        assert result.exception
+        assert result.exit_code != 0
+        assert 'branch with same id exists: feature/bar-1_description' in result.output
         assert 'feature/foo-1_description' not in git_repo.heads
         # Test the rename case:
         result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'foo-1', '--no-verify', '--rename'])
         assert not result.exception
         assert result.exit_code == 0
         assert 'feature/foo-1_description' in git_repo.heads
+        # Test the rename case with same id:
+        result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'foo-1_description2', '--no-verify', '--rename'])
+        assert not result.exception
+        assert result.exit_code == 0
+        assert 'feature/foo-1_description' not in git_repo.heads
+        assert 'feature/foo-1_description2' in git_repo.heads
 
 
 def test_start_make_ticket(git_repo_with_local_origin, mocker):
