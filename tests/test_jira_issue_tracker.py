@@ -91,11 +91,11 @@ def test_jira_issue_tracker_create_issue(mocker, mocked_jira_issue_tracker):
     jira_mock.assign_issue.assert_called_once_with(mock_issue, 'reporter')
 
 
-def test_jira_assign_to_me(mocker, mocked_jira_issue_tracker):
+def test_jira_assign_issue(mocker, mocked_jira_issue_tracker):
     mocked_jira_issue_tracker._jira_handle.current_user = mocker.Mock(return_value='me')
     mocked_jira_issue_tracker._jira_handle.assign_issue = mocker.Mock()
     issue = zazu.plugins.jira_issue_tracker.JiraIssueAdaptor(mock_issue, mocked_jira_issue_tracker)
-    mocked_jira_issue_tracker.assign_issue_to_me(issue)
+    mocked_jira_issue_tracker.assign_issue(issue, mocked_jira_issue_tracker.user())
     mocked_jira_issue_tracker._jira_handle.assign_issue.assert_called_once_with(mock_issue, 'me')
 
 

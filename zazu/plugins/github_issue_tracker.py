@@ -69,8 +69,8 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
-    def assign_issue_to_me(self, issue):
-        issue._github_issue.edit(assignee=self.user())
+    def assign_issue(self, issue, user):
+        issue._github_issue.edit(assignee=user)
 
     def default_project(self):
         """Meaningless for GitHub."""

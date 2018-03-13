@@ -180,7 +180,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         raise click.ClickException('branch with same id exists: {}'.format(existing_branch))
     if not no_verify:
         issue = verify_ticket_exists(ctx.obj.issue_tracker(), issue_descriptor.id)
-        ctx.obj.issue_tracker().assign_issue_to_me(issue)
+        ctx.obj.issue_tracker().assign_issue(issue, ctx.obj.issue_tracker().user())
     if not issue_descriptor.description:
         issue_descriptor.description = zazu.util.prompt('Enter a short description for the branch')
     issue_descriptor.type = type

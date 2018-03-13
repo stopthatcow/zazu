@@ -122,7 +122,7 @@ def test_assign(mocker, tracker_mock):
     mock_gh_issue.edit = mocker.Mock()
     mock_gh_issue_wrapper = mocker.Mock()
     mock_gh_issue_wrapper._github_issue = mock_gh_issue
-    uut.assign_issue_to_me(mock_gh_issue_wrapper)
+    uut.assign_issue(mock_gh_issue_wrapper, uut.user())
     mock_gh_issue.edit.assert_called_once_with(assignee='me')
 
 
