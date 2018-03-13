@@ -70,6 +70,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
     def assign_issue(self, issue, user):
+        """Assign an issue to a user."""
         issue._github_issue.edit(assignee=user)
 
     def default_project(self):
