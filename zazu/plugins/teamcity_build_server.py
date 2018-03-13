@@ -228,7 +228,7 @@ class TeamCityBuildServer(zazu.build_server.BuildServer, pyteamcity.TeamCity):
     @staticmethod
     def type():
         """Return the name of this BuildServer type."""
-        return 'TeamCity'
+        return 'teamcity'
 
     @staticmethod
     def from_config(config):

@@ -18,7 +18,7 @@ def repo_with_teamcity(git_repo):
     root = git_repo.working_tree_dir
     teamcity_config = {
         'ci': {
-            'type': 'TeamCity',
+            'type': 'teamcity',
             'url': 'http://teamcity.zazu.technology:8111/'
         }
     }
@@ -62,7 +62,7 @@ def repo_with_jira(git_repo):
     root = git_repo.working_tree_dir
     jira_config = {
         'issueTracker': {
-            'type': 'Jira',
+            'type': 'jira',
             'url': 'https://zazu.atlassian.net/',
             'project': 'TEST',
             'component': 'Zazu'
@@ -77,7 +77,7 @@ def test_teamcity_config(repo_with_teamcity):
     cfg = zazu.config.Config(repo_with_teamcity.working_tree_dir)
     tc = cfg.build_server()
     assert tc is not None
-    assert tc.type() == 'TeamCity'
+    assert tc.type() == 'teamcity'
 
 
 def test_invalid_ci(repo_with_invalid_ci):
@@ -90,7 +90,7 @@ def test_jira_config(repo_with_jira):
     cfg = zazu.config.Config(repo_with_jira.working_tree_dir)
     tracker = cfg.issue_tracker()
     assert tracker is not None
-    assert tracker.type() == 'Jira'
+    assert tracker.type() == 'jira'
 
 
 def test_check_repo(tmp_dir):

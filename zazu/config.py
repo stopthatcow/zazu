@@ -40,7 +40,7 @@ class PluginFactory(object):
         plugins = straight.plugin.load('zazu.plugins', subclasses=self._subclass)
         known_types = {p.type().lower(): p.from_config for p in plugins}
         if 'type' in config:
-            type = config['type'].lower()
+            type = config['type']
             if type in known_types:
                 return known_types[type](config)
             else:
@@ -71,7 +71,7 @@ def scm_host_factory(config):
                 default_host = value
                 continue
         if 'type' in value:
-            type = value['type'].lower()
+            type = value['type']
             if type in known_types:
                 hosts[name] = known_types[type].from_config(value)
             else:
