@@ -2,6 +2,7 @@
 import conftest
 import github
 import pytest
+import zazu.git_helper
 import zazu.github_helper
 import zazu.plugins.github_issue_tracker
 
@@ -112,6 +113,17 @@ def test_github_validate_id_format(tracker_mock):
     assert str(e.value) == 'issue id "lc-10" is not numeric'
     with pytest.raises(zazu.issue_tracker.IssueTrackerError):
         uut.validate_id_format('10a')
+
+
+def test_assign(mocker, tracker_mock):
+    uut = tracker_mock
+    uut._user = 'me'
+    mock_gh_issue = mocker.Mock()
+    mock_gh_issue.edit = mocker.Mock()
+    mock_gh_issue_wrapper = mocker.Mock()
+    mock_gh_issue_wrapper._github_issue = mock_gh_issue
+    uut.assign_issue_to_me(mock_gh_issue_wrapper)
+    mock_gh_issue.edit.assert_called_once_with(assignee='me')
 
 
 def test_github_issue_adaptor():

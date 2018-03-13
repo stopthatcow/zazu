@@ -195,7 +195,6 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         except git.exc.GitCommandError:
             click.secho('WARNING: unable to pull from origin!', fg='red')
     try:
-        # Check if the target branch already exists
         repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))
     except git.exc.GitCommandError:

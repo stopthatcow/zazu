@@ -95,7 +95,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def assign_issue_to_me(self, issue):
         """Assigns an issue to username of the client"""
-        self._jira().assign_issue(issue, self.user())
+        self._jira().assign_issue(issue._jira_issue, self.user())
 
     def default_project(self):
         """JIRA project associated with this tracker."""
