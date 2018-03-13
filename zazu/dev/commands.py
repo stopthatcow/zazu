@@ -178,9 +178,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     existing_branch = find_branch_with_id(repo, issue_descriptor.id)
     if existing_branch and not (rename_flag and repo.active_branch.name == existing_branch):
         raise click.ClickException('branch with same id exists: {}'.format(existing_branch))
-    if not no_verify:
-        issue = verify_ticket_exists(ctx.obj.issue_tracker(), issue_descriptor.id)
-        ctx.obj.issue_tracker().assign_issue(issue, ctx.obj.issue_tracker().user())
+    issue = None if no_verify else verify_ticket_exists(ctx.obj.issue_tracker(), issue_descriptor.id)
     if not issue_descriptor.description:
         issue_descriptor.description = zazu.util.prompt('Enter a short description for the branch')
     issue_descriptor.type = type
@@ -204,6 +202,8 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         else:
             click.echo('Creating new branch named "{}"...'.format(branch_name))
             repo.git.checkout('HEAD', b=branch_name)
+    if issue is not None:
+        ctx.obj.issue_tracker().assign_issue(issue, ctx.obj.issue_tracker().user())
 
 
 def wrap_text(text, width=90, indent=''):
