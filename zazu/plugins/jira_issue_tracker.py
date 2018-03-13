@@ -39,9 +39,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _jira(self):
         if self._jira_handle is None:
-            self._username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
+            username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
             self._jira_handle = jira.JIRA(self._base_url,
-                                          basic_auth=(self._username, password),
+                                          basic_auth=(username, password),
                                           options={'check_update': False}, max_retries=0)
         return self._jira_handle
 
