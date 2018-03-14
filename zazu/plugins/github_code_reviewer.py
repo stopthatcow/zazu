@@ -9,8 +9,8 @@ zazu.util.lazy_import(locals(), [
     'os'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2017"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2017'
 
 
 class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):

@@ -15,8 +15,8 @@ zazu.util.lazy_import(locals(), [
     'sys'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 
@@ -149,7 +149,7 @@ def load_yaml_file(filepath):
                 error_line = get_line(filepath, e.problem_mark.line)
                 col_indicator = make_col_indicator(e.problem_mark.column)
                 error_string = "invalid_syntax: '{}'\n" \
-                               "                 {}".format(error_line, col_indicator)
+                               '                 {}'.format(error_line, col_indicator)
             raise click.ClickException('unable to parse file \'{}\'\n{}'.format(filepath, error_string))
         return config
 
@@ -165,7 +165,7 @@ def find_and_load_yaml_file(search_paths, file_names):
 
 def user_config_filepath():
     """User configuration file path."""
-    return os.path.join(os.path.expanduser("~"), '.zazuconfig.yaml')
+    return os.path.join(os.path.expanduser('~'), '.zazuconfig.yaml')
 
 
 class Config(object):
@@ -204,7 +204,7 @@ class Config(object):
         try:
             return self.project_config()['issueTracker']
         except KeyError:
-            raise click.ClickException("no issueTracker config found")
+            raise click.ClickException('no issueTracker config found')
 
     def code_reviewer_config(self):
         """Return the code reviewer configuration if one exists.
@@ -216,7 +216,7 @@ class Config(object):
         try:
             return self.project_config()['codeReviewer']
         except KeyError:
-            raise click.ClickException("no codeReviewer config found")
+            raise click.ClickException('no codeReviewer config found')
 
     def code_reviewer(self):
         """Lazily create and return code reviewer object."""
@@ -229,7 +229,7 @@ class Config(object):
         try:
             return self.user_config()['scmHost']
         except KeyError:
-            raise click.ClickException("no scmHost config found in ~/zazuconfig.yaml")
+            raise click.ClickException('no scmHost config found in ~/zazuconfig.yaml')
 
     def scm_hosts(self):
         """Lazily create and return scm host list."""

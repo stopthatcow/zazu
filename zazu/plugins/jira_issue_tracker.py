@@ -8,8 +8,8 @@ zazu.util.lazy_import(locals(), [
     're'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'

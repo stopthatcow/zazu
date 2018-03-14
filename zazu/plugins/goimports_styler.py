@@ -2,8 +2,8 @@
 """GoimportsStyler plugin for zazu."""
 import zazu.styler
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2018"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2018'
 
 
 class GoimportsStyler(zazu.styler.Styler):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Package level defines for zazu."""
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class LazyVersion(object):
