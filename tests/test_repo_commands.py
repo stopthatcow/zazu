@@ -84,7 +84,6 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
         assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup', '-y', '-r'])
-        print result.output
         assert result.exit_code == 0
         assert not result.exception
         assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
