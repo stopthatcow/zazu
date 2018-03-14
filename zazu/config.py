@@ -126,7 +126,7 @@ def make_col_indicator(index):
 
 
 def find_file(search_paths, file_names):
-    """Search search_paths for filenames."""
+    """Search search_paths for file_names."""
     searched = path_gen(search_paths, file_names)
     for file_name in searched:
         try:
