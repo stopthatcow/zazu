@@ -126,6 +126,7 @@ def make_col_indicator(index):
 
 
 def find_file(search_paths, file_names):
+    """Search search_paths for filenames."""
     searched = path_gen(search_paths, file_names)
     for file_name in searched:
         try:
@@ -163,6 +164,7 @@ def find_and_load_yaml_file(search_paths, file_names):
 
 
 def user_config_filepath():
+    """User configuration file path."""
     return os.path.join(os.path.expanduser("~"), '.zazuconfig.yaml')
 
 
@@ -223,6 +225,7 @@ class Config(object):
         return self._code_reviewer
 
     def scm_host_config(self):
+        """Return scmHost config or raise ClickException if it is missing."""
         try:
             return self.user_config()['scmHost']
         except KeyError:
@@ -235,6 +238,7 @@ class Config(object):
         return self._scm_hosts
 
     def default_scm_host(self):
+        """Lazily create scm host list and return the default scm host."""
         self.scm_hosts()
         return self._default_scm_host
 
@@ -295,6 +299,7 @@ class Config(object):
 
 
 def maybe_write_default_user_config(path):
+    """Write a default user config file if it doesn't exist."""
     DEFAULT_USER_CONFIG = """# User configuration file for zazu.
     
 # SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
