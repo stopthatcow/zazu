@@ -22,10 +22,9 @@ class IssueDescriptor(object):
     def __init__(self, type, id, description=''):
         """Create an IssueDescriptor.
 
-        Args:
-            type (str): the issue type.
-            id (str): the issue tracker id.
-            description (str): a brief description (used for the branch name only).
+        Args:     type (str): the issue type.     id (str): the issue
+        tracker id.     description (str): a brief description (used for
+        the branch name only).
         """
         self.type = type
         self.id = id
@@ -42,7 +41,8 @@ class IssueDescriptor(object):
         return ret
 
     def readable_description(self):
-        """Get the human readable description by replacing underscores with spaces."""
+        """Get the human readable description by replacing underscores with
+        spaces."""
         return self.description.replace('_', ' ').capitalize()
 
 
@@ -110,7 +110,8 @@ def check_if_branch_is_protected(branch_name):
 
 
 def check_if_active_branch_can_be_renamed(repo):
-    """Throw if the current head is detached or if the active branch is protected."""
+    """Throw if the current head is detached or if the active branch is
+    protected."""
     if repo.head.is_detached:
         raise click.ClickException("the current HEAD is detached")
     check_if_branch_is_protected(repo.active_branch.name)
@@ -145,7 +146,7 @@ def rename(ctx, name):
 
 
 def find_branch_with_id(repo, id):
-    """Find a branch with a given issue id"""
+    """Find a branch with a given issue id."""
     descriptors = zazu.repo.commands.descriptors_from_branches([h.name for h in repo.heads])
     try:
         return next(d.get_branch_name() for d in descriptors if d.id == id)
@@ -216,7 +217,6 @@ def wrap_text(text, width=90, indent=''):
 
     Returns:
         str: A wrapped block of text.
-
     """
     return '\n'.join(['\n'.join(textwrap.wrap(line, width,
                                               break_long_words=False,
@@ -291,7 +291,8 @@ def review(ctx, base, head):
 @click.pass_context
 @click.argument('ticket', default='')
 def ticket(ctx, ticket):
-    """Open the ticket for the current feature or the one supplied in the ticket argument."""
+    """Open the ticket for the current feature or the one supplied in the
+    ticket argument."""
     issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if not ticket else ticket
     issue = verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
     url = issue.browse_url

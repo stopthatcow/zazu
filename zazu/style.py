@@ -36,7 +36,8 @@ git_lock = threading.Lock()
 
 
 def stage_patch(path, input_string, styled_string):
-    """Create a patch between input_string and output_string and add the patch to the git staging area.
+    """Create a patch between input_string and output_string and add the patch
+    to the git staging area.
 
     Args:
         path: the path of the file being patched.

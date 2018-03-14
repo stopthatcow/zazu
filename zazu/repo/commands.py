@@ -39,11 +39,10 @@ def init(ctx):
 def clone(ctx, repository, destination, nohooks, nosubmodules):
     """Clone and initialize a repo.
 
-    Args:
-        repository (str): name or url of the repository to clone.
-        destination (str): path to clone the repo to.
-        nohooks (bool): if True, git hooks are not installed.
-        nosubmodules (bool): if True submodules are not initialized.
+    Args:     repository (str): name or url of the repository to clone.
+    destination (str): path to clone the repo to.     nohooks (bool): if
+    True, git hooks are not installed.     nosubmodules (bool): if True
+    submodules are not initialized.
     """
     if os.path.isdir(repository) or ':' in repository:
         repository_url = repository
@@ -81,7 +80,8 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
 @click.option('-y', '--yes', is_flag=True, help='Don\'t ask to before deleting branches')
 @click.pass_context
 def cleanup(ctx, remote, target_branch, yes):
-    """Clean up merged branches that have been merged or are associated with closed/resolved tickets."""
+    """Clean up merged branches that have been merged or are associated with
+    closed/resolved tickets."""
     ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
     try:
@@ -141,7 +141,8 @@ def get_closed_branches(issue_tracker, branches):
 
 
 def ticket_is_closed(issue_tracker, descriptor):
-    """Determine if a ticket is closed or not, defaults to False in case the ticket isn't found by the issue tracker."""
+    """Determine if a ticket is closed or not, defaults to False in case the
+    ticket isn't found by the issue tracker."""
     try:
         return issue_tracker.issue(descriptor.id).closed
     except zazu.issue_tracker.IssueTrackerError:

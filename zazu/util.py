@@ -51,7 +51,8 @@ __copyright__ = "Copyright 2016"
 
 
 def check_output(*args, **kwargs):
-    """Like subprocess.check_output but raises an exception if the program cannot be found."""
+    """Like subprocess.check_output but raises an exception if the program
+    cannot be found."""
     try:
         return subprocess.check_output(*args, **kwargs)
     except OSError:
@@ -59,7 +60,8 @@ def check_output(*args, **kwargs):
 
 
 def call(*args, **kwargs):
-    """Like subprocess.call but raise an exception if the program cannot be found."""
+    """Like subprocess.call but raise an exception if the program cannot be
+    found."""
     try:
         return subprocess.call(*args, **kwargs)
     except OSError:
@@ -67,7 +69,8 @@ def call(*args, **kwargs):
 
 
 def check_popen(args, stdin_str='', *other_args, **kwargs):
-    """Like subprocess.Popen but raises an exception if the program cannot be found.
+    """Like subprocess.Popen but raises an exception if the program cannot be
+    found.
 
     Args:
         args: passed to Popen.
@@ -77,7 +80,6 @@ def check_popen(args, stdin_str='', *other_args, **kwargs):
     Raises:
         CalledProcessError: on non zero return from the child process.
         click.ClickException: if the program can't be found.
-
     """
     try:
         p = subprocess.Popen(args=args, stdin=subprocess.PIPE,
@@ -97,7 +99,6 @@ def cd(path):
 
     Args:
         path: the path to change to.
-
     """
     prev_dir = os.getcwd()
     os.chdir(path)
@@ -108,14 +109,14 @@ def cd(path):
 
 
 def dispatch(work):
-    """Dispatch a list of callables in multiple threads and yields their returns.
+    """Dispatch a list of callables in multiple threads and yields their
+    returns.
 
     Args:
         work: the list of callables to execute.
 
     Yields:
         the results of the callables as they are finished.
-
     """
     with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
         futures = {executor.submit(w): w for w in work}
@@ -136,7 +137,6 @@ def format_checklist_item(tag, text, tag_formats=FAIL_OK):
 
     Returns (str):
         the checklist string.
-
     """
     return '[{}] {}'.format(tag_formats[tag], text)
 
@@ -151,7 +151,6 @@ def prompt(text, default=None, expected_type=str):
 
     Returns:
         user's input casted to expected_type or default if no inout is provided.
-
     """
     if default is not None:
         result = builtins.input('{} [{}]: '.format(text, default)) or default
@@ -166,7 +165,6 @@ def pick(choices, message):
     Args:
         choices: list of possible choices.
         message: the message to display to the user.
-
     """
     if not choices:
         return None
@@ -183,7 +181,8 @@ def pick(choices, message):
 
 
 def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False):
-    """List files recursively that match any of the include glob patterns but are not in an excluded pattern.
+    """List files recursively that match any of the include glob patterns but
+    are not in an excluded pattern.
 
     Args:
         base_path (str): the path to scan.
@@ -193,7 +192,6 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
 
     Returns:
         list of str: of file paths (relative to the base path) that match the input parameters.
-
     """
     files = []
     exclude_dirs = set([os.path.normpath(e) for e in exclude_patterns])
@@ -219,7 +217,6 @@ def pprint_list(data):
 
     Returns:
         str: a newline separated pretty printed list.
-
     """
     return '\n  - {}'.format('\n  - '.join(str(x) for x in data))
 
@@ -236,7 +233,6 @@ def flatten_dict(d, separator='.', prefix=''):
 
     Returns:
         dict: a dictionary with keys compressed and separated by separator.
-
     """
     return {prefix + separator + k if prefix else k: v
             for kk, vv in d.items()
@@ -256,7 +252,6 @@ def unflatten_dict(d, separator='.'):
 
     Returns:
         dict: a expanded dictionary with keys uncompressed.
-
     """
     ret = dict()
     for key, value in d.iteritems():
@@ -311,10 +306,8 @@ def dict_del_nested(d, keys):
 def dict_update_nested(d, update):
     """Updated a nested dictionary given an update dictionary.
 
-    Args:
-        d (dict): dictionary to add the update to.
-        update (dict): update to apply to the dictionary.
-
+    Args:     d (dict): dictionary to add the update to.     update
+    (dict): update to apply to the dictionary.
     """
     dict_recursive_update.recursive_update(d, update)
 
@@ -327,6 +320,5 @@ def raise_uninstalled(pkg_name):
 
     Raises:
         click.ClickException
-
     """
     raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))

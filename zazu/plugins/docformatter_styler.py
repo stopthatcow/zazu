@@ -10,7 +10,8 @@ class DocformatterStyler(zazu.styler.Styler):
     """Docformatter plugin for code styling."""
     @staticmethod
     def default_extensions():
-        """Return the list of file extensions that are compatible with this Styler."""
+        """Return the list of file extensions that are compatible with this
+        Styler."""
         return ['*.py']
 
     @staticmethod

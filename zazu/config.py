@@ -22,14 +22,15 @@ PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 
 
 class PluginFactory(object):
-    """A genetic plugin factory that uses the type field of the config to create the appropriate class."""
+    """A genetic plugin factory that uses the type field of the config to
+    create the appropriate class."""
 
     def __init__(self, name, subclass):
         """Constructor.
 
-        Args:
-            name (str): the name of the plugin type.
-            subclass (type): subclasses of this type will be loaded as potential plugins.
+        Args:     name (str): the name of the plugin type.     subclass
+        (type): subclasses of this type will be loaded as potential
+        plugins.
         """
         self._subclass = subclass
         self._name = name
@@ -106,7 +107,8 @@ def styler_factory(config):
 
 
 def path_gen(search_paths, file_names):
-    """Generate full paths given a list of directories and list of file names."""
+    """Generate full paths given a list of directories and list of file
+    names."""
     for p in search_paths:
         for f in file_names:
             yield os.path.join(p, f)
@@ -170,7 +172,8 @@ class Config(object):
     """Hold all zazu configuration info."""
 
     def __init__(self, repo_root):
-        """Constructor, doesn't parse configuration or require repo to be valid."""
+        """Constructor, doesn't parse configuration or require repo to be
+        valid."""
         self.repo_root = repo_root
         if self.repo_root is not None:
             try:
@@ -197,7 +200,6 @@ class Config(object):
 
         Raises:
             click.ClickException: if no issue tracker configuration is present.
-
         """
         try:
             return self.project_config()['issueTracker']
@@ -209,7 +211,6 @@ class Config(object):
 
         Raises:
            click.ClickException: if no code review configuration is present.
-
         """
         try:
             return self.project_config()['codeReviewer']

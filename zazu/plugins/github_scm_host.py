@@ -18,8 +18,7 @@ class GitHubScmHost(zazu.scm_host.ScmHost):
     def __init__(self, user):
         """Create a GitHubScmHost.
 
-        Args:
-            user (str): the github username.
+        Args:     user (str): the github username.
         """
         self._user = user
         self._github_handle = None
@@ -54,7 +53,8 @@ class GitHubScmHost(zazu.scm_host.ScmHost):
 
 
 class GitHubScmRepoAdaptor(zazu.scm_host.ScmHostRepo):
-    """Wraps a repo returned from the GirHub api and adapts it to the zazu.scm_host.ScmHostRepo interface."""
+    """Wraps a repo returned from the GirHub api and adapts it to the
+    zazu.scm_host.ScmHostRepo interface."""
 
     def __init__(self, github_repo):
         """Create a GitHubScmRepoAdaptor by wrapping a GitHub Repo object.

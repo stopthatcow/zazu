@@ -19,9 +19,8 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
     def __init__(self, owner, repo):
         """Create a GitHubIssueTracker.
 
-        Args:
-            owner (str): the github repo owner's username or organization name.
-            repo (str): the github repo name.
+        Args:     owner (str): the github repo owner's username or
+        organization name.     repo (str): the github repo name.
         """
         self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
         self._owner = owner
@@ -57,12 +56,10 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
     def create_issue(self, project, issue_type, summary, description, component):
         """Create a new issue on github.
 
-        Args:
-            project (str): meaningless for GitHub.
-            issue_type (str): meaningless for GitHub.
-            summary (str): a summary of the issue.
-            description (str): a detailed description of the issue.
-            component (str): meaningless for GitHub.
+        Args:     project (str): meaningless for GitHub.     issue_type
+        (str): meaningless for GitHub.     summary (str): a summary of
+        the issue.     description (str): a detailed description of the
+        issue.     component (str): meaningless for GitHub.
         """
         try:
             return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description, assignee=self.user()))
@@ -123,7 +120,8 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
-    """Wraps a returned issue from PyGithub and adapts it to the zazu.issue_tracker.Issue interface."""
+    """Wraps a returned issue from PyGithub and adapts it to the
+    zazu.issue_tracker.Issue interface."""
 
     def __init__(self, github_issue):
         """Create a zazu Issue interface by wrapping a PyGithub Issue.
