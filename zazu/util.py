@@ -66,7 +66,7 @@ def call(*args, **kwargs):
         raise_uninstalled(args[0])
 
 
-def check_popen(args, stdin_str='', *other_args, **kwargs):
+def check_popen(args, stdin_str='', filepath='', *other_args, **kwargs):
     """Like subprocess.Popen but raises an exception if the program cannot be found.
 
     Args:

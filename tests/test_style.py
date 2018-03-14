@@ -38,7 +38,7 @@ def repo_with_style_errors(repo_with_style):
 def test_astyle(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
-    ret = styler.style_string('foo')
+    ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['astyle', '-U'], stdin_str='foo')
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.c',
@@ -58,14 +58,14 @@ def test_eslint():
 
 def test_autopep8():
     styler = zazu.plugins.autopep8_styler.Autopep8Styler()
-    ret = styler.style_string('def foo ():\n  pass')
+    ret = styler.style_string('def foo ():\n  pass', None)
     assert ret == 'def foo():\n    pass\n'
     assert ['*.py'] == styler.default_extensions()
 
 
 def test_docformatter():
     styler = zazu.plugins.docformatter_styler.DocformatterStyler()
-    ret = styler.style_string('def foo ():\n"""doc"""\n  pass')
+    ret = styler.style_string('def foo ():\n"""doc"""\n  pass', None)
     assert ret == 'def foo ():\n"""doc"""\n  pass'
     assert ['*.py'] == styler.default_extensions()
 
@@ -73,7 +73,7 @@ def test_docformatter():
 def test_goimports(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.goimports_styler.GoimportsStyler(options=['-U'])
-    ret = styler.style_string('foo')
+    ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['goimports', '-U'], stdin_str='foo')
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.go']
@@ -82,7 +82,7 @@ def test_goimports(mocker):
 def test_generic(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.generic_styler.GenericStyler(command='sed', options=['-U'])
-    ret = styler.style_string('foo')
+    ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['sed', '-U'], stdin_str='foo')
     assert ret == 'bar'
     assert styler.default_extensions() == []
@@ -91,7 +91,7 @@ def test_generic(mocker):
 def test_esformatter(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.esformatter_styler.EsformatterStyler(options=['-U'])
-    ret = styler.style_string('foo')
+    ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['esformatter', '-U'], stdin_str='foo')
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.js', '*.es', '*.es6']
