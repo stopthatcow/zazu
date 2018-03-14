@@ -6,8 +6,8 @@ zazu.util.lazy_import(locals(), [
     'pip'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 @click.command()

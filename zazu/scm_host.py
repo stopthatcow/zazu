@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Source code management (SCM) host related classes."""
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2018"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2018'
 
 
 class ScmHost(object):

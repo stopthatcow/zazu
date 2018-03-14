@@ -9,8 +9,8 @@ zazu.util.lazy_import(locals(), [
     'os'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
@@ -42,6 +42,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         return self._github().get_user(self._owner).get_repo(self._repo)
 
     def user(self):
+        """Get username of authenticated user."""
         if self._user is None:
             self._user = self._github().get_user().login
         return self._user
@@ -96,6 +97,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 
         Returns:
             normalized id string
+
         """
         if not id.isdigit():
             raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not numeric'.format(id))

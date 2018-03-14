@@ -6,8 +6,8 @@ zazu.util.lazy_import(locals(), [
     'keyring'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 def get_user_pass_credentials(component, use_saved=True):
@@ -26,5 +26,5 @@ def get_user_pass_credentials(component, use_saved=True):
         if click.confirm('Do you want to save these credentials?', default=True):
             keyring.set_password(component, keyring_user, user)
             keyring.set_password(component, keyring_password, password)
-            click.echo("saved.")
+            click.echo('saved.')
     return user, password
