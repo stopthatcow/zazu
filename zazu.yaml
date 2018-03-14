@@ -1,4 +1,4 @@
-# Zozu config file for zazu itself.
+# Zazu config file for zazu itself.
 
 issueTracker:
     type: github
