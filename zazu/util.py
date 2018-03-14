@@ -46,8 +46,8 @@ lazy_import(locals(), [
     'subprocess',
     'sys'
 ])
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 def check_output(*args, **kwargs):
