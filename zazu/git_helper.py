@@ -42,7 +42,8 @@ def get_default_git_hooks():
 
 
 def get_touched_files(repo):
-    """Get list of files that are scheduled to be committed (Added, created, modified, or renamed)."""
+    """Get list of files that are scheduled to be committed (Added, created,
+    modified, or renamed)."""
     return [file for file in repo.git.diff('--cached', '--name-only', '--diff-filter=ACMR').split('\n') if file]
 
 

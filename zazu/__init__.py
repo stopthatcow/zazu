@@ -5,7 +5,8 @@ __copyright__ = "Copyright 2016"
 
 
 class LazyVersion(object):
-    """Lazily loads version information only when it is converted to a string."""
+    """Lazily loads version information only when it is converted to a
+    string."""
 
     def __str__(self):
         """Load version information from version.txt file."""

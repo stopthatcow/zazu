@@ -22,10 +22,10 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
     def __init__(self, base_url, default_project, components):
         """Create a JiraIssueTracker.
 
-        Args:
-            base_url (str): base URL for the JIRA instance.
-            default_project (str): project that new issues will be created in by default.
-            components (list of str): list of components that new issues can be associated with.
+        Args:     base_url (str): base URL for the JIRA instance.
+        default_project (str): project that new issues will be created
+        in by default.     components (list of str): list of components
+        that new issues can be associated with.
         """
         self._base_url = base_url
         self._default_project = default_project
@@ -71,12 +71,11 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
     def create_issue(self, project, issue_type, summary, description, component):
         """Create a new issue on JIRA.
 
-        Args:
-            project (str): the JIRA project short string to create the issue in.
-            issue_type (str): the JIRA issue type to create.
-            summary (str): a summary of the issue.
-            description (str): a detailed description of the issue.
-            component (str): the JIRA component to associate with the issue.
+        Args:     project (str): the JIRA project short string to create
+        the issue in.     issue_type (str): the JIRA issue type to
+        create.     summary (str): a summary of the issue.
+        description (str): a detailed description of the issue.
+        component (str): the JIRA component to associate with the issue.
         """
         try:
             issue_dict = {
@@ -154,7 +153,8 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
-    """Wraps a issue returned from the jiri api and adapts it to the zazu.issue_tracker.Issue interface."""
+    """Wraps a issue returned from the jiri api and adapts it to the
+    zazu.issue_tracker.Issue interface."""
 
     def __init__(self, jira_issue, tracker_handle):
         """Create a JiraIssueAdaptor by wrapping a jira Issue object.

@@ -11,7 +11,8 @@ class GenericStyler(zazu.styler.Styler):
 
     @staticmethod
     def default_extensions():
-        """Return the list of file extensions that are compatible with this Styler."""
+        """Return the list of file extensions that are compatible with this
+        Styler."""
         return []
 
     @staticmethod

@@ -19,9 +19,8 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     def __init__(self, owner, repo):
         """Create a GitHubCodeReviewer.
 
-        Args:
-            owner (str): the github repo owner's username or organization name.
-            repo (str): the github repo name.
+        Args:     owner (str): the github repo owner's username or
+        organization name.     repo (str): the github repo name.
         """
         self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
         self._owner = owner
@@ -90,7 +89,8 @@ class GitHubCodeReview(zazu.code_reviewer.CodeReview):
     """Adapts a github pull request object into a zazu CodeReview object."""
 
     def __init__(self, github_pull_request):
-        """Create a GitHubCodeReview interface by wrapping a pygithub PullRequest object."""
+        """Create a GitHubCodeReview interface by wrapping a pygithub
+        PullRequest object."""
         self._pr = github_pull_request
 
     @property

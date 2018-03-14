@@ -16,11 +16,10 @@ class Styler(object):
     def __init__(self, command=None, options=None, excludes=None, includes=None):
         """Constructor.
 
-        Args:
-            command (str): command to use when running the styler.
-            options (list): flags to pass to the styler.
-            excludes (list): file patterns to exclude from styling.
-            includes (list): file patterns to include for styling.
+        Args:     command (str): command to use when running the styler.
+        options (list): flags to pass to the styler.     excludes
+        (list): file patterns to exclude from styling.     includes
+        (list): file patterns to include for styling.
         """
         self.command = self.type() if command is None else command
         self.options = [] if options is None else options
@@ -36,7 +35,6 @@ class Styler(object):
 
         Returns:
             Styled string.
-
         """
         args = [self.command] + self.options
         return zazu.util.check_popen(args=args, stdin_str=string)
@@ -52,7 +50,6 @@ class Styler(object):
 
         Returns:
             Styler with config options set.
-
         """
         obj = cls(config.get('command', None),
                   config.get('options', []),
@@ -62,7 +59,8 @@ class Styler(object):
 
     @staticmethod
     def required_options():
-        """Options required to make the tool use stdin for input and output styled version to stdout"""
+        """Options required to make the tool use stdin for input and output
+        styled version to stdout."""
         return []
 
     @staticmethod

@@ -88,7 +88,8 @@ def git_repo_with_local_origin(git_repo):
 
 @contextlib.contextmanager
 def working_directory(path):
-    """Changes the working directory to the given path back to its previous value on exit"""
+    """Changes the working directory to the given path back to its previous
+    value on exit."""
     prev_cwd = os.getcwd()
     os.chdir(path)
     try:
@@ -98,7 +99,7 @@ def working_directory(path):
 
 
 def dict_to_obj(dictionary):
-    """Creates a object from a dictionary"""
+    """Creates a object from a dictionary."""
     class Struct(object):
 
         def __init__(self, d):
