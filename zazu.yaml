@@ -25,6 +25,7 @@ style:
       - type: autopep8
         options:
           - "--max-line-length=150"
+      - type: docformatter
       # Fix common misspellings.
       - type: generic
         command: sed
