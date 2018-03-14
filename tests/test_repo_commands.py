@@ -65,7 +65,7 @@ def test_cleanup(git_repo):
 
 
 def test_cleanup_remote(git_repo_with_local_origin, mocker):
-    mocker.patch('zazu.repo.commands.get_closed_branches', return_value=['feature/F00-1'])
+    mocker.patch('zazu.repo.commands.get_closed_branches', return_value={'feature/F00-1'})
     git_repo = git_repo_with_local_origin
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
@@ -84,6 +84,7 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
         assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup', '-y', '-r'])
+        print result.output
         assert result.exit_code == 0
         assert not result.exception
         assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
@@ -103,7 +104,7 @@ def test_get_closed_branches(mocker):
     mocker.patch('zazu.repo.commands.ticket_is_closed', side_effect=foo1_is_closed)
     issue_tracker = mocker.Mock()
     result = zazu.repo.commands.get_closed_branches(issue_tracker, ['feature/FOO-1', 'feature/FOO-2'])
-    assert result == ['feature/FOO-1']
+    assert result == {'feature/FOO-1'}
 
 
 def test_ticket_is_closed(mocker):
