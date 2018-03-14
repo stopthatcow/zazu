@@ -60,7 +60,7 @@ def repo_with_jira(git_repo):
     root = git_repo.working_tree_dir
     jira_config = {
         'issueTracker': {
-            'type': 'Jira',
+            'type': 'jira',
             'url': 'https://zazu.atlassian.net/',
             'project': 'TEST',
             'component': 'Zazu'
@@ -87,7 +87,7 @@ def test_jira_config(repo_with_jira):
     cfg = zazu.config.Config(repo_with_jira.working_tree_dir)
     tracker = cfg.issue_tracker()
     assert tracker is not None
-    assert tracker.type() == 'Jira'
+    assert tracker.type() == 'jira'
 
 
 def test_check_repo(tmp_dir):

@@ -150,7 +150,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
     @staticmethod
     def type():
         """Return the name of this IssueTracker type."""
-        return 'Jira'
+        return 'jira'
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
