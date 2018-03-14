@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
 import keyring
-import zazu.plugins.teamcity_build_server
+import zazu.credential_helper
 
 __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2017"
