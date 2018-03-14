@@ -29,7 +29,7 @@ pytest_runner = ['pytest-runner>=2.0'] if needs_pytest else []
 setuptools.setup(
     name='zazu',
     version=version,
-    description='A development workflow management CLI for GitHub, JIRA, and TeamCity',
+    description='A development workflow management CLI for GitHub and JIRA',
     long_description=description,
     author='Nicholas Wiles',
     author_email='nhwiles@gmail.com',
@@ -47,7 +47,7 @@ setuptools.setup(
         'Topic :: Software Development :: Quality Assurance',
         'Intended Audience :: Developers'
     ],
-    keywords='teamcity, jira, git, github',
+    keywords='jira, git, github',
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['githooks/*', 'version.txt']},
     install_requires=['click>=6.7',                    # BSD
@@ -56,7 +56,6 @@ setuptools.setup(
                       'jira>=1.0.11',                  # BSD
                       'GitPython>=2.1.8',              # BSD
                       'dict-recursive-update>=1.0.1',  # MIT
-                      'pyteamcity>=0.1.1',             # MIT
                       'ruamel.yaml<=0.15',             # MIT
                       'keyring>=11.0',                 # MIT
                       'keyrings.alt>=2.3',             # MIT

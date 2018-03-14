@@ -12,19 +12,14 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-def test_cli(git_repo):
+def test_init(git_repo):
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['repo', 'setup', 'hooks'])
+        result = runner.invoke(zazu.cli.cli, ['repo', 'init'])
+        print result.output
         assert result.exit_code == 0
         assert zazu.git_helper.check_git_hooks(dir)
-
-
-def test_init():
-    runner = click.testing.CliRunner()
-    result = runner.invoke(zazu.cli.cli, ['repo', 'init'])
-    assert result.exit_code != 0
 
 
 def test_cleanup_no_develop(git_repo):
@@ -172,12 +167,3 @@ def test_clone_error(mocker, git_repo):
         assert result.exit_code != 0
         assert result.exception
     git.Repo.clone_from.assert_called_once()
-
-
-def test_repo_ci_no_config(repo_with_build_config):
-    dir = repo_with_build_config.working_tree_dir
-    with zazu.util.cd(dir):
-        runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['repo', 'setup', 'ci'])
-        assert result.exit_code != 0
-        assert result.exception

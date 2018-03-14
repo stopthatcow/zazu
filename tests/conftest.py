@@ -54,47 +54,6 @@ def repo_with_style(git_repo):
 
 
 @pytest.fixture()
-def repo_with_build_config(git_repo):
-    root = git_repo.working_tree_dir
-    config = {
-        'components': [
-            {
-                'name': 'zazu',
-                'description': 'A description',
-                'goals': [
-                    {
-                        'name': 'echo_foobar',
-                        'description': 'echo_foobar description',
-                        'builds': [
-                            {
-                                'arch': 'host',
-                                'description': 'echo_foobar build description',
-                                'script': ['echo "foobar"'],
-                                'artifacts': ['artifact.zip']
-                            },
-                            {
-                                'arch': 'arm-linux-gnueabihf'
-                            }
-                        ]
-                    },
-                    {
-                        'name': 'cmake_build',
-                        'builds': [
-                            {
-                                'arch': 'host'
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
-    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(config, file)
-    return git_repo
-
-
-@pytest.fixture()
 def repo_with_empty_zazu_file(git_repo):
     root = git_repo.working_tree_dir
     with open(os.path.join(root, 'zazu.yaml'), 'a'):
