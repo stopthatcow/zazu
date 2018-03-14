@@ -27,6 +27,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         self._owner = owner
         self._repo = repo
         self._github_handle = None
+        self._user = None
 
     def connect(self):
         """Get handle to ensure that github credentials are in place."""
@@ -40,16 +41,16 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
     def _github_repo(self):
         return self._github().get_user(self._owner).get_repo(self._repo)
 
-    def browse_url(self, issue_id):
-        """Get the url to open to display the issue."""
-        self.validate_id_format(issue_id)
-        return '{}/issues/{}'.format(self._base_url, issue_id)
+    def user(self):
+        if self._user is None:
+            self._user = self._github().get_user().login
+        return self._user
 
     def issue(self, issue_id):
         """Get an issue by id."""
         self.validate_id_format(issue_id)
         try:
-            return GitHubIssueAdaptor(self._github_repo().get_issue(int(issue_id)), self)
+            return GitHubIssueAdaptor(self._github_repo().get_issue(int(issue_id)))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
@@ -64,9 +65,13 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
             component (str): meaningless for GitHub.
         """
         try:
-            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description), self)
+            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description, assignee=self.user()))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
+
+    def assign_issue(self, issue, user):
+        """Assign an issue to a user."""
+        issue._github_issue.edit(assignee=user)
 
     def default_project(self):
         """Meaningless for GitHub."""
@@ -120,15 +125,13 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
     """Wraps a returned issue from PyGithub and adapts it to the zazu.issue_tracker.Issue interface."""
 
-    def __init__(self, github_issue, tracker_handle):
+    def __init__(self, github_issue):
         """Create a zazu Issue interface by wrapping a PyGithub Issue.
 
         Args:
             github_issue: PyGithub issue handle.
-            tracker_handle: The tracker associated with this issue.
         """
         self._github_issue = github_issue
-        self._tracker = tracker_handle
 
     @property
     def name(self):
@@ -163,7 +166,7 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
     @property
     def browse_url(self):
         """Get the url to open to display the issue."""
-        return self._tracker.browse_url(self.id)
+        return self._github_issue.html_url
 
     @property
     def id(self):
