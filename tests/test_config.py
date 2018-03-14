@@ -14,20 +14,6 @@ __copyright__ = "Copyright 2016"
 
 
 @pytest.fixture()
-def repo_with_teamcity(git_repo):
-    root = git_repo.working_tree_dir
-    teamcity_config = {
-        'ci': {
-            'type': 'teamcity',
-            'url': 'http://teamcity.zazu.technology:8111/'
-        }
-    }
-    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(teamcity_config, file)
-    return git_repo
-
-
-@pytest.fixture()
 def temp_user_config(tmp_dir):
     config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
     path = os.path.join(tmp_dir, '.zazuconfig.yaml')
@@ -45,15 +31,27 @@ def empty_user_config(tmp_dir):
 
 
 @pytest.fixture()
-def repo_with_invalid_ci(git_repo):
+def repo_with_invalid_issue_tracker(git_repo):
     root = git_repo.working_tree_dir
-    teamcity_config = {
-        'ci': {
+    config = {
+        'issueTracker': {
+        }
+    }
+    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
+        yaml.dump(config, file)
+    return git_repo
+
+
+@pytest.fixture()
+def repo_with_unknown_issue_tracker(git_repo):
+    root = git_repo.working_tree_dir
+    config = {
+        'issueTracker': {
             'type': 'foobar',
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(teamcity_config, file)
+        yaml.dump(config, file)
     return git_repo
 
 
@@ -73,17 +71,16 @@ def repo_with_jira(git_repo):
     return git_repo
 
 
-def test_teamcity_config(repo_with_teamcity):
-    cfg = zazu.config.Config(repo_with_teamcity.working_tree_dir)
-    tc = cfg.build_server()
-    assert tc is not None
-    assert tc.type() == 'teamcity'
-
-
-def test_invalid_ci(repo_with_invalid_ci):
-    cfg = zazu.config.Config(repo_with_invalid_ci.working_tree_dir)
+def test_invalid_issue_tracker(repo_with_invalid_issue_tracker):
+    cfg = zazu.config.Config(repo_with_invalid_issue_tracker.working_tree_dir)
     with pytest.raises(click.ClickException):
-        cfg.build_server()
+        cfg.issue_tracker()
+
+
+def test_unknown_issue_tracker(repo_with_unknown_issue_tracker):
+    cfg = zazu.config.Config(repo_with_unknown_issue_tracker.working_tree_dir)
+    with pytest.raises(click.ClickException):
+        cfg.issue_tracker()
 
 
 def test_jira_config(repo_with_jira):

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Holds the zazu repo subcommand."""
-import zazu.build
 import zazu.git_helper
 import zazu.github_helper
 import zazu.util
@@ -23,35 +22,12 @@ def repo(ctx):
     pass
 
 
-@repo.group()
+@repo.command()
 @click.pass_context
-def setup(ctx):
-    """Handle repository services setup."""
+def init(ctx):
+    """Install git hooks to repo."""
     ctx.obj.check_repo()
-    pass
-
-
-@setup.command()
-@click.pass_context
-def hooks(ctx):
-    """Install default git hooks."""
     zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
-
-
-@setup.command()
-@click.pass_context
-def ci(ctx):
-    """Post CI configurations to the CI server based on a zazu.yaml file."""
-    ctx.obj.check_repo()
-    build_server = ctx.obj.build_server()
-    project_config = ctx.obj.project_config()
-    if click.confirm("Post build configuration to {}?".format(build_server.type())):
-        scm_url = ctx.obj.repo.remotes.origin.url
-        _, scm_name = zazu.github_helper.parse_github_url(scm_url)
-        components = project_config['components']
-        for c in components:
-            component = zazu.build.ComponentConfiguration(c)
-            build_server.setup_component(component, scm_name, scm_url)
 
 
 @repo.command()
@@ -97,12 +73,6 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
 
     except git.GitCommandError as err:
         raise click.ClickException(str(err))
-
-
-@repo.command()
-def init():
-    """Initialize repo directory structure."""
-    raise NotImplementedError
 
 
 @repo.command()
