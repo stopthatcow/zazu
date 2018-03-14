@@ -2,12 +2,13 @@
 """DocformatterStyler plugin for zazu."""
 import zazu.styler
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2018"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2018'
 
 
 class DocformatterStyler(zazu.styler.Styler):
     """Docformatter plugin for code styling."""
+
     @staticmethod
     def default_extensions():
         """Return the list of file extensions that are compatible with this Styler."""
@@ -20,4 +21,5 @@ class DocformatterStyler(zazu.styler.Styler):
 
     @staticmethod
     def required_options():
+        """Options required to make docformatter use stdin."""
         return ['-']

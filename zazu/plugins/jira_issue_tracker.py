@@ -8,8 +8,8 @@ zazu.util.lazy_import(locals(), [
     're'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
@@ -51,6 +51,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         return '{}/browse/{}'.format(self._base_url, normalized_id)
 
     def user(self):
+        """Get username of authenticated user."""
         if self._user is None:
             self._user = self._jira().current_user()
         return self._user
@@ -120,6 +121,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
         Returns:
             normalized id string
+
         """
         components = id.split('-', 1)
         number = components.pop()

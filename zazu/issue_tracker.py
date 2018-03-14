@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Issue tracker related classes."""
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class IssueTracker(object):

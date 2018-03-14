@@ -12,8 +12,8 @@ zazu.util.lazy_import(locals(), [
     'urllib'
 
 ])
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class IssueDescriptor(object):
@@ -61,7 +61,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists."""
     try:
         issue = issue_tracker.issue(ticket_id)
-        click.echo("Found ticket {}: {}".format(issue.id, issue.name))
+        click.echo('Found ticket {}: {}'.format(issue.id, issue.name))
         return issue
     except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket for id "{}"'.format(ticket_id))
@@ -86,7 +86,7 @@ def make_issue_descriptor(name):
     if len(components) > 1:
         type = components[-2]
         if type not in known_types:
-            raise click.ClickException("Branch type specifier must be one of {}".format(known_types))
+            raise click.ClickException('Branch type specifier must be one of {}'.format(known_types))
     components = components.pop().split('_', 1)
     if len(components) == 2:
         description = components[1]
@@ -112,7 +112,7 @@ def check_if_branch_is_protected(branch_name):
 def check_if_active_branch_can_be_renamed(repo):
     """Throw if the current head is detached or if the active branch is protected."""
     if repo.head.is_detached:
-        raise click.ClickException("the current HEAD is detached")
+        raise click.ClickException('the current HEAD is detached')
     check_if_branch_is_protected(repo.active_branch.name)
 
 
@@ -145,7 +145,7 @@ def rename(ctx, name):
 
 
 def find_branch_with_id(repo, id):
-    """Find a branch with a given issue id"""
+    """Find a branch with a given issue id."""
     descriptors = zazu.repo.commands.descriptors_from_branches([h.name for h in repo.heads])
     try:
         return next(d.get_branch_name() for d in descriptors if d.id == id)
@@ -243,7 +243,7 @@ def status(ctx):
             click.echo(click.style('    Description:\n', fg='green'), nl=False)
             click.echo(wrap_text(issue.description, indent='    '))
         except zazu.issue_tracker.IssueTrackerError:
-            click.echo("    No ticket found")
+            click.echo('    No ticket found')
 
         matches = pulls_future.result()
         click.secho('Review info:', bg='white', fg='black')

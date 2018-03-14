@@ -2,8 +2,8 @@
 """AstyleStyler plugin for zazu."""
 import zazu.styler
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2017"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2017'
 
 
 class AstyleStyler(zazu.styler.Styler):

@@ -9,8 +9,8 @@ import zazu.repo.commands
 import zazu.style
 import zazu.upgrade
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 @click.group()
@@ -23,7 +23,7 @@ def cli(ctx):
 
 def init():
     """Run on startup to allow zazu to be run as a module."""
-    if __name__ == "__main__":
+    if __name__ == '__main__':
         cli()
 
 

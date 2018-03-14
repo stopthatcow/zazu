@@ -11,8 +11,8 @@ zazu.util.lazy_import(locals(), [
     'socket'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 @click.group()
