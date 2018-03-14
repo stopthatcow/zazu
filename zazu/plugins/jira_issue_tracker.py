@@ -31,6 +31,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         self._default_project = default_project
         self._components = components
         self._jira_handle = None
+        self._user = None
 
     def connect(self):
         """Get handle to ensure that JIRA credentials are in place."""
@@ -48,6 +49,11 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         """Get the url to open to display the issue."""
         normalized_id = self.validate_id_format(id)
         return '{}/browse/{}'.format(self._base_url, normalized_id)
+
+    def user(self):
+        if self._user is None:
+            self._user = self._jira().current_user()
+        return self._user
 
     def issue(self, id):
         """Get an issue by id."""
@@ -86,6 +92,10 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             return JiraIssueAdaptor(issue, self)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
+
+    def assign_issue(self, issue, user):
+        """Assign an issue to a user."""
+        self._jira().assign_issue(issue._jira_issue, user)
 
     def default_project(self):
         """JIRA project associated with this tracker."""
