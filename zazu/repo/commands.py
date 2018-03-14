@@ -130,8 +130,8 @@ def cleanup(ctx, remote, target_branch, yes):
             closed_branches = set(get_closed_branches(issue_tracker, remote_branches))
         merged_remote_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch, remote=True))
         merged_remote_branches = [b.replace('origin/', '') for b in merged_remote_branches]
-        empty_branches = [b for b in remote_branches if branch_is_empty(repo_obj, b, 'develop')]
-        branches_to_delete = set(merged_remote_branches) | closed_branches | set(empty_branches)
+        empty_branches = {b for b in remote_branches if branch_is_empty(repo_obj, b, 'develop')}
+        branches_to_delete = set(merged_remote_branches) | closed_branches | empty_branches
         if branches_to_delete:
             confirmation = 'These remote branches will be deleted: {} Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
             if yes or click.confirm(confirmation):
@@ -143,7 +143,7 @@ def cleanup(ctx, remote, target_branch, yes):
     if issue_tracker is not None:
         branches_to_check = local_branches - closed_branches
         closed_branches |= set(get_closed_branches(issue_tracker, branches_to_check))
-    empty_branches = [b for b in local_branches if branch_is_empty(repo_obj, b, 'develop')]
+    empty_branches = {b for b in local_branches if branch_is_empty(repo_obj, b, 'develop')}
     branches_to_delete = (closed_branches & local_branches) | set(merged_branches) | set(empty_branches)
     if branches_to_delete:
         confirmation = 'These local branches will be deleted: {}\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
