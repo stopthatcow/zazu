@@ -145,7 +145,7 @@ def rename(ctx, name):
 
 
 def find_branch_with_id(repo, id):
-    """Find a branch with a given issue id"""
+    """Find a branch with a given issue id."""
     descriptors = zazu.repo.commands.descriptors_from_branches([h.name for h in repo.heads])
     try:
         return next(d.get_branch_name() for d in descriptors if d.id == id)

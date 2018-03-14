@@ -282,6 +282,7 @@ def dict_get_nested(d, keys, alt_ret):
 
     Returns:
           item matching the chain of keys in d.
+
     """
     item = d.get(keys[0], alt_ret)
     for k in keys[1:]:
@@ -300,6 +301,7 @@ def dict_del_nested(d, keys):
 
     Raises:
         KeyError: if the key couldn't be found in d.
+
     """
     item = d
     if keys:
@@ -309,7 +311,7 @@ def dict_del_nested(d, keys):
 
 
 def dict_update_nested(d, update):
-    """Updated a nested dictionary given an update dictionary.
+    """Update a nested dictionary given an update dictionary.
 
     Args:
         d (dict): dictionary to add the update to.
