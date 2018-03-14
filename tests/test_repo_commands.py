@@ -167,3 +167,19 @@ def test_clone_error(mocker, git_repo):
         assert result.exit_code != 0
         assert result.exception
     git.Repo.clone_from.assert_called_once()
+
+
+def test_branch_is_empty(git_repo):
+    dir = git_repo.working_tree_dir
+    with zazu.util.cd(dir):
+        assert zazu.repo.commands.branch_is_empty(git_repo, 'master', 'master')
+        assert not zazu.repo.commands.branch_is_empty(git_repo, 'master', 'non_existent')
+        git_repo.create_head('empty').checkout()
+        git_repo.create_head('not_empty').checkout()
+        tmp_file = os.path.join(dir, 'temp.txt')
+        with open(tmp_file, 'wb') as f:
+            f.write('\n')
+        git_repo.index.add([tmp_file])
+        git_repo.index.commit('make this not empty')
+        assert zazu.repo.commands.branch_is_empty(git_repo, 'empty', 'master')
+        assert not zazu.repo.commands.branch_is_empty(git_repo, 'non_empty', 'master')

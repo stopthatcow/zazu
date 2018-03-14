@@ -100,7 +100,7 @@ def cleanup(ctx, remote, target_branch, yes):
             closed_branches = get_closed_branches(issue_tracker, remote_branches)
         merged_remote_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch, remote=True))
         merged_remote_branches = {b.replace('origin/', '') for b in merged_remote_branches}
-        empty_branches = {b for b in remote_branches if branch_is_empty(repo_obj, b, 'develop')}
+        empty_branches = {b for b in remote_branches if branch_is_empty(repo_obj, b, 'origin/develop')}
         branches_to_delete = merged_remote_branches | closed_branches | empty_branches
         if branches_to_delete:
             confirmation = 'These remote branches will be deleted: {} Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
@@ -152,4 +152,7 @@ def ticket_is_closed(issue_tracker, descriptor):
 
 def branch_is_empty(repo, branch, base_branch):
     """Returns True if branch has no commits newer than base_branch"""
-    return int(repo.git.rev_list('--count', branch, '^{}'.format(base_branch))) == 0
+    try:
+        return int(repo.git.rev_list('--count', branch, '^{}'.format(base_branch))) == 0
+    except git.GitCommandError:
+        return False
