@@ -1,12 +1,21 @@
 Changelog
 =========
 
-Version 0.10.1 (bugfixes, not yet released)
+Version 0.11 (Not yet released)
 -------------------------------------------
 
 - Update dependencies (old GitPython was broken).
 - Fix up documentation.
 - JIRA issue fetching normalizes ticket IDs to be uppercase. See #84.
+- Update config file styler format to allow better grouping and ordering.
+- Add support for docformatter styler. See #106.
+- Add support for esformatter styler. See #110.
+- Add support for goimports styler. See #108.
+- Add support for generic stdin styler. See #112.
+- Skip ticket verification when making a new ticket. See #114.
+- Support ``zazu config`` subcommand to edit ~/.zazuconfig.yaml file. See #100.
+- Enable SCM hosting shortcuts for ``zazu repo clone``.
+- Remove CI and build support as it overcomplicated zazu. See #119.
 
 Version 0.10.0 (Released Jul 2, 2017)
 -------------------------------------

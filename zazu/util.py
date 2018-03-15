@@ -38,14 +38,16 @@ lazy_import(locals(), [
     'click',
     'concurrent.futures',
     'contextlib',
+    'dict_recursive_update',
     'fnmatch',
     'inquirer',
     'multiprocessing',
     'os',
-    'subprocess'
+    'subprocess',
+    'sys'
 ])
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 def check_output(*args, **kwargs):
@@ -53,7 +55,7 @@ def check_output(*args, **kwargs):
     try:
         return subprocess.check_output(*args, **kwargs)
     except OSError:
-        raise_uninstalled(args[0][0])
+        raise_uninstalled(args[0])
 
 
 def call(*args, **kwargs):
@@ -61,7 +63,7 @@ def call(*args, **kwargs):
     try:
         return subprocess.call(*args, **kwargs)
     except OSError:
-        raise_uninstalled(args[0][0])
+        raise_uninstalled(args[0])
 
 
 def check_popen(args, stdin_str='', *other_args, **kwargs):
@@ -83,7 +85,7 @@ def check_popen(args, stdin_str='', *other_args, **kwargs):
                              *other_args, **kwargs)
         stdout, stderr = p.communicate(stdin_str)
     except OSError:
-        raise_uninstalled(args[0][0])
+        raise_uninstalled(args[0])
     if p.returncode:
         raise subprocess.CalledProcessError(p.returncode, args, stderr)
     return stdout
@@ -171,10 +173,7 @@ def pick(choices, message):
     if len(choices) > 1:
         click.clear()
         questions = [
-            inquirer.List(' ',
-                          message=message,
-                          choices=choices,
-                          ),
+            inquirer.List(' ', message=message, choices=choices),
         ]
         response = inquirer.prompt(questions)
         if response is None:
@@ -222,7 +221,104 @@ def pprint_list(data):
         str: a newline separated pretty printed list.
 
     """
-    return '\n  - {}'.format('\n  - '.join(data))
+    return '\n  - {}'.format('\n  - '.join(str(x) for x in data))
+
+
+def flatten_dict(d, separator='.', prefix=''):
+    """Flatten nested dictionary.
+
+    Transforms {'a': {'b': {'c': 5}, 'd': 6}} into {'a.b.c': 5, 'a.d': 6}
+
+    Args:
+        d (dist): nested dictionary to flatten.
+        separator (str): the separator to use between keys.
+        prefix (str): key prefix
+
+    Returns:
+        dict: a dictionary with keys compressed and separated by separator.
+
+    """
+    return {prefix + separator + k if prefix else k: v
+            for kk, vv in d.items()
+            for k, v in flatten_dict(vv, separator, kk).items()
+            } if isinstance(d, dict) else {prefix: d}
+
+
+def unflatten_dict(d, separator='.'):
+    """Unflatten nested dictionary.
+
+    Transforms {'a.b.c': 5, 'a.d': 6} into {'a': {'b': {'c': 5}, 'd': 6}}
+
+    Args:
+        d (dict): nested dictionary to flatten.
+        separator (str): the separator to use between keys.
+        prefix (str): key prefix
+
+    Returns:
+        dict: a expanded dictionary with keys uncompressed.
+
+    """
+    ret = dict()
+    for key, value in d.iteritems():
+        parts = key.split(separator)
+        d = ret
+        for part in parts[:-1]:
+            if part not in d:
+                d[part] = dict()
+            d = d[part]
+        d[parts[-1]] = value
+    return ret
+
+
+def dict_get_nested(d, keys, alt_ret):
+    """Get a nested dictionary entry given a list of keys.
+
+    Equivalent to d[keys[0]][keys[1]]...etc.
+
+    Args:
+        d (dict): nested dictionary to search.
+        keys (list): keys to search one by one.
+        alt_ret: returned if the specified item is not found.
+
+    Returns:
+          item matching the chain of keys in d.
+
+    """
+    item = d.get(keys[0], alt_ret)
+    for k in keys[1:]:
+        item = item.get(k, alt_ret)
+    return item
+
+
+def dict_del_nested(d, keys):
+    """Delete a nested dictionary entry given a list of keys.
+
+    Equivalent to del d[keys[0]][keys[1]]...etc.
+
+    Args:
+        d (dict): nested dictionary to search.
+        keys (list): keys to search one by one.
+
+    Raises:
+        KeyError: if the key couldn't be found in d.
+
+    """
+    item = d
+    if keys:
+        for k in keys[:-1]:
+            item = item[k]
+        del item[keys[-1]]
+
+
+def dict_update_nested(d, update):
+    """Update a nested dictionary given an update dictionary.
+
+    Args:
+        d (dict): dictionary to add the update to.
+        update (dict): update to apply to the dictionary.
+
+    """
+    dict_recursive_update.recursive_update(d, update)
 
 
 def raise_uninstalled(pkg_name):

@@ -11,8 +11,8 @@ zazu.util.lazy_import(locals(), [
     'threading'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 default_exclude_paths = ['build',
@@ -117,7 +117,7 @@ def style(ctx, verbose, check, cached):
                 for f, violation in checked_files:
                     if verbose:
                         click.echo(zazu.util.format_checklist_item(not violation,
-                                                                   text='({}) {}'.format(s.type(), f),
+                                                                   text='({}) {}'.format(s.name(), f),
                                                                    tag_formats=tags))
                     violation_count += violation
             if verbose:

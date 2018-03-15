@@ -2,6 +2,7 @@
 import conftest
 import github
 import pytest
+import zazu.git_helper
 import zazu.github_helper
 import zazu.plugins.github_issue_tracker
 
@@ -29,7 +30,8 @@ mock_issue_dict = {
     'title': 'name',
     'state': 'closed',
     'body': 'description',
-    'assignees': [{'login': 'assignee'}]
+    'assignees': [{'login': 'assignee'}],
+    'html_url': 'https://github.com/stopthatcow/zazu/issues/1'
 }
 mock_issue = conftest.dict_to_obj(mock_issue_dict)
 
@@ -113,8 +115,19 @@ def test_github_validate_id_format(tracker_mock):
         uut.validate_id_format('10a')
 
 
-def test_github_issue_adaptor(tracker_mock):
-    uut = zazu.plugins.github_issue_tracker.GitHubIssueAdaptor(mock_issue, tracker_mock)
+def test_assign(mocker, tracker_mock):
+    uut = tracker_mock
+    uut._user = 'me'
+    mock_gh_issue = mocker.Mock()
+    mock_gh_issue.edit = mocker.Mock()
+    mock_gh_issue_wrapper = mocker.Mock()
+    mock_gh_issue_wrapper._github_issue = mock_gh_issue
+    uut.assign_issue(mock_gh_issue_wrapper, uut.user())
+    mock_gh_issue.edit.assert_called_once_with(assignee='me')
+
+
+def test_github_issue_adaptor():
+    uut = zazu.plugins.github_issue_tracker.GitHubIssueAdaptor(mock_issue)
     assert uut.name == 'name'
     assert uut.status == 'closed'
     assert uut.description == 'description'

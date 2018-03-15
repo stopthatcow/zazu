@@ -1,17 +1,4 @@
-components:
-  - name: zazu
-    goals:
-      - name: package
-        builds:
-          - arch: python
-            script:
-              - rm -rf dist &&
-                python setup.py build_sphinx bdist_wheel
-      - name: coverage
-        builds:
-          - arch: python
-            script:
-              - tox
+# Zazu config file for zazu itself.
 
 issueTracker:
     type: github
@@ -29,11 +16,17 @@ codeReviewer:
     repo: zazu
 
 style:
-  include:
+  - include:
     - setup.py
-    - docs/**/*.py
-    - tests/**/*.py
-    - zazu/**/*.py
-  autopep8:
-    options:
-      - "--max-line-length=150"
+    - docs/**.py
+    - tests/**.py
+    - zazu/**.py
+    stylers:
+      - type: autopep8
+        options:
+          - "--max-line-length=150"
+      # Fix common misspellings.
+      - type: generic
+        command: sed
+        options:
+          - "s/responce/response/g"

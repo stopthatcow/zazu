@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import click.testing
+import conftest
 import git
 import os
-import tests.conftest
-import yaml
+import ruamel.yaml as yaml
 import zazu.cli
 import zazu.git_helper
 
@@ -12,19 +12,14 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-def test_cli(git_repo):
+def test_init(git_repo):
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['repo', 'setup', 'hooks'])
+        result = runner.invoke(zazu.cli.cli, ['repo', 'init'])
+        print result.output
         assert result.exit_code == 0
         assert zazu.git_helper.check_git_hooks(dir)
-
-
-def test_init():
-    runner = click.testing.CliRunner()
-    result = runner.invoke(zazu.cli.cli, ['repo', 'init'])
-    assert result.exit_code != 0
 
 
 def test_cleanup_no_develop(git_repo):
@@ -70,9 +65,9 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         with open('zazu.yaml', 'a') as file:
-            file.write(yaml.dump({'issueTracker': {'type': 'github',
-                                                   'owner': 'foo',
-                                                   'repo': 'bar'}}))
+            yaml.dump({'issueTracker': {'type': 'github',
+                                        'owner': 'foo',
+                                        'repo': 'bar'}}, file)
         git_repo.git.checkout('HEAD', b='develop')
         git_repo.git.checkout('HEAD', b='feature/F00-1')
         with open('README.md', 'w') as f:
@@ -98,7 +93,9 @@ def test_descriptors_from_branches():
 
 
 def test_get_closed_branches(mocker):
-    mocker.patch('zazu.repo.commands.ticket_is_closed', side_effect=[True, False])
+    def foo1_is_closed(tracker, ticket):
+        return 'FOO-1' == ticket.id
+    mocker.patch('zazu.repo.commands.ticket_is_closed', side_effect=foo1_is_closed)
     issue_tracker = mocker.Mock()
     result = zazu.repo.commands.get_closed_branches(issue_tracker, ['feature/FOO-1', 'feature/FOO-2'])
     assert result == ['feature/FOO-1']
@@ -122,7 +119,43 @@ def test_clone(mocker, git_repo):
         assert not result.exception
     git.Repo.clone_from.assert_called_once()
     assert git.Repo.clone_from.call_args[0][0] == 'http://foo/bar/baz.git'
-    assert os.path.join(dir, 'baz') in git.Repo.clone_from.call_args[0][1]
+    assert 'baz' == git.Repo.clone_from.call_args[0][1]
+
+
+def test_clone_hosted(mocker, git_repo):
+    mocker.patch('git.Repo.clone_from', return_value=git_repo)
+    mocker.patch('zazu.config.Config.default_scm_host', return_value='foo')
+    mock_scm_host = mocker.patch('zazu.scm_host.ScmHost', autospec=True)
+    mock_host_repo = conftest.dict_to_obj({'id': 'bar',
+                                           'ssh_url': 'http://github.com/foo/bar.git'})
+    mock_scm_host.repos = mocker.Mock(return_value=[mock_host_repo])
+
+    mocker.patch('zazu.config.Config.scm_hosts', return_value={'foo': mock_scm_host})
+    dir = git_repo.working_tree_dir
+    with zazu.util.cd(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'foo/bar'])
+        assert result.exit_code == 0
+    git.Repo.clone_from.assert_called_once()
+    assert git.Repo.clone_from.call_args[0][0] == 'http://github.com/foo/bar.git'
+    assert 'bar' == git.Repo.clone_from.call_args[0][1]
+    # No matching repo.
+    result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'foo/baz'])
+    assert result.exit_code != 0
+    # No matching host.
+    result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'foo2/baz'])
+    assert result.exit_code != 0
+
+
+def test_clone_no_hosted_hosted(mocker, git_repo):
+    mocker.patch('zazu.config.Config.scm_hosts', return_value={})
+    dir = git_repo.working_tree_dir
+    with zazu.util.cd(dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'foo/bar'])
+        assert result.exit_code != 0
+        assert result.exception
+        assert result.output.startswith('Error: Unable to clone foo/bar')
 
 
 def test_clone_error(mocker, git_repo):
@@ -134,12 +167,3 @@ def test_clone_error(mocker, git_repo):
         assert result.exit_code != 0
         assert result.exception
     git.Repo.clone_from.assert_called_once()
-
-
-def test_repo_ci_no_config(repo_with_build_config):
-    dir = repo_with_build_config.working_tree_dir
-    with zazu.util.cd(dir):
-        runner = click.testing.CliRunner()
-        result = runner.invoke(zazu.cli.cli, ['repo', 'setup', 'ci'])
-        assert result.exit_code != 0
-        assert result.exception

@@ -25,11 +25,9 @@ Getting Started
 Complete documentation is available at `zazu.readthedocs.io <http://zazu.readthedocs.io>`__.
 
 Zazu is a CLI development workflow management tool that combines
-elements of git flow with CI and issue tracking.
+elements of git flow with issue tracking and code review.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
-    "Zazu" -> "Continuous Integration"
-    "Continuous Integration" -> "TeamCity"
     "Zazu" -> "Issue Tracker"
     "Issue Tracker" -> "JIRA"
     "Issue Tracker" -> "GitHub"
@@ -38,7 +36,10 @@ elements of git flow with CI and issue tracking.
     "Zazu" -> "Code Style"
     "Code Style" -> "Artistic Style"
     "Code Style" -> "ClangFormat"
-    "Code Style" -> "autopep8"}
+    "Code Style" -> "autopep8"
+    "Code Style" -> "goimports"
+    "Code Style" -> "esformatter"
+    "Code Style" -> "..."}
     :align: center
 
 Zazu is implemented in Python and is a
@@ -78,50 +79,40 @@ Zazu is fastest when installed in wheel form.
     python setup.py bdist_wheel
     pip install dist/*.whl
 
+Configuration
+-------------
+Setup your user config file (located in ~/zazuconfig.yaml).
+
+GitHub setup
+~~~~~~~~~~~~
+::
+
+    zazu config --add scmHost.default.type github
+    zazu config --add scmHost.default.user <github username>
+
 Command overview
 ----------------
 The following diagram shows the available subcommands of zazu.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
-      "zazu" -> "build"
+      "zazu" -> "config"
       "zazu" -> "style"
       "zazu" -> "repo"
-      "repo" -> "setup"
-      "setup" -> "hooks"
-      "setup" -> "ci"
+      "repo" -> "init"
       "repo" -> "cleanup"
-      "repo" -> "repo_init"
-      repo_init [label=init, style=dashed]
       "repo" -> "clone"
       "zazu" -> "dev"
       "dev" -> "start"
       "dev" -> "status"
-      dev_builds [label=builds, style=dashed]
-      "dev" -> "dev_builds"
-      "dev" -> "review"
-      "dev" -> "ticket"}
-
-Note: dashed lines are not yet implemented
+      "dev" -> "ticket"
+      "dev" -> "review"}
 
 Repo management
 ---------------
 
 -  ``zazu repo clone <name>`` clones repo and installs GIT
    hooks
--  ``zazu repo init <name>`` initializes repo to default project
-   structure (Unimplemented)
--  ``zazu repo setup hooks`` installs default GIT hooks to the repo
--  ``zazu repo setup ci`` sets up CI builds based on the zazu.yaml file
-   in the repo
-
-CI build configuration management
----------------------------------
-
-Zazu can setup CI server builds (currently only TeamCity is supported)
-to build targets specified by a recipe file (the zazu.yaml file in the
-root of a repo).
-
--  ``zazu repo setup ci``
+-  ``zazu repo init`` installs default GIT hooks to an existing repo
 
 Development workflow management
 -------------------------------
@@ -131,7 +122,6 @@ Development workflow management
    ``zazu dev start LC-440_a_cool_feature``
 -  ``zazu dev status`` displays ticket and pull request status
 -  ``zazu dev ticket`` launches web browser to the ticket page
--  ``zazu dev builds`` launches web browser to the CI project page
 -  ``zazu dev review`` launches web browser to create/view a pull
    request
 
@@ -140,48 +130,38 @@ Code Style Enforcement
 
 -  ``zazu style`` fixes code style using astyle and autopep8
 
-Building
---------
 
-Zazu uses the zazu.yaml file to build goals defined there
+~/.zazuconfig.yaml file (user level configuration)
+--------------------------------------------------
 
--  ``zazu build <goal>``
--  The target architecture is assumed to be 'local' but may be
-   overridden using the --arch flag. e.g
-   ``zazu build --arch=arm32-linux-gnueabihf package`` would build
-   targeting 32 bit arm linux.
-
-Passing variables to the build
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You may pass extra variables to the build using key=value pairs.
-``zazu build --arch=arm32-linux-gnueabihf package FOO=bar`` This sets
-the environement variable *FOO* to the value *bar* during the build.
-
-zazu.yaml file
---------------
-
-The zazu.yaml file lives at the base of the repo and describes the CI
-goals and architectures to be run. In addition it describes the
-requirements for each goal.
+The .zazuconfig.yaml is a file that lives in your home directory and sets high
+level configuration options for zazu. Most people will likely have a single
+default scmHost entry, though zazu supports multiple named entries.
 
 ::
 
-    components:
-      - name: networkInterface
-        goals:
-          - name: coverage
-            description: "Runs the \"check\" target and reports coverage via gcovr"
-            buildType: coverage
-            buildVars:
-                  LOCAL_SERVER: ON
-            builds:
-              - arch: x86_64-linux-gcc
-          - name: package
-            buildType: minSizeRel
-            builds:
-              - arch: arm32-linux-gnueabihf
-              - arch: x86_64-linux-gcc
+  # User configuration file for zazu.
+
+  # SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
+  scmHost:
+    default:              # This is the default SCM host.
+      type: github        # Type of this SCM host.
+      user: stopthatcow   # GitHub username
+    pat:                  # Optionally: another SCM host named "pat".
+      type: github        # Type of this SCM host.
+      user: moorepatrick  # GitHub username
+
+With the above configuration in place the following are allowed:
+
+- ``zazu repo clone stopthatcow/zazu`` Using the default host so we don't need the fully-qualified name.
+- ``zazu repo clone pat/moorepatrick/zazu`` This uses a non-default host so we need the name.
+
+zazu.yaml file (repo level configuration)
+-----------------------------------------
+
+The zazu.yaml file lives at the base of the repo and describes the integrations to use with this repo.
+
+::
 
     issueTracker:
         type: github
@@ -194,40 +174,32 @@ requirements for each goal.
         repo: zazu
 
     style:
-      exclude:
-        - dependencies/ #list path prefixes here to exclude from style
-        - build/
-      astyle:
-        options:
-          - "--options=astyle.conf" # options passed to astyle
-        include:
-          - src/*.cpp # list of globs of files to style
-          - include/*.h
-          - test/*.cpp
-      autopep8:
-        options:
-          - "--max-line-length=150" # options passed to autopep8
+      - exclude:
+          - dependencies/ # list path prefixes here to exclude from style
+          - build/
+        stylers:
+          - type: astyle
+            options:
+              - "--options=astyle.conf" # options passed to astyle
+            include:
+              - src/**.cpp # list of globs of files to style
+              - include/**.h
+              - test/**.cpp
+          - type: autopep8
+            options:
+              - "--max-line-length=150" # options passed to autopep8
+          # Generic styler that uses sed to fix common misspellings.
+          - type: generic
+            command: sed
+            options:
+              - "s/responce/response/g"
+            include:
+              - src/**
+              - include/**
+              - test/**
 
-      zazu: 0.10.0 # optional required zazu version
+      zazu: 0.11.0 # optional required zazu version
 
-Compiler tuples
-~~~~~~~~~~~~~~~
-
-Architectures are defined as tuple in the folowing form:
-``<ISA>-<OS>-<ABI>``
-
-============
-Examples
-============
-
-- x86\_64-linux-gcc
-- x86\_32-linux-gcc
-- x86\_64-win-msvc\_2013
-- x86\_64-win-msvc\_2015
-- x86\_32-win-msvc\_2013
-- x86\_32-win-msvc\_2015
-- arm32-linux-gnueabihf
-- arm32-none-eabi
 
 Command autocompletion
 ----------------------
@@ -266,7 +238,4 @@ Handy aliases
     alias zds="zazu dev start"
     alias zdr="zazu dev review"
     alias zdt="zazu dev ticket"
-    alias zdb="zazu dev builds"
     alias zs="zazu style"
-    alias zb="zazu build"
-

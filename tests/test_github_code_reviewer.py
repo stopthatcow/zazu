@@ -99,7 +99,7 @@ class MockNonGithubIssue(object):
 class MockGithubIssue(zazu.plugins.github_issue_tracker.GitHubIssueAdaptor):
 
     def __init__(self):
-        super(MockGithubIssue, self).__init__(None, None)
+        super(MockGithubIssue, self).__init__(None)
 
     def __str__(self):
         return '3'

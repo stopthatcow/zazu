@@ -3,7 +3,7 @@ import git
 import tempfile
 import os
 import pytest
-import yaml
+import ruamel.yaml as yaml
 
 
 @pytest.fixture
@@ -39,55 +39,17 @@ def git_repo_with_bad_config(git_repo):
 def repo_with_style(git_repo):
     root = git_repo.working_tree_dir
     style_config = {
-        'style': {
-            'exclude': ['dependency'],
-            'autopep8': {},
-            'clang-format': {}
-        }
-    }
-    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(style_config))
-    return git_repo
-
-
-@pytest.fixture()
-def repo_with_build_config(git_repo):
-    root = git_repo.working_tree_dir
-    config = {
-        'components': [
-            {
-                'name': 'zazu',
-                'description': 'A description',
-                'goals': [
-                    {
-                        'name': 'echo_foobar',
-                        'description': 'echo_foobar description',
-                        'builds': [
-                            {
-                                'arch': 'host',
-                                'description': 'echo_foobar build description',
-                                'script': ['echo "foobar"'],
-                                'artifacts': ['artifact.zip']
-                            },
-                            {
-                                'arch': 'arm-linux-gnueabihf'
-                            }
-                        ]
-                    },
-                    {
-                        'name': 'cmake_build',
-                        'builds': [
-                            {
-                                'arch': 'host'
-                            }
-                        ]
-                    }
-                ]
+        'style': [
+            {'exclude': ['dependency'],
+             'stylers':[
+                {'type': 'autopep8'},
+                {'type': 'clang-format'}
+            ]
             }
         ]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(config))
+        yaml.dump(style_config, file)
     return git_repo
 
 
@@ -106,7 +68,7 @@ def repo_with_missing_style(git_repo):
         'components': [{'name': 'zazu'}]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(config))
+        yaml.dump(config, file)
     return git_repo
 
 

@@ -10,8 +10,8 @@ zazu.util.lazy_import(locals(), [
 ])
 
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 def get_repo_root(starting_dir):
@@ -34,10 +34,10 @@ def get_hooks_path(repo_base):
 def get_default_git_hooks():
     """Get list of known git hooks to install."""
     return {
-        "pre-commit": pkg_resources.resource_filename('zazu', 'githooks/pre-commit'),
-        "post-checkout": pkg_resources.resource_filename('zazu', 'githooks/post-checkout'),
-        "post-merge": pkg_resources.resource_filename('zazu', 'githooks/post-merge'),
-        "commit-msg": pkg_resources.resource_filename('zazu', 'githooks/commit-msg'),
+        'pre-commit': pkg_resources.resource_filename('zazu', 'githooks/pre-commit'),
+        'post-checkout': pkg_resources.resource_filename('zazu', 'githooks/post-checkout'),
+        'post-merge': pkg_resources.resource_filename('zazu', 'githooks/post-merge'),
+        'commit-msg': pkg_resources.resource_filename('zazu', 'githooks/commit-msg'),
     }
 
 

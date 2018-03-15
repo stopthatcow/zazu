@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 import click
+import click.testing
 import distutils.spawn
 import pytest
 import zazu.cli
+import zazu.plugins.clang_format_styler
+import zazu.plugins.astyle_styler
+import zazu.plugins.autopep8_styler
+import zazu.plugins.docformatter_styler
 import zazu.style
 import zazu.util
 
@@ -30,13 +35,19 @@ def repo_with_style_errors(repo_with_style):
     return repo_with_style
 
 
-@pytest.mark.skipif(not distutils.spawn.find_executable('astyle'),
-                    reason="requires astyle")
-def test_astyle():
+def test_astyle(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
-    ret = styler.style_string('void main ( ) {}')
-    assert ret == 'void main() {}'
-    assert styler.default_extensions()
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['astyle', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == ['*.c',
+                                           '*.cc',
+                                           '*.cs',
+                                           '*.cpp',
+                                           '*.h',
+                                           '*.hpp',
+                                           '*.java']
 
 
 def test_autopep8():
@@ -44,6 +55,40 @@ def test_autopep8():
     ret = styler.style_string('def foo ():\n  pass')
     assert ret == 'def foo():\n    pass\n'
     assert ['*.py'] == styler.default_extensions()
+
+
+def test_docformatter():
+    styler = zazu.plugins.docformatter_styler.DocformatterStyler()
+    ret = styler.style_string('def foo ():\n"""doc"""\n  pass')
+    assert ret == 'def foo ():\n"""doc"""\n  pass'
+    assert ['*.py'] == styler.default_extensions()
+
+
+def test_goimports(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
+    styler = zazu.plugins.goimports_styler.GoimportsStyler(options=['-U'])
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['goimports', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == ['*.go']
+
+
+def test_generic(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
+    styler = zazu.plugins.generic_styler.GenericStyler(command='sed', options=['-U'])
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['sed', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == []
+
+
+def test_esformatter(mocker):
+    mocker.patch('zazu.util.check_popen', return_value='bar')
+    styler = zazu.plugins.esformatter_styler.EsformatterStyler(options=['-U'])
+    ret = styler.style_string('foo')
+    zazu.util.check_popen.assert_called_once_with(args=['esformatter', '-U'], stdin_str='foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == ['*.js', '*.es', '*.es6']
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
@@ -114,6 +159,8 @@ def test_style_no_config(repo_with_missing_style):
 
 
 def test_styler():
-    uut = zazu.styler.Styler()
     with pytest.raises(NotImplementedError):
-        uut.style_string('')
+        zazu.styler.Styler()
+    uut = zazu.styler.Styler('foo')
+    with pytest.raises(NotImplementedError):
+        uut.default_extensions()
