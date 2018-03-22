@@ -2,8 +2,8 @@
 """Autopep8Styler plugin for zazu."""
 import zazu.styler
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class Autopep8Styler(zazu.styler.Styler):
@@ -21,4 +21,5 @@ class Autopep8Styler(zazu.styler.Styler):
 
     @staticmethod
     def required_options():
+        """Options required to make autopep8 take input from stdin."""
         return ['-']

@@ -6,8 +6,8 @@ zazu.util.lazy_import(locals(), [
     'os'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class Styler(object):
@@ -63,16 +63,19 @@ class Styler(object):
 
     @staticmethod
     def required_options():
-        """Options required to make the tool use stdin for input and output styled version to stdout"""
+        """Options required to make the tool use stdin for input and output styled version to stdout."""
         return []
 
     @staticmethod
     def default_extensions():
+        """Extensions that this styler can fix."""
         raise NotImplementedError('Must implement default_extensions()')
 
     @staticmethod
     def type():
+        """Return the type of this styler."""
         raise NotImplementedError('Must implement type()')
 
     def name(self):
+        """Get name of this styler."""
         return self.command

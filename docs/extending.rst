@@ -3,9 +3,9 @@ Extending
 
 Zazu has 4 classes of plugins:
 
-- BuildServer (aka CI or Continuous Integration)
 - IssueTracker
 - CodeReviewer
+- ScmHost
 - Styler
 
 Creating a new plugin
@@ -14,11 +14,10 @@ Zazu uses the `straight.plugin <http://straightplugin.readthedocs.io/en/latest/i
 new Zazu plugin is as easy as subclassing one of the base plugin types and installing the module containing the subclass
 to the ``zazu.plugin`` namespace.
 
-Build Servers
--------------
-
-The build server interface exists so zazu can setup a continuous integration server to automatically build your repo when you make changes.
-Zazu ships with support built in for JetBrains TeamCity.
+SCM Host
+--------
+A SCM host is a service that hosts source code such as github. Zazu uses the ScmHost interface to allow shortcuts when cloning new repos.
+Zazu ships with support for GitHub hosting.
 
 
 Issue Trackers
@@ -38,4 +37,5 @@ Code Stylers
 ------------
 
 Zazu uses the Styler interface to check code style, prevent commits when there are style violations and fix these violations.
-Zazu ships with support built in for astyle, clang-format and autopep8.
+Zazu ships with support built in for astyle, clang-format, autopep8, docformatter, goimports, esformatter and a generic styler.
+The generic styler can be used for any program that can take unstyled input from stdin and output styled test on stdout.

@@ -11,8 +11,8 @@ zazu.util.lazy_import(locals(), [
     'threading'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 default_exclude_paths = ['build',

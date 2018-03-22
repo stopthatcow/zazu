@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Code reviewer related classes."""
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2017"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2017'
 
 
 class CodeReviewer(object):

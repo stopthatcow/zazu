@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Config classes and methods for zazu."""
-import zazu.build_server
 import zazu.code_reviewer
 import zazu.issue_tracker
 import zazu.scm_host
@@ -16,8 +15,8 @@ zazu.util.lazy_import(locals(), [
     'sys'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 
@@ -40,7 +39,7 @@ class PluginFactory(object):
         plugins = straight.plugin.load('zazu.plugins', subclasses=self._subclass)
         known_types = {p.type().lower(): p.from_config for p in plugins}
         if 'type' in config:
-            type = config['type'].lower()
+            type = config['type']
             if type in known_types:
                 return known_types[type](config)
             else:
@@ -53,7 +52,6 @@ class PluginFactory(object):
 
 issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker)
 code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer)
-build_server_factory = PluginFactory('buildServer', zazu.build_server.BuildServer)
 
 
 def scm_host_factory(config):
@@ -71,7 +69,7 @@ def scm_host_factory(config):
                 default_host = value
                 continue
         if 'type' in value:
-            type = value['type'].lower()
+            type = value['type']
             if type in known_types:
                 hosts[name] = known_types[type].from_config(value)
             else:
@@ -128,6 +126,7 @@ def make_col_indicator(index):
 
 
 def find_file(search_paths, file_names):
+    """Search search_paths for file_names."""
     searched = path_gen(search_paths, file_names)
     for file_name in searched:
         try:
@@ -150,7 +149,7 @@ def load_yaml_file(filepath):
                 error_line = get_line(filepath, e.problem_mark.line)
                 col_indicator = make_col_indicator(e.problem_mark.column)
                 error_string = "invalid_syntax: '{}'\n" \
-                               "                 {}".format(error_line, col_indicator)
+                               '                 {}'.format(error_line, col_indicator)
             raise click.ClickException('unable to parse file \'{}\'\n{}'.format(filepath, error_string))
         return config
 
@@ -165,7 +164,8 @@ def find_and_load_yaml_file(search_paths, file_names):
 
 
 def user_config_filepath():
-    return os.path.join(os.path.expanduser("~"), '.zazuconfig.yaml')
+    """User configuration file path."""
+    return os.path.join(os.path.expanduser('~'), '.zazuconfig.yaml')
 
 
 class Config(object):
@@ -183,7 +183,6 @@ class Config(object):
         self._code_reviewer = None
         self._scm_hosts = None
         self._default_scm_host = None
-        self._build_server = None
         self._project_config = None
         self._user_config = None
         self._stylers = None
@@ -205,17 +204,7 @@ class Config(object):
         try:
             return self.project_config()['issueTracker']
         except KeyError:
-            raise click.ClickException("no issueTracker config found")
-
-    def build_server(self):
-        """Lazily create a build server object."""
-        if self._build_server is None:
-            self._build_server = build_server_factory.from_config(self.ci_config())
-        return self._build_server
-
-    def ci_config(self):
-        """Return the CI configuration if one exists."""
-        return self.project_config().get('ci', {})
+            raise click.ClickException('no issueTracker config found')
 
     def code_reviewer_config(self):
         """Return the code reviewer configuration if one exists.
@@ -227,7 +216,7 @@ class Config(object):
         try:
             return self.project_config()['codeReviewer']
         except KeyError:
-            raise click.ClickException("no codeReviewer config found")
+            raise click.ClickException('no codeReviewer config found')
 
     def code_reviewer(self):
         """Lazily create and return code reviewer object."""
@@ -236,10 +225,11 @@ class Config(object):
         return self._code_reviewer
 
     def scm_host_config(self):
+        """Return scmHost config or raise ClickException if it is missing."""
         try:
             return self.user_config()['scmHost']
         except KeyError:
-            raise click.ClickException("no scmHost config found in ~/zazuconfig.yaml")
+            raise click.ClickException('no scmHost config found in ~/zazuconfig.yaml')
 
     def scm_hosts(self):
         """Lazily create and return scm host list."""
@@ -248,6 +238,7 @@ class Config(object):
         return self._scm_hosts
 
     def default_scm_host(self):
+        """Lazily create scm host list and return the default scm host."""
         self.scm_hosts()
         return self._default_scm_host
 
@@ -308,6 +299,7 @@ class Config(object):
 
 
 def maybe_write_default_user_config(path):
+    """Write a default user config file if it doesn't exist."""
     DEFAULT_USER_CONFIG = """# User configuration file for zazu.
     
 # SCM hosts are cloud hosting services for repos. Currently GitHub is supported.

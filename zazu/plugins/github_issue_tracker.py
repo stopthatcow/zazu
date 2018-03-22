@@ -9,8 +9,8 @@ zazu.util.lazy_import(locals(), [
     'os'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
@@ -27,6 +27,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         self._owner = owner
         self._repo = repo
         self._github_handle = None
+        self._user = None
 
     def connect(self):
         """Get handle to ensure that github credentials are in place."""
@@ -39,6 +40,12 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _github_repo(self):
         return self._github().get_user(self._owner).get_repo(self._repo)
+
+    def user(self):
+        """Get username of authenticated user."""
+        if self._user is None:
+            self._user = self._github().get_user().login
+        return self._user
 
     def issue(self, issue_id):
         """Get an issue by id."""
@@ -59,9 +66,13 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
             component (str): meaningless for GitHub.
         """
         try:
-            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description))
+            return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description, assignee=self.user()))
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
+
+    def assign_issue(self, issue, user):
+        """Assign an issue to a user."""
+        issue._github_issue.edit(assignee=user)
 
     def default_project(self):
         """Meaningless for GitHub."""
@@ -86,6 +97,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 
         Returns:
             normalized id string
+
         """
         if not id.isdigit():
             raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not numeric'.format(id))

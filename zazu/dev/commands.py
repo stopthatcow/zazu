@@ -12,8 +12,8 @@ zazu.util.lazy_import(locals(), [
     'urllib'
 
 ])
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class IssueDescriptor(object):
@@ -61,7 +61,7 @@ def verify_ticket_exists(issue_tracker, ticket_id):
     """Verify that a given ticket exists."""
     try:
         issue = issue_tracker.issue(ticket_id)
-        click.echo("Found ticket {}: {}".format(issue.id, issue.name))
+        click.echo('Found ticket {}: {}'.format(issue.id, issue.name))
         return issue
     except zazu.issue_tracker.IssueTrackerError:
         raise click.ClickException('no ticket for id "{}"'.format(ticket_id))
@@ -79,14 +79,14 @@ def offer_to_stash_changes(repo):
 
 def make_issue_descriptor(name):
     """Split input into type, id and description."""
-    known_types = set(['hotfix', 'release', 'feature', 'bug'])
+    known_types = {'hotfix', 'release', 'feature', 'bug'}
     type = None
     description = ''
     components = name.split('/')
     if len(components) > 1:
         type = components[-2]
         if type not in known_types:
-            raise click.ClickException("Branch type specifier must be one of {}".format(known_types))
+            raise click.ClickException('Branch type specifier must be one of {}'.format(known_types))
     components = components.pop().split('_', 1)
     if len(components) == 2:
         description = components[1]
@@ -112,7 +112,7 @@ def check_if_branch_is_protected(branch_name):
 def check_if_active_branch_can_be_renamed(repo):
     """Throw if the current head is detached or if the active branch is protected."""
     if repo.head.is_detached:
-        raise click.ClickException("the current HEAD is detached")
+        raise click.ClickException('the current HEAD is detached')
     check_if_branch_is_protected(repo.active_branch.name)
 
 
@@ -144,6 +144,15 @@ def rename(ctx, name):
     rename_branch(repo, repo.active_branch.name, name)
 
 
+def find_branch_with_id(repo, id):
+    """Find a branch with a given issue id."""
+    descriptors = zazu.repo.commands.descriptors_from_branches([h.name for h in repo.heads])
+    try:
+        return next(d.get_branch_name() for d in descriptors if d.id == id)
+    except StopIteration:
+        pass
+
+
 @dev.command()
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
@@ -154,17 +163,10 @@ def rename(ctx, name):
 @click.pass_context
 def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar."""
+    repo = ctx.obj.repo
     if rename_flag:
-        check_if_active_branch_can_be_renamed(ctx.obj.repo)
-    if not (head or rename_flag):
-        offer_to_stash_changes(ctx.obj.repo)
-        click.echo('Checking out develop...')
-        ctx.obj.repo.heads.develop.checkout()
-        click.echo('Pulling from origin...')
-        try:
-            ctx.obj.repo.remotes.origin.pull()
-        except git.exc.GitCommandError:
-            click.secho('WARNING: unable to pull from origin!', fg='red')
+        check_if_active_branch_can_be_renamed(repo)
+
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
@@ -172,24 +174,36 @@ def start(ctx, name, no_verify, head, rename_flag, type):
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
-    issue = make_issue_descriptor(name)
-    if not no_verify:
-        verify_ticket_exists(ctx.obj.issue_tracker(), issue.id)
-    if not issue.description:
-        issue.description = zazu.util.prompt('Enter a short description for the branch')
-    issue.type = type
-    branch_name = issue.get_branch_name()
+    issue_descriptor = make_issue_descriptor(name)
+    existing_branch = find_branch_with_id(repo, issue_descriptor.id)
+    if existing_branch and not (rename_flag and repo.active_branch.name == existing_branch):
+        raise click.ClickException('branch with same id exists: {}'.format(existing_branch))
+    issue = None if no_verify else verify_ticket_exists(ctx.obj.issue_tracker(), issue_descriptor.id)
+    if not issue_descriptor.description:
+        issue_descriptor.description = zazu.util.prompt('Enter a short description for the branch')
+    issue_descriptor.type = type
+    branch_name = issue_descriptor.get_branch_name()
+    if not (head or rename_flag):
+        offer_to_stash_changes(repo)
+        click.echo('Checking out develop...')
+        repo.heads.develop.checkout()
+        click.echo('Pulling from origin...')
+        try:
+            repo.remotes.origin.pull()
+        except git.exc.GitCommandError:
+            click.secho('WARNING: unable to pull from origin!', fg='red')
     try:
-        # Check if the target branch already exists
-        ctx.obj.repo.git.checkout(branch_name)
+        repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))
     except git.exc.GitCommandError:
         if rename_flag:
             click.echo('Renaming current branch to "{}"...'.format(branch_name))
-            rename_branch(ctx.obj.repo, ctx.obj.repo.active_branch.name, branch_name)
+            rename_branch(repo, repo.active_branch.name, branch_name)
         else:
             click.echo('Creating new branch named "{}"...'.format(branch_name))
-            ctx.obj.repo.git.checkout('HEAD', b=branch_name)
+            repo.git.checkout('HEAD', b=branch_name)
+    if issue is not None:
+        ctx.obj.issue_tracker().assign_issue(issue, ctx.obj.issue_tracker().user())
 
 
 def wrap_text(text, width=90, indent=''):
@@ -229,7 +243,7 @@ def status(ctx):
             click.echo(click.style('    Description:\n', fg='green'), nl=False)
             click.echo(wrap_text(issue.description, indent='    '))
         except zazu.issue_tracker.IssueTrackerError:
-            click.echo("    No ticket found")
+            click.echo('    No ticket found')
 
         matches = pulls_future.result()
         click.secho('Review info:', bg='white', fg='black')
