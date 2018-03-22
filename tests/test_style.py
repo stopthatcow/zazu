@@ -120,7 +120,7 @@ def test_esformatter(mocker):
                     reason="requires clang-format")
 def test_clang_format():
     styler = zazu.plugins.clang_format_styler.ClangFormatStyler(options=['-style=google'])
-    ret = styler.style_string('void  main ( ) { }')
+    ret = styler.style_string('void  main ( ) { }', None)
     assert ret == 'void main() {}'
     assert styler.default_extensions()
 
