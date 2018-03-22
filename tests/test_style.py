@@ -3,6 +3,7 @@ import click
 import click.testing
 import distutils.spawn
 import pytest
+import subprocess
 import zazu.cli
 import zazu.plugins.clang_format_styler
 import zazu.plugins.astyle_styler
@@ -49,12 +50,6 @@ def test_astyle(mocker):
                                            '*.hpp',
                                            '*.java']
 
-def test_eslint():
-    rule = '"space-in-parens: [error, never]"'
-    styler = zazu.plugins.eslint_styler.ESLintStyler(options=['--rule', rule])
-    ret = styler.style_string('const request = require( "request" );')
-    assert ret == 'const request = require("request");'
-    assert styler.default_extensions()
 
 def test_autopep8():
     styler = zazu.plugins.autopep8_styler.Autopep8Styler()
@@ -68,6 +63,30 @@ def test_docformatter():
     ret = styler.style_string('def foo ():\n"""doc"""\n  pass', None)
     assert ret == 'def foo ():\n"""doc"""\n  pass'
     assert ['*.py'] == styler.default_extensions()
+
+
+def test_eslint(mocker):
+    class MockPopen(object):
+        def __init__(self):
+            pass
+
+        def communicate(self, input=None):
+            pass
+
+        def returncode(self):
+            pass
+
+    mock_popen = MockPopen()
+    mocker.patch.object(MockPopen, 'communicate', return_value=('[{"output":"bar"}]', None))
+    mocker.patch('subprocess.Popen', return_value=mock_popen)
+    styler = zazu.plugins.eslint_styler.ESLintStyler(options=['--color'])
+    ret = styler.style_string('foo', '')
+    subprocess.Popen.assert_called_once_with(
+        args=['eslint', '-f', 'json', '--fix-dry-run', '--stdin', '--stdin-filename', '', '--color'],
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    MockPopen.communicate.assert_called_once_with('foo')
+    assert ret == 'bar'
+    assert styler.default_extensions() == ['*.js']
 
 
 def test_goimports(mocker):
