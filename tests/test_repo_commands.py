@@ -85,9 +85,9 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
 
 
 def test_descriptors_from_branches():
-    tickets = list(zazu.repo.commands.descriptors_from_branches(['feature/foo-4', 'badly/formed']))
+    tickets = list(zazu.repo.commands.descriptors_from_branches(['feature/foo-4', 'badly/formed'], require_type=True))
     assert len(tickets) == 1
-    assert tickets[0].type == 'feature'
+    assert tickets[0].type == 'feature/'
     assert tickets[0].id == 'foo-4'
     assert tickets[0].description == ''
 

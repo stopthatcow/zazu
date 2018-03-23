@@ -121,11 +121,11 @@ def cleanup(ctx, remote, target_branch, yes):
             repo_obj.git.branch('-D', *branches_to_delete)
 
 
-def descriptors_from_branches(branches):
+def descriptors_from_branches(branches, require_type=False):
     """Generate IssueDescriptors from a branch names."""
     for b in branches:
         try:
-            yield zazu.dev.commands.make_issue_descriptor(b)
+            yield zazu.dev.commands.make_issue_descriptor(b, require_type)
         except click.ClickException:
             pass
 
