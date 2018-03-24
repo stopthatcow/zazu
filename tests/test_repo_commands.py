@@ -52,12 +52,12 @@ def test_cleanup(git_repo):
         git_repo.git.commit('-am', 'touch readme')
         git_repo.git.checkout('master')
         git_repo.git.merge('feature/F00-1')
-        assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(git_repo, 'master')
+        assert 'feature/F00-1' in zazu.git_helper.merged_branches(git_repo, 'master')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup', '-b', 'master', '-y'])
         assert result.exit_code == 0
         assert not result.exception
-        assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(git_repo, 'master')
+        assert 'feature/F00-1' not in zazu.git_helper.merged_branches(git_repo, 'master')
 
 
 def test_cleanup_remote(git_repo_with_local_origin, mocker):
@@ -77,12 +77,12 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
         git_repo.git.checkout('master')
         git_repo.git.merge('feature/F00-1')
         git_repo.git.push('--all', 'origin')
-        assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
+        assert 'feature/F00-1' in zazu.git_helper.merged_branches(git_repo, 'origin/master')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup', '-y', '-r'])
         assert result.exit_code == 0
         assert not result.exception
-        assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
+        assert 'feature/F00-1' not in zazu.git_helper.merged_branches(git_repo, 'origin/master')
 
 
 def test_descriptors_from_branches():
