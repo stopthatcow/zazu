@@ -143,6 +143,8 @@ def load_yaml_file(filepath):
         try:
             yaml = ruamel.yaml.YAML()
             config = yaml.load(f)
+            if config is None:
+                config = {}
         except ruamel.yaml.YAMLError as e:
             error_string = ''
             if hasattr(e, 'problem_mark'):
@@ -277,8 +279,6 @@ class Config(object):
             try:
                 self._user_config = load_yaml_file(user_config_path)
             except IOError:
-                self._user_config = None
-            if self._user_config is None:
                 self._user_config = {}
         return self._user_config
 
@@ -287,6 +287,27 @@ class Config(object):
         if self._stylers is None:
             self._stylers = styler_factory(self.project_config().get('style', {}))
         return self._stylers
+
+    def develop_branch_name(self):
+        try:
+            return self.project_config()['branches']['develop']
+        except (click.ClickException, KeyError):
+            pass
+        return 'develop'
+
+    def master_branch_name(self):
+        try:
+            return self.project_config()['branches']['master']
+        except (click.ClickException, KeyError):
+            pass
+        return 'master'
+
+    def protected_branches(self):
+        """Return set of protected branches that can't be deleted."""
+        develop = self.develop_branch_name()
+        master = self.master_branch_name()
+        return {develop, 'origin/{}'.format(develop),
+                master, 'origin/{}'.format(master)}
 
     def zazu_version_required(self):
         """Return the version of zazu requested by the config file."""

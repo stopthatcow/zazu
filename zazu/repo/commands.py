@@ -84,22 +84,24 @@ def cleanup(ctx, remote, target_branch, yes):
     """Clean up merged branches that have been merged or are associated with closed/resolved tickets."""
     ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
+    develop_branch_name = ctx.obj.develop_branch_name()
     try:
-        repo_obj.git.checkout('develop')
-    except git.exc.GitCommandError:
-        raise click.ClickException('unable to checkout "develop"')
+        repo_obj.heads[develop_branch_name].checkout()
+    except IndexError:
+        raise click.ClickException('unable to checkout "{}"'.format(develop_branch_name))
     try:
         issue_tracker = ctx.obj.issue_tracker()
     except click.ClickException:
         issue_tracker = None
     closed_branches = set()
+    protected_branches = ctx.obj.protected_branches()
     if remote:
         repo_obj.git.fetch('--prune')
-        remote_branches = zazu.git_helper.filter_undeletable([b.name for b in repo_obj.remotes.origin.refs])
+        remote_branches = {b.name for b in repo_obj.remotes.origin.refs} - protected_branches
         if issue_tracker is not None:
             closed_branches = get_closed_branches(issue_tracker, remote_branches)
-        merged_remote_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch, remote=True))
-        merged_remote_branches = {b.replace('origin/', '') for b in merged_remote_branches}
+        merged_remote_branches = zazu.git_helper.merged_branches(repo_obj, target_branch, remote=True)
+        merged_remote_branches = {b.replace('origin/', '') for b in merged_remote_branches} - protected_branches
         empty_branches = {b for b in remote_branches if branch_is_empty(repo_obj, b, 'origin/develop')}
         branches_to_delete = merged_remote_branches | closed_branches | empty_branches
         if branches_to_delete:
@@ -108,13 +110,13 @@ def cleanup(ctx, remote, target_branch, yes):
                 for b in branches_to_delete:
                     click.echo('Deleting {}'.format(b))
                 repo_obj.git.push('-df', 'origin', *branches_to_delete)
-    merged_branches = zazu.git_helper.filter_undeletable(zazu.git_helper.get_merged_branches(repo_obj, target_branch))
-    local_branches = set(zazu.git_helper.filter_undeletable([b.name for b in repo_obj.heads]))
+    merged_branches = zazu.git_helper.merged_branches(repo_obj, target_branch) - protected_branches
+    local_branches = {b.name for b in repo_obj.heads} - protected_branches
     if issue_tracker is not None:
         branches_to_check = local_branches - closed_branches
         closed_branches |= get_closed_branches(issue_tracker, branches_to_check)
     empty_branches = {b for b in local_branches if branch_is_empty(repo_obj, b, 'develop')}
-    branches_to_delete = (closed_branches & local_branches) | set(merged_branches) | empty_branches
+    branches_to_delete = (closed_branches & local_branches) | merged_branches | empty_branches
     if branches_to_delete:
         confirmation = 'These local branches will be deleted: {}\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
         if yes or click.confirm(confirmation):
@@ -123,11 +125,11 @@ def cleanup(ctx, remote, target_branch, yes):
             repo_obj.git.branch('-D', *branches_to_delete)
 
 
-def descriptors_from_branches(branches):
+def descriptors_from_branches(branches, require_type=False):
     """Generate IssueDescriptors from a branch names."""
     for b in branches:
         try:
-            yield zazu.dev.commands.make_issue_descriptor(b)
+            yield zazu.dev.commands.make_issue_descriptor(b, require_type)
         except click.ClickException:
             pass
 
