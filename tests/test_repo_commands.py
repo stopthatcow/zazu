@@ -12,8 +12,8 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-def test_init(repo_with_empty_zazu_file):
-    dir = repo_with_empty_zazu_file.working_tree_dir
+def test_init(git_repo):
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'init'])
@@ -22,8 +22,8 @@ def test_init(repo_with_empty_zazu_file):
         assert zazu.git_helper.check_git_hooks(dir)
 
 
-def test_cleanup_no_develop(repo_with_empty_zazu_file):
-    dir = repo_with_empty_zazu_file.working_tree_dir
+def test_cleanup_no_develop(git_repo):
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup'])
@@ -31,33 +31,32 @@ def test_cleanup_no_develop(repo_with_empty_zazu_file):
         assert result.exception
 
 
-def test_cleanup_no_config(repo_with_empty_zazu_file):
-    dir = repo_with_empty_zazu_file.working_tree_dir
+def test_cleanup_no_config(git_repo):
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
-        repo_with_empty_zazu_file.git.checkout('HEAD', b='develop')
+        git_repo.git.checkout('HEAD', b='develop')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup'])
         assert result.exit_code != 0
         assert result.exception
 
 
-def test_cleanup(repo_with_empty_zazu_file):
-    dir = repo_with_empty_zazu_file.working_tree_dir
+def test_cleanup(git_repo):
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
-        repo_with_empty_zazu_file.git.checkout('HEAD', b='develop')
-        repo_with_empty_zazu_file.git.checkout('HEAD', b='feature/F00-1')
+        git_repo.git.checkout('HEAD', b='develop')
+        git_repo.git.checkout('HEAD', b='feature/F00-1')
         with open('README.md', 'w') as f:
             f.write('foo')
-        repo_with_empty_zazu_file.git.commit('-am', 'touch readme')
-        repo_with_empty_zazu_file.git.checkout('master')
-        repo_with_empty_zazu_file.git.merge('feature/F00-1')
-        assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(repo_with_empty_zazu_file, 'master')
+        git_repo.git.commit('-am', 'touch readme')
+        git_repo.git.checkout('master')
+        git_repo.git.merge('feature/F00-1')
+        assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(git_repo, 'master')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup', '-b', 'master', '-y'])
-        print result.output
         assert result.exit_code == 0
         assert not result.exception
-        assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(repo_with_empty_zazu_file, 'master')
+        assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(git_repo, 'master')
 
 
 def test_cleanup_remote(git_repo_with_local_origin, mocker):
@@ -110,9 +109,9 @@ def test_ticket_is_closed(mocker):
     issue_tracker.issue.assert_called_once_with(descriptor.id)
 
 
-def test_clone(mocker, repo_with_empty_zazu_file):
-    mocker.patch('git.Repo.clone_from', return_value=repo_with_empty_zazu_file)
-    dir = repo_with_empty_zazu_file.working_tree_dir
+def test_clone(mocker, git_repo):
+    mocker.patch('git.Repo.clone_from', return_value=git_repo)
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'http://foo/bar/baz.git'])
@@ -123,8 +122,8 @@ def test_clone(mocker, repo_with_empty_zazu_file):
     assert 'baz' == git.Repo.clone_from.call_args[0][1]
 
 
-def test_clone_hosted(mocker, repo_with_empty_zazu_file):
-    mocker.patch('git.Repo.clone_from', return_value=repo_with_empty_zazu_file)
+def test_clone_hosted(mocker, git_repo):
+    mocker.patch('git.Repo.clone_from', return_value=git_repo)
     mocker.patch('zazu.config.Config.default_scm_host', return_value='foo')
     mock_scm_host = mocker.patch('zazu.scm_host.ScmHost', autospec=True)
     mock_host_repo = conftest.dict_to_obj({'id': 'bar',
@@ -132,7 +131,7 @@ def test_clone_hosted(mocker, repo_with_empty_zazu_file):
     mock_scm_host.repos = mocker.Mock(return_value=[mock_host_repo])
 
     mocker.patch('zazu.config.Config.scm_hosts', return_value={'foo': mock_scm_host})
-    dir = repo_with_empty_zazu_file.working_tree_dir
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'foo/bar'])
@@ -148,9 +147,9 @@ def test_clone_hosted(mocker, repo_with_empty_zazu_file):
     assert result.exit_code != 0
 
 
-def test_clone_no_hosted_hosted(mocker, repo_with_empty_zazu_file):
+def test_clone_no_hosted_hosted(mocker, git_repo):
     mocker.patch('zazu.config.Config.scm_hosts', return_value={})
-    dir = repo_with_empty_zazu_file.working_tree_dir
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'foo/bar'])
@@ -159,9 +158,9 @@ def test_clone_no_hosted_hosted(mocker, repo_with_empty_zazu_file):
         assert result.output.startswith('Error: Unable to clone foo/bar')
 
 
-def test_clone_error(mocker, repo_with_empty_zazu_file):
+def test_clone_error(mocker, git_repo):
     mocker.patch('git.Repo.clone_from', side_effect=git.GitCommandError('clone', 'Foo'))
-    dir = repo_with_empty_zazu_file.working_tree_dir
+    dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'clone', 'http://foo/bar/baz.git'])
