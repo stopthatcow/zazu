@@ -73,17 +73,17 @@ def repo_with_missing_style(git_repo):
 
 
 @pytest.fixture()
-def repo_with_github_as_origin(git_repo):
-    git_repo.create_remote('origin', 'http://github.com/stopthatcow/zazu')
-    return git_repo
+def repo_with_github_as_origin(repo_with_empty_zazu_file):
+    repo_with_empty_zazu_file.create_remote('origin', 'http://github.com/stopthatcow/zazu')
+    return repo_with_empty_zazu_file
 
 
 @pytest.fixture()
-def git_repo_with_local_origin(git_repo):
+def git_repo_with_local_origin(repo_with_empty_zazu_file):
     temp_dir = tempfile.mkdtemp()
     git.Repo.init(temp_dir, bare=True)
-    git_repo.create_remote('origin', temp_dir)
-    return git_repo
+    repo_with_empty_zazu_file.create_remote('origin', temp_dir)
+    return repo_with_empty_zazu_file
 
 
 @contextlib.contextmanager

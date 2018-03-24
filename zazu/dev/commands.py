@@ -164,6 +164,7 @@ def find_branch_with_id(repo, id):
 def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar."""
     repo = ctx.obj.repo
+
     if rename_flag:
         check_if_active_branch_can_be_renamed(repo)
 
@@ -185,10 +186,11 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     branch_name = issue_descriptor.get_branch_name()
     if not (head or rename_flag):
         offer_to_stash_changes(repo)
-        click.echo('Checking out develop...')
-        repo.heads.develop.checkout()
-        click.echo('Pulling from origin...')
+        develop_branch_name = ctx.obj.develop_branch_name()
+        click.echo('Checking out {}...'.format(develop_branch_name))
+        repo.heads[develop_branch_name].checkout()
         try:
+            click.echo('Pulling from origin...')
             repo.remotes.origin.pull()
         except git.exc.GitCommandError:
             click.secho('WARNING: unable to pull from origin!', fg='red')
@@ -255,8 +257,6 @@ def status(ctx):
                 click.echo('{} {} -> {}'.format(click.style('    Branches:', fg='green'), p.head, p.base))
                 click.echo(click.style('    Description:\n', fg='green') + wrap_text(p.description, indent='    '))
 
-                # TODO: build status from TC
-
 
 @dev.command()
 @click.pass_context
@@ -274,7 +274,7 @@ def review(ctx, base, head):
         issue_id = descriptor.id
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
-            base = 'develop' if base is None else base
+            base = ctx.obj.develop_branch_name() if base is None else base
             click.echo('No existing review found, creating one...')
             title = zazu.util.prompt('Title', default=descriptor.readable_description())
             body = zazu.util.prompt('Summary')

@@ -84,10 +84,11 @@ def cleanup(ctx, remote, target_branch, yes):
     """Clean up merged branches that have been merged or are associated with closed/resolved tickets."""
     ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
+    develop_branch_name = ctx.obj.develop_branch_name()
     try:
-        repo_obj.git.checkout('develop')
+        repo_obj.heads[develop_branch_name].checkout()
     except git.exc.GitCommandError:
-        raise click.ClickException('unable to checkout "develop"')
+        raise click.ClickException('unable to checkout "{}"'.format(develop_branch_name))
     try:
         issue_tracker = ctx.obj.issue_tracker()
     except click.ClickException:
