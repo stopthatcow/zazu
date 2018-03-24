@@ -28,6 +28,7 @@ def test_cleanup_no_develop(git_repo):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup'])
         assert result.exit_code != 0
+        assert 'unable to checkout "develop"' in result.output
         assert result.exception
 
 

@@ -87,7 +87,7 @@ def cleanup(ctx, remote, target_branch, yes):
     develop_branch_name = ctx.obj.develop_branch_name()
     try:
         repo_obj.heads[develop_branch_name].checkout()
-    except git.exc.GitCommandError:
+    except IndexError:
         raise click.ClickException('unable to checkout "{}"'.format(develop_branch_name))
     try:
         issue_tracker = ctx.obj.issue_tracker()
