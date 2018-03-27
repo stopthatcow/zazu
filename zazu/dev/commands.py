@@ -154,10 +154,9 @@ def find_branch_with_id(repo, id):
 
 
 def branch_is_current(repo, branch):
-    try:
-        repo.remotes.origin.fetch()
-    except git.exc.GitCommandError:
-        click.secho('WARNING: unable to fetch from origin!', fg='red')
+    repo.remotes.origin.fetch()
+    if repo.heads[branch].tracking_branch() is None:
+        return True
     return repo.git.rev_parse('{}@{{0}}'.format(branch)) == repo.git.rev_parse('{}@{{u}}'.format(branch))
 
 
@@ -179,7 +178,6 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     develop_branch_name = ctx.obj.develop_branch_name()
     if not (head or rename_flag):
         develop_is_current_future = zazu.util.async(branch_is_current, repo, develop_branch_name)
-
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
@@ -190,7 +188,11 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     issue_descriptor = make_issue_descriptor(name)
     # Sync with the background fetch process before touching the git repo.
     if not (head or rename_flag):
-        develop_is_current = develop_is_current_future.result()
+        try:
+            develop_is_current = develop_is_current_future.result()
+        except git.exc.GitCommandError:
+            click.secho('WARNING: unable to fetch from origin!', fg='red')
+            develop_is_current = True
     existing_branch = find_branch_with_id(repo, issue_descriptor.id)
     if existing_branch and not (rename_flag and repo.active_branch.name == existing_branch):
         raise click.ClickException('branch with same id exists: {}'.format(existing_branch))
