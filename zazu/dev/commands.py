@@ -190,7 +190,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     if not (head or rename_flag):
         try:
             develop_is_current = develop_is_current_future.result()
-        except git.exc.GitCommandError:
+        except (git.exc.GitCommandError, AttributeError):
             click.secho('WARNING: unable to fetch from origin!', fg='red')
             develop_is_current = True
     existing_branch = find_branch_with_id(repo, issue_descriptor.id)
