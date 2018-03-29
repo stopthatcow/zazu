@@ -80,13 +80,26 @@ def test_eslint(mocker):
     mocker.patch.object(MockPopen, 'communicate', return_value=('[{"output":"bar"}]', None))
     mocker.patch('subprocess.Popen', return_value=mock_popen)
     styler = zazu.plugins.eslint_styler.ESLintStyler(options=['--color'])
-    ret = styler.style_string('foo', '')
+    ret = styler.style_string('foo', 'baz')
     subprocess.Popen.assert_called_once_with(
-        args=['eslint', '-f', 'json', '--fix-dry-run', '--stdin', '--stdin-filename', '', '--color'],
+        args=['eslint', '-f', 'json', '--fix-dry-run', '--stdin', '--stdin-filename', 'baz', '--color'],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     MockPopen.communicate.assert_called_once_with('foo')
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.js']
+
+    styler.style_string('foo', 'baz/qux/quux/quuz/corge')
+    assert ret == 'bar'
+
+    styler.style_string('foo', '/')
+    assert ret == 'bar'
+
+    long_path = '/'
+    for i in range(105):
+        long_path = long_path + 'baz/'
+
+    with pytest.raises(click.ClickException):
+        styler.style_string('foo', long_path)
 
 
 def test_goimports(mocker):
