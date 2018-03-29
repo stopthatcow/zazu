@@ -26,7 +26,6 @@ class ESLintStyler(zazu.styler.Styler):
 
         """
 
-        node_modules_path = None
         eslint = 'eslint'
         cwd = os.path.normpath(os.getcwd())
         dirname = os.path.normpath(os.path.dirname(filepath))
