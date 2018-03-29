@@ -2,6 +2,7 @@
 """ESLint plugin for zazu."""
 import zazu.styler
 zazu.util.lazy_import(locals(), [
+    'click',
     'json',
     'os',
     'subprocess'
@@ -31,19 +32,28 @@ class ESLintStyler(zazu.styler.Styler):
         dirname = os.path.normpath(os.path.dirname(filepath))
         loop_count = 0
 
+        local_eslint = os.path.join('node_modules', 'eslint', 'bin', 'eslint.js')
+
         while True and loop_count < 100:
             loop_count = loop_count + 1
-            maybe_eslint = os.path.join(dirname, 'node_modules/eslint/bin/eslint.js')
+            maybe_eslint = os.path.join(dirname, local_eslint)
 
             if os.path.isfile(maybe_eslint):
                 eslint = maybe_eslint
                 break
-            elif dirname == cwd:
+            elif os.path.realpath(dirname) == cwd:
+                # Stop searching for eslint above current working directory
+                # An invalid filepath should break-out here
                 break
-            elif os.path.realpath(dirname) == '/':
+            elif os.path.realpath(dirname) == os.path.normpath('/'):
+                # Stop searching when dirname and maybe_eslint are same
+                # This should be the filesystem root
                 break
 
             dirname = os.path.normpath(os.path.join(dirname, '..'))
+
+        if loop_count >= 100:
+            raise click.ClickException('Unable to find eslint.js')
 
         args = [eslint, '-f', 'json', '--fix-dry-run', '--stdin', '--stdin-filename', filepath] + self.options
         try:
