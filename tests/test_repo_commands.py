@@ -28,6 +28,7 @@ def test_cleanup_no_develop(git_repo):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup'])
         assert result.exit_code != 0
+        assert 'unable to checkout "develop"' in result.output
         assert result.exception
 
 
@@ -51,16 +52,16 @@ def test_cleanup(git_repo):
         git_repo.git.commit('-am', 'touch readme')
         git_repo.git.checkout('master')
         git_repo.git.merge('feature/F00-1')
-        assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(git_repo, 'master')
+        assert 'feature/F00-1' in zazu.git_helper.merged_branches(git_repo, 'master')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup', '-b', 'master', '-y'])
         assert result.exit_code == 0
         assert not result.exception
-        assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(git_repo, 'master')
+        assert 'feature/F00-1' not in zazu.git_helper.merged_branches(git_repo, 'master')
 
 
 def test_cleanup_remote(git_repo_with_local_origin, mocker):
-    mocker.patch('zazu.repo.commands.get_closed_branches', return_value=['feature/F00-1'])
+    mocker.patch('zazu.repo.commands.get_closed_branches', return_value={'feature/F00-1'})
     git_repo = git_repo_with_local_origin
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
@@ -76,18 +77,18 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
         git_repo.git.checkout('master')
         git_repo.git.merge('feature/F00-1')
         git_repo.git.push('--all', 'origin')
-        assert 'feature/F00-1' in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
+        assert 'feature/F00-1' in zazu.git_helper.merged_branches(git_repo, 'origin/master')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'cleanup', '-y', '-r'])
         assert result.exit_code == 0
         assert not result.exception
-        assert 'feature/F00-1' not in zazu.git_helper.get_merged_branches(git_repo, 'origin/master')
+        assert 'feature/F00-1' not in zazu.git_helper.merged_branches(git_repo, 'origin/master')
 
 
 def test_descriptors_from_branches():
-    tickets = list(zazu.repo.commands.descriptors_from_branches(['feature/foo-4', 'badly/formed']))
+    tickets = list(zazu.repo.commands.descriptors_from_branches(['feature/foo-4', 'badly/formed'], require_type=True))
     assert len(tickets) == 1
-    assert tickets[0].type == 'feature'
+    assert tickets[0].type == 'feature/'
     assert tickets[0].id == 'foo-4'
     assert tickets[0].description == ''
 
@@ -98,7 +99,7 @@ def test_get_closed_branches(mocker):
     mocker.patch('zazu.repo.commands.ticket_is_closed', side_effect=foo1_is_closed)
     issue_tracker = mocker.Mock()
     result = zazu.repo.commands.get_closed_branches(issue_tracker, ['feature/FOO-1', 'feature/FOO-2'])
-    assert result == ['feature/FOO-1']
+    assert result == {'feature/FOO-1'}
 
 
 def test_ticket_is_closed(mocker):
@@ -167,3 +168,19 @@ def test_clone_error(mocker, git_repo):
         assert result.exit_code != 0
         assert result.exception
     git.Repo.clone_from.assert_called_once()
+
+
+def test_branch_is_empty(git_repo):
+    dir = git_repo.working_tree_dir
+    with zazu.util.cd(dir):
+        assert zazu.repo.commands.branch_is_empty(git_repo, 'master', 'master')
+        assert not zazu.repo.commands.branch_is_empty(git_repo, 'master', 'non_existent')
+        git_repo.create_head('empty').checkout()
+        git_repo.create_head('not_empty').checkout()
+        tmp_file = os.path.join(dir, 'temp.txt')
+        with open(tmp_file, 'wb') as f:
+            f.write('\n')
+        git_repo.index.add([tmp_file])
+        git_repo.index.commit('make this not empty')
+        assert zazu.repo.commands.branch_is_empty(git_repo, 'empty', 'master')
+        assert not zazu.repo.commands.branch_is_empty(git_repo, 'non_empty', 'master')

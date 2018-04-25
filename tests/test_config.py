@@ -285,3 +285,23 @@ def test_config_create(mocker, tmp_dir):
     result = runner.invoke(zazu.cli.cli, ['config', '--list'])
     assert result.exit_code == 0
     assert os.path.isfile(path)
+
+
+def test_branch_names(git_repo):
+    with zazu.util.cd(git_repo.working_tree_dir):
+        uut = zazu.config.Config('')
+        assert uut.develop_branch_name() == 'develop'
+        assert uut.master_branch_name() == 'master'
+
+
+def test_alt_branch_names(git_repo):
+    with zazu.util.cd(git_repo.working_tree_dir):
+        with open('zazu.yaml', 'w') as file:
+            config = {
+                'branches': {'develop': 'alt_develop',
+                             'master': 'alt_master'}
+            }
+            yaml.dump(config, file)
+        uut = zazu.config.Config('')
+        assert uut.develop_branch_name() == 'alt_develop'
+        assert uut.master_branch_name() == 'alt_master'
