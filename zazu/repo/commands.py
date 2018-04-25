@@ -109,8 +109,6 @@ def cleanup(ctx, remote, target_branch, yes):
         if branches_to_delete:
             confirmation = 'These remote branches will be deleted: {} Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
             if yes or click.confirm(confirmation):
-                for b in branches_to_delete:
-                    click.echo('Deleting {}'.format(b))
                 repo_obj.git.push('-df', 'origin', *branches_to_delete)
     merged_branches = zazu.git_helper.merged_branches(repo_obj, target_branch) - protected_branches
     local_branches = {b.name for b in repo_obj.heads} - protected_branches
@@ -122,8 +120,6 @@ def cleanup(ctx, remote, target_branch, yes):
     if branches_to_delete:
         confirmation = 'These local branches will be deleted: {}\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
         if yes or click.confirm(confirmation):
-            for b in branches_to_delete:
-                click.echo('Deleting {}'.format(b))
             repo_obj.git.branch('-D', *branches_to_delete)
 
 
