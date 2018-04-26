@@ -97,31 +97,29 @@ def cleanup(ctx, remote, target_branch, yes):
     protected_branches = ctx.obj.protected_branches()
     if remote:
         repo_obj.git.fetch('--prune')
-        remote_branches = {b.name for b in repo_obj.remotes.origin.refs} - protected_branches
+        remote_branch_names = {b.name.replace('origin/', '') for b in repo_obj.remotes.origin.refs} - protected_branches
         if issue_tracker is not None:
-            closed_branches = get_closed_branches(issue_tracker, remote_branches)
+            closed_branches = get_closed_branches(issue_tracker, remote_branch_names)
         merged_remote_branches = zazu.git_helper.merged_branches(repo_obj, target_branch, remote=True)
-        merged_remote_branches = {b.replace('origin/', '') for b in merged_remote_branches} - protected_branches
-        empty_branches = {b for b in remote_branches if branch_is_empty(repo_obj, b, 'origin/develop')}
-        branches_to_delete = merged_remote_branches | closed_branches | empty_branches
+        merged_remote_branches = {b.replace('origin/', '') for b in merged_remote_branches}
+        empty_branches = {b for b in remote_branch_names if branch_is_empty(repo_obj,
+                                                                            'origin/{}'.format(b),
+                                                                            'origin/{}'.format(develop_branch_name))}
+        branches_to_delete = (merged_remote_branches | closed_branches | empty_branches) - protected_branches
         if branches_to_delete:
             confirmation = 'These remote branches will be deleted: {} Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
             if yes or click.confirm(confirmation):
-                for b in branches_to_delete:
-                    click.echo('Deleting {}'.format(b))
                 repo_obj.git.push('-df', 'origin', *branches_to_delete)
     merged_branches = zazu.git_helper.merged_branches(repo_obj, target_branch) - protected_branches
     local_branches = {b.name for b in repo_obj.heads} - protected_branches
     if issue_tracker is not None:
         branches_to_check = local_branches - closed_branches
         closed_branches |= get_closed_branches(issue_tracker, branches_to_check)
-    empty_branches = {b for b in local_branches if branch_is_empty(repo_obj, b, 'develop')}
-    branches_to_delete = (closed_branches & local_branches) | merged_branches | empty_branches
+    empty_branches = {b for b in local_branches if branch_is_empty(repo_obj, b, develop_branch_name)}
+    branches_to_delete = ((closed_branches & local_branches) | merged_branches | empty_branches) - protected_branches
     if branches_to_delete:
         confirmation = 'These local branches will be deleted: {}\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
         if yes or click.confirm(confirmation):
-            for b in branches_to_delete:
-                click.echo('Deleting {}'.format(b))
             repo_obj.git.branch('-D', *branches_to_delete)
 
 
