@@ -117,10 +117,28 @@ def dispatch(work):
         the results of the callables as they are finished.
 
     """
-    with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()*5) as executor:
         futures = {executor.submit(w): w for w in work}
         for future in concurrent.futures.as_completed(futures):
             yield future.result()
+
+
+def async(call, *args, **kwargs):
+    """Dispatch a call asynchronously and return the future.
+
+    Args:
+        fn: the function to call.
+        *args: args to forward to fn.
+        **kwargs: args to forward to fn
+
+    Returns:
+        the future for the return of the called function.
+
+    """
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(call, *args, **kwargs)
+    executor.shutdown(wait=False)
+    return future
 
 
 FAIL_OK = [click.style('FAIL', fg='red', bold=True), click.style(' OK ', fg='green', bold=True)]

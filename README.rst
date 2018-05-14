@@ -198,7 +198,11 @@ The zazu.yaml file lives at the base of the repo and describes the integrations 
               - include/**
               - test/**
 
-      zazu: 0.11.0 # optional required zazu version
+    # An optional section where names for special branches can be remapped.
+    branches:
+      develop: master  # Features will be started from the "master" branch.
+
+    zazu: 0.11.0 # optional required zazu version
 
 
 Command autocompletion

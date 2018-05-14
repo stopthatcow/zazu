@@ -35,7 +35,7 @@ class IssueDescriptor(object):
         """Get the branch name for this issue descriptor."""
         ret = self.id
         if self.type is not None:
-            ret = '{}/{}'.format(self.type, ret)
+            ret = '{}{}'.format(self.type, ret)
         if self.description:
             sanitized_description = self.description.replace(' ', '_')
             ret = '{}_{}'.format(ret, sanitized_description)
@@ -77,21 +77,21 @@ def offer_to_stash_changes(repo):
             repo.git.stash()
 
 
-def make_issue_descriptor(name):
+def make_issue_descriptor(name, require_type=False):
     """Split input into type, id and description."""
-    known_types = {'hotfix', 'release', 'feature', 'bug'}
+    known_types = {'hotfix/', 'release/', 'feature/', 'support/'}
     type = None
     description = ''
-    components = name.split('/')
-    if len(components) > 1:
-        type = components[-2]
-        if type not in known_types:
-            raise click.ClickException('Branch type specifier must be one of {}'.format(known_types))
-    components = components.pop().split('_', 1)
+    for t in known_types:
+        if name.startswith(t):
+            type = t
+            name = name[len(t):]
+    if type is None and require_type:
+        raise click.ClickException('Branch prefix must be one of {}'.format(known_types))
+    components = name.split('_', 1)
+    id = components[0]
     if len(components) == 2:
         description = components[1]
-    id = components[0]
-
     return IssueDescriptor(type, id, description)
 
 
@@ -146,11 +146,18 @@ def rename(ctx, name):
 
 def find_branch_with_id(repo, id):
     """Find a branch with a given issue id."""
-    descriptors = zazu.repo.commands.descriptors_from_branches([h.name for h in repo.heads])
+    descriptors = zazu.repo.commands.descriptors_from_branches([h.name for h in repo.heads], require_type=False)
     try:
         return next(d.get_branch_name() for d in descriptors if d.id == id)
     except StopIteration:
         pass
+
+
+def branch_is_current(repo, branch):
+    repo.remotes.origin.fetch()
+    if repo.heads[branch].tracking_branch() is None:
+        return True
+    return repo.git.rev_parse('{}@{{0}}'.format(branch)) == repo.git.rev_parse('{}@{{u}}'.format(branch))
 
 
 @dev.command()
@@ -158,8 +165,8 @@ def find_branch_with_id(repo, id):
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
 @click.option('--head', is_flag=True, help='Branch off of the current head rather than develop')
 @click.option('rename_flag', '--rename', is_flag=True, help='Rename the current branch rather than making a new one')
-@click.option('-t', '--type', type=click.Choice(['feature', 'release', 'hotfix']), help='the ticket type to make',
-              default='feature')
+@click.option('-t', '--type', type=click.Choice(['feature/', 'release/', 'hotfix/', 'support/']), help='the ticket type to make',
+              default='feature/')
 @click.pass_context
 def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar."""
@@ -167,6 +174,10 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     if rename_flag:
         check_if_active_branch_can_be_renamed(repo)
 
+    # Fetch in the background.
+    develop_branch_name = ctx.obj.develop_branch_name()
+    if not (head or rename_flag):
+        develop_is_current_future = zazu.util.async(branch_is_current, repo, develop_branch_name)
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
@@ -175,6 +186,13 @@ def start(ctx, name, no_verify, head, rename_flag, type):
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
     issue_descriptor = make_issue_descriptor(name)
+    # Sync with the background fetch process before touching the git repo.
+    if not (head or rename_flag):
+        try:
+            develop_is_current = develop_is_current_future.result()
+        except (git.exc.GitCommandError, AttributeError):
+            click.secho('WARNING: unable to fetch from origin!', fg='red')
+            develop_is_current = True
     existing_branch = find_branch_with_id(repo, issue_descriptor.id)
     if existing_branch and not (rename_flag and repo.active_branch.name == existing_branch):
         raise click.ClickException('branch with same id exists: {}'.format(existing_branch))
@@ -185,13 +203,12 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     branch_name = issue_descriptor.get_branch_name()
     if not (head or rename_flag):
         offer_to_stash_changes(repo)
-        click.echo('Checking out develop...')
-        repo.heads.develop.checkout()
-        click.echo('Pulling from origin...')
-        try:
-            repo.remotes.origin.pull()
-        except git.exc.GitCommandError:
-            click.secho('WARNING: unable to pull from origin!', fg='red')
+        click.echo('Checking out {}...'.format(develop_branch_name))
+        repo.heads[develop_branch_name].checkout()
+        if not develop_is_current:
+            click.echo('Merging latest from origin...')
+            repo.git.merge()
+
     try:
         repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))
@@ -255,8 +272,6 @@ def status(ctx):
                 click.echo('{} {} -> {}'.format(click.style('    Branches:', fg='green'), p.head, p.base))
                 click.echo(click.style('    Description:\n', fg='green') + wrap_text(p.description, indent='    '))
 
-                # TODO: build status from TC
-
 
 @dev.command()
 @click.pass_context
@@ -274,7 +289,7 @@ def review(ctx, base, head):
         issue_id = descriptor.id
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
-            base = 'develop' if base is None else base
+            base = ctx.obj.develop_branch_name() if base is None else base
             click.echo('No existing review found, creating one...')
             title = zazu.util.prompt('Title', default=descriptor.readable_description())
             body = zazu.util.prompt('Summary')
