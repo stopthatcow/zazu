@@ -60,7 +60,7 @@ class ESLintStyler(zazu.styler.Styler):
             p = subprocess.Popen(args=args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
             results, _ = p.communicate(string)
         except OSError:
-            zazu.util.raise_uninstalled(args[0])
+            raise click.ClickException('Unable to find {}'.format(args[0]))
 
         return json.loads(results)[0].get('output', string)
 

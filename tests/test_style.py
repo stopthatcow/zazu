@@ -88,18 +88,30 @@ def test_eslint(mocker):
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.js']
 
-    styler.style_string('foo', 'baz/qux/quux/quuz/corge')
+    ret = styler.style_string('foo', 'baz/qux/quux/quuz/corge')
     assert ret == 'bar'
 
-    styler.style_string('foo', '/')
+    # eslint not found in file's parent directories
+    ret = styler.style_string('foo', '/')
     assert ret == 'bar'
 
+    # local eslint not found at directory depth > 100
     long_path = '/'
     for i in range(105):
         long_path = long_path + 'baz/'
 
     with pytest.raises(click.ClickException):
         styler.style_string('foo', long_path)
+
+    # local eslint fount
+    mocker.patch('os.path.isfile', return_value=True)
+    ret = styler.style_string('foo', 'baz/qux')
+    assert ret == 'bar'
+
+    # global eslint does not exist
+    mocker.patch('subprocess.Popen', side_effect=OSError())
+    with pytest.raises(click.ClickException):
+        styler.style_string('foo', 'baz/qux')
 
 
 def test_goimports(mocker):
