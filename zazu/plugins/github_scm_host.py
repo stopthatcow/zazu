@@ -21,8 +21,8 @@ class GitHubScmHost(zazu.scm_host.ScmHost):
         Args:
             user (str): the github username.
         """
-        self._user = user
         self._github_handle = None
+        self._user = user
 
     def connect(self):
         """Get handle to ensure that github credentials are in place."""

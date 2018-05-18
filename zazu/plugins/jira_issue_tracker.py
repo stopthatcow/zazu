@@ -28,10 +28,10 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             components (list of str): list of components that new issues can be associated with.
         """
         self._base_url = base_url
+        self._user = None
         self._default_project = default_project
         self._components = components
         self._jira_handle = None
-        self._user = None
 
     def connect(self):
         """Get handle to ensure that JIRA credentials are in place."""
@@ -39,9 +39,9 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _jira(self):
         if self._jira_handle is None:
-            username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
+            user, password = zazu.credential_helper.get_user_pass_credentials(self._base_url)
             self._jira_handle = jira.JIRA(self._base_url,
-                                          basic_auth=(username, password),
+                                          basic_auth=(user, password),
                                           options={'check_update': False}, max_retries=0)
         return self._jira_handle
 

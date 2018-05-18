@@ -25,8 +25,7 @@ def make_gh_token():
     }
     token = None
     while token is None:
-        user = zazu.util.prompt('GitHub username', expected_type=str)
-        password = click.prompt('GitHub password', type=str, hide_input=True)
+        user, password = zazu.credential_helper.get_user_pass_credentials(api_url, offer_to_save=False)
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
