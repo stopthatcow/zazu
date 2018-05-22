@@ -4,6 +4,7 @@ import zazu.credential_helper
 import zazu.issue_tracker
 import zazu.util
 zazu.util.lazy_import(locals(), [
+    'click',
     'jira',
     're'
 ])
@@ -39,10 +40,20 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _jira(self):
         if self._jira_handle is None:
-            user, password = zazu.credential_helper.get_user_pass_credentials(self._base_url)
-            self._jira_handle = jira.JIRA(self._base_url,
-                                          basic_auth=(user, password),
-                                          options={'check_update': False}, max_retries=0)
+            use_saved = True
+            while True:
+                user, password = zazu.credential_helper.get_user_pass_credentials(self._base_url, use_saved=use_saved)
+                try:
+                    self._jira_handle = jira.JIRA(self._base_url,
+                                                  basic_auth=(user, password),
+                                                  options={'check_update': False}, max_retries=0)
+                    break
+                except jira.JIRAError as e:
+                    if e.status_code == 401:
+                        click.echo('{} rejected password for user {}!'.format(self._base_url, user))
+                        use_saved = False
+                    else:
+                        raise zazu.issue_tracker.IssueTrackerError(str(e))
         return self._jira_handle
 
     def browse_url(self, id):
