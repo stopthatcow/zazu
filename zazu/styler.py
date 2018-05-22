@@ -28,11 +28,12 @@ class Styler(object):
         self.includes = [] if includes is None else includes
         self.options += self.required_options()
 
-    def style_string(self, string):
+    def style_string(self, string, filepath):
         """Fix a string to be within style guidelines.
 
         Args:
             string (str): the string to style
+            filepath (str): the filepath of the file being styled
 
         Returns:
             Styled string.

@@ -153,6 +153,13 @@ def find_branch_with_id(repo, id):
         pass
 
 
+def branch_is_current(repo, branch):
+    repo.remotes.origin.fetch()
+    if repo.heads[branch].tracking_branch() is None:
+        return True
+    return repo.git.rev_parse('{}@{{0}}'.format(branch)) == repo.git.rev_parse('{}@{{u}}'.format(branch))
+
+
 @dev.command()
 @click.argument('name', required=False)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
@@ -164,10 +171,13 @@ def find_branch_with_id(repo, id):
 def start(ctx, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar."""
     repo = ctx.obj.repo
-
     if rename_flag:
         check_if_active_branch_can_be_renamed(repo)
 
+    # Fetch in the background.
+    develop_branch_name = ctx.obj.develop_branch_name()
+    if not (head or rename_flag):
+        develop_is_current_future = zazu.util.async(branch_is_current, repo, develop_branch_name)
     if name is None:
         try:
             name = str(make_ticket(ctx.obj.issue_tracker()))
@@ -176,6 +186,13 @@ def start(ctx, name, no_verify, head, rename_flag, type):
             raise click.ClickException(str(e))
         click.echo('Created ticket "{}"'.format(name))
     issue_descriptor = make_issue_descriptor(name)
+    # Sync with the background fetch process before touching the git repo.
+    if not (head or rename_flag):
+        try:
+            develop_is_current = develop_is_current_future.result()
+        except (git.exc.GitCommandError, AttributeError):
+            click.secho('WARNING: unable to fetch from origin!', fg='red')
+            develop_is_current = True
     existing_branch = find_branch_with_id(repo, issue_descriptor.id)
     if existing_branch and not (rename_flag and repo.active_branch.name == existing_branch):
         raise click.ClickException('branch with same id exists: {}'.format(existing_branch))
@@ -186,14 +203,12 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     branch_name = issue_descriptor.get_branch_name()
     if not (head or rename_flag):
         offer_to_stash_changes(repo)
-        develop_branch_name = ctx.obj.develop_branch_name()
         click.echo('Checking out {}...'.format(develop_branch_name))
         repo.heads[develop_branch_name].checkout()
-        try:
-            click.echo('Pulling from origin...')
-            repo.remotes.origin.pull()
-        except git.exc.GitCommandError:
-            click.secho('WARNING: unable to pull from origin!', fg='red')
+        if not develop_is_current:
+            click.echo('Merging latest from origin...')
+            repo.git.merge()
+
     try:
         repo.git.checkout(branch_name)
         click.echo('Branch {} already exists!'.format(branch_name))

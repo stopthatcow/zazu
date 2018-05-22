@@ -135,11 +135,18 @@ def test_rename_detached_head(git_repo):
         assert result.exit_code != 0
 
 
-def test_start(git_repo_with_local_origin, mocker):
-    git_repo = git_repo_with_local_origin
+def test_branch_is_current(git_repo_with_out_of_date_local_origin):
+    assert not zazu.dev.commands.branch_is_current(git_repo_with_out_of_date_local_origin, 'develop')
+    git_repo_with_out_of_date_local_origin.git.pull('origin', 'develop')
+    assert zazu.dev.commands.branch_is_current(git_repo_with_out_of_date_local_origin, 'develop')
+    git_repo_with_out_of_date_local_origin.git.branch('--unset-upstream')
+    assert zazu.dev.commands.branch_is_current(git_repo_with_out_of_date_local_origin, 'develop')
+
+
+def test_start(git_repo_with_out_of_date_local_origin, mocker):
+    git_repo = git_repo_with_out_of_date_local_origin
     mocker.patch('zazu.util.prompt', return_value='description')
     with zazu.util.cd(git_repo.working_tree_dir):
-        git_repo.git.checkout('HEAD', b='develop')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'bar-1', '--no-verify'])
         assert not result.exception
@@ -164,6 +171,11 @@ def test_start(git_repo_with_local_origin, mocker):
         assert 'feature/foo-1_description2' in git_repo.heads
         # Test with exactly same name.
         result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'foo-1_description2', '--no-verify', '--rename'])
+        assert not result.exception
+        assert result.exit_code == 0
+        # Test with no origin.
+        git_repo_with_out_of_date_local_origin.git.remote('remove', 'origin')
+        result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'bar-2', '--no-verify'])
         assert not result.exception
         assert result.exit_code == 0
 
