@@ -29,16 +29,20 @@ def get_user_pass_credentials(url, use_saved=True, offer_to_save=True):
 
 
 def get_user(url):
+    """Get the stored username for a given URL from the keychain."""
     return keyring.get_password(url, 'username')
 
 
 def set_user(url, username):
+    """Store a username to the keychain for a given URL."""
     return keyring.set_password(url, 'username', username)
 
 
 def get_password(url):
+    """Get the stored password for a given URL from the keychain."""
     return keyring.get_password(url, 'password')
 
 
 def set_password(url, password):
+    """Store a password to the keychain for a given URL."""
     return keyring.set_password(url, 'password', password)

@@ -171,17 +171,25 @@ def user_config_filepath():
 
 
 class ConfigFile(object):
-    """Holds a parsed config file and can write changes to disk"""
+    """Holds a parsed config file and can write changes to disk."""
 
     def __init__(self, path):
+        """Store path and read the contents from disk if it exists."""
         self._path = path
         self.dict = {}
-        self.read()
+        if self.exists():
+            self.read()
+
+    def exists(self):
+        """Return True if the path exists."""
+        return os.path.isfile(self._path)
 
     def read(self):
+        """Read config file from disk."""
         self.dict = load_yaml_file(self._path)
 
     def write(self):
+        """Write config file to disk."""
         yaml = ruamel.yaml.YAML()
         with open(self._path, 'w') as f:
             yaml.dump(self.dict, f)
@@ -304,6 +312,7 @@ class Config(object):
         return self._stylers
 
     def develop_branch_name(self):
+        """Get the branch name for develop branch."""
         try:
             return self.project_config()['branches']['develop']
         except (click.ClickException, KeyError):
@@ -311,6 +320,7 @@ class Config(object):
         return 'develop'
 
     def master_branch_name(self):
+        """Get the branch name for master branch."""
         try:
             return self.project_config()['branches']['master']
         except (click.ClickException, KeyError):
