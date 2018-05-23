@@ -44,6 +44,7 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
         destination (str): path to clone the repo to.
         nohooks (bool): if True, git hooks are not installed.
         nosubmodules (bool): if True submodules are not initialized.
+
     """
     if os.path.isdir(repository) or ':' in repository:
         repository_url = repository

@@ -27,6 +27,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             base_url (str): base URL for the JIRA instance.
             default_project (str): project that new issues will be created in by default.
             components (list of str): list of components that new issues can be associated with.
+
         """
         self._base_url = base_url
         self._user = None
@@ -89,6 +90,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             summary (str): a summary of the issue.
             description (str): a detailed description of the issue.
             component (str): the JIRA component to associate with the issue.
+
         """
         try:
             issue_dict = {
@@ -175,6 +177,7 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
         Args:
             jira_issue: Jira issue handle.
             tracker_handle: The tracker associated with this issue.
+
         """
         self._jira_issue = jira_issue
         self._tracker = tracker_handle

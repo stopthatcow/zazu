@@ -20,6 +20,7 @@ class GitHubScmHost(zazu.scm_host.ScmHost):
 
         Args:
             user (str): the github username.
+
         """
         self._github_handle = None
         self._user = user
@@ -61,6 +62,7 @@ class GitHubScmRepoAdaptor(zazu.scm_host.ScmHostRepo):
 
         Args:
             github_repo: GitHub repo handle.
+
         """
         self._github_repo = github_repo
 

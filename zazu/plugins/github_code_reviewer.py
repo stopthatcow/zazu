@@ -22,6 +22,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         Args:
             owner (str): the github repo owner's username or organization name.
             repo (str): the github repo name.
+
         """
         self._owner = owner
         self._repo = repo

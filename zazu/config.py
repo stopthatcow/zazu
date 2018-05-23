@@ -30,6 +30,7 @@ class PluginFactory(object):
         Args:
             name (str): the name of the plugin type.
             subclass (type): subclasses of this type will be loaded as potential plugins.
+
         """
         self._subclass = subclass
         self._name = name
