@@ -120,7 +120,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         return ['Task', 'Bug', 'Story']
 
     def issue_components(self):
-        """Components that are associated with this tracker."""
+        """Get components that are associated with this tracker."""
         return self._components
 
     def validate_id_format(self, id):

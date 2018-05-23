@@ -21,5 +21,5 @@ class Autopep8Styler(zazu.styler.Styler):
 
     @staticmethod
     def required_options():
-        """Options required to make autopep8 take input from stdin."""
+        """Get options required to make autopep8 take input from stdin."""
         return ['-']
