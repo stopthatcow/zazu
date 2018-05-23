@@ -61,9 +61,6 @@ setuptools.setup(
                       'keyrings.alt>=2.3',             # MIT
                       'autopep8>=1.3.4',               # MIT
                       'docformatter>=1.0',             # Expat
-                      'semantic_version>=2.6.0',       # BSD
-                      'gcovr>=3.4',                    # BSD
-                      'teamcity-messages>=1.21',       # Apache 2.0
                       'future>=0.16.0',                # MIT
                       'futures>=3.2.0',                # PSF
                       'inquirer>=2.2.0',               # MIT
