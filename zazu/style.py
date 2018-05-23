@@ -74,7 +74,7 @@ def style_file(styler, path, read_fn, write_fn):
 
     """
     input_string = read_fn(path)
-    styled_string = styler.style_string(input_string)
+    styled_string = styler.style_string(input_string, path)
     violation = styled_string != input_string
     if violation and callable(write_fn):
         write_fn(path, input_string, styled_string)
