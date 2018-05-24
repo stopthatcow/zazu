@@ -149,7 +149,7 @@ def tag_to_version(tag):
     return '.'.join([major, minor, patch])
 
 
-def make_semver(repo_root, prerelease):
+def make_semver(repo_root, prerelease=None):
     """Parse SCM info and creates a semantic version."""
     branch_name, sha, tags = parse_describe(repo_root)
     if tags:
