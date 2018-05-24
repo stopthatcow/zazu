@@ -300,10 +300,7 @@ class Config(object):
     def user_config(self):
         """Parse and return the global zazu yaml configuration file."""
         if self._user_config is None:
-            try:
-                self._user_config = ConfigFile(user_config_filepath()).dict
-            except IOError:
-                self._user_config = {}
+            self._user_config = ConfigFile(user_config_filepath()).dict
         return self._user_config
 
     def stylers(self):
