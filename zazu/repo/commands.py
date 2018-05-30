@@ -44,6 +44,7 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
         destination (str): path to clone the repo to.
         nohooks (bool): if True, git hooks are not installed.
         nosubmodules (bool): if True submodules are not initialized.
+
     """
     if os.path.isdir(repository) or ':' in repository:
         repository_url = repository
@@ -151,7 +152,7 @@ def ticket_is_closed(issue_tracker, descriptor):
 
 
 def branch_is_empty(repo, branch, base_branch):
-    """Returns True if branch has no commits newer than base_branch"""
+    """Return True if branch has no commits newer than base_branch."""
     try:
         return int(repo.git.rev_list('--count', branch, '^{}'.format(base_branch))) == 0
     except git.GitCommandError:

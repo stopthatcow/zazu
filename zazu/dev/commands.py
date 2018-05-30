@@ -26,6 +26,7 @@ class IssueDescriptor(object):
             type (str): the issue type.
             id (str): the issue tracker id.
             description (str): a brief description (used for the branch name only).
+
         """
         self.type = type
         self.id = id

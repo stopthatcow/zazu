@@ -14,9 +14,11 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
 
 
-def make_gh_token():
+GITHUB_API_URL = 'https://api.github.com'
+
+
+def make_gh_token(api_url=GITHUB_API_URL):
     """Make new GitHub token."""
-    api_url = 'https://api.github.com'
     add_auth = {
         'scopes': [
             'repo'
@@ -25,8 +27,7 @@ def make_gh_token():
     }
     token = None
     while token is None:
-        user = zazu.util.prompt('GitHub username', expected_type=str)
-        password = click.prompt('GitHub password', type=str, hide_input=True)
+        user, password = zazu.credential_helper.get_user_pass_credentials(api_url, offer_to_save=False)
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
@@ -46,15 +47,24 @@ def make_gh_token():
     return token
 
 
-def make_gh():
+def make_gh(api_url=GITHUB_API_URL):
     """Make github object with token from the keychain."""
     import keyring  # For some reason this doesn't play nicely with threads on lazy import.
-    token = keyring.get_password('https://api.github.com', 'token')
+    gh = None
+    token = keyring.get_password(api_url, 'token')
     if token is None:
         click.echo('No saved GitHub token found in keychain, lets add one...')
-        token = make_gh_token()
-        keyring.set_password('https://api.github.com', 'token', token)
-    gh = github.Github(token)
+    while gh is None:
+        try:
+            if token is None:
+                token = make_gh_token(api_url)
+                gh = github.Github(token)
+                keyring.set_password(api_url, 'token', token)
+            else:
+                gh = github.Github(token)
+        except github.BadCredentialsException:
+            click.echo("GitHub token rejected, you will need to create a new token.")
+            token = None
     return gh
 
 

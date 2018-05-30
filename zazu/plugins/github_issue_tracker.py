@@ -22,8 +22,8 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         Args:
             owner (str): the github repo owner's username or organization name.
             repo (str): the github repo name.
+
         """
-        self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
         self._owner = owner
         self._repo = repo
         self._github_handle = None
@@ -64,6 +64,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
             summary (str): a summary of the issue.
             description (str): a detailed description of the issue.
             component (str): meaningless for GitHub.
+
         """
         try:
             return GitHubIssueAdaptor(self._github_repo().create_issue(title=summary, body=description, assignee=self.user()))
@@ -132,6 +133,7 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
 
         Args:
             github_issue: PyGithub issue handle.
+
         """
         self._github_issue = github_issue
 

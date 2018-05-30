@@ -30,6 +30,7 @@ class PluginFactory(object):
         Args:
             name (str): the name of the plugin type.
             subclass (type): subclasses of this type will be loaded as potential plugins.
+
         """
         self._subclass = subclass
         self._name = name
@@ -54,7 +55,7 @@ issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTr
 code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer)
 
 
-def scm_host_factory(config):
+def scm_host_factory(user_config, config):
     """Make and initialize the ScmHosts from the config."""
     hosts = {}
     default_host = ''
@@ -170,6 +171,31 @@ def user_config_filepath():
     return os.path.join(os.path.expanduser('~'), '.zazuconfig.yaml')
 
 
+class ConfigFile(object):
+    """Holds a parsed config file and can write changes to disk."""
+
+    def __init__(self, path):
+        """Store path and read the contents from disk if it exists."""
+        self._path = path
+        self.dict = {}
+        if self.exists():
+            self.read()
+
+    def exists(self):
+        """Return True if the path exists."""
+        return os.path.isfile(self._path)
+
+    def read(self):
+        """Read config file from disk."""
+        self.dict = load_yaml_file(self._path)
+
+    def write(self):
+        """Write config file to disk."""
+        yaml = ruamel.yaml.YAML()
+        with open(self._path, 'w') as f:
+            yaml.dump(self.dict, f)
+
+
 class Config(object):
     """Hold all zazu configuration info."""
 
@@ -188,7 +214,6 @@ class Config(object):
         self._project_config = None
         self._user_config = None
         self._stylers = None
-        self._tc = None
 
     def issue_tracker(self):
         """Lazily create a IssueTracker object."""
@@ -236,7 +261,7 @@ class Config(object):
     def scm_hosts(self):
         """Lazily create and return scm host list."""
         if self._scm_hosts is None:
-            self._scm_hosts, self._default_scm_host = scm_host_factory(self.scm_host_config())
+            self._scm_hosts, self._default_scm_host = scm_host_factory(self.user_config(), self.scm_host_config())
         return self._scm_hosts
 
     def default_scm_host(self):
@@ -275,11 +300,7 @@ class Config(object):
     def user_config(self):
         """Parse and return the global zazu yaml configuration file."""
         if self._user_config is None:
-            user_config_path = user_config_filepath()
-            try:
-                self._user_config = load_yaml_file(user_config_path)
-            except IOError:
-                self._user_config = {}
+            self._user_config = ConfigFile(user_config_filepath()).dict
         return self._user_config
 
     def stylers(self):
@@ -289,6 +310,7 @@ class Config(object):
         return self._stylers
 
     def develop_branch_name(self):
+        """Get the branch name for develop branch."""
         try:
             return self.project_config()['branches']['develop']
         except (click.ClickException, KeyError):
@@ -296,6 +318,7 @@ class Config(object):
         return 'develop'
 
     def master_branch_name(self):
+        """Get the branch name for master branch."""
         try:
             return self.project_config()['branches']['master']
         except (click.ClickException, KeyError):
@@ -356,7 +379,9 @@ def config(ctx, list, add, unset, show_origin, param_name, param_value):
     user_config_path = user_config_filepath()
     maybe_write_default_user_config(user_config_path)
 
-    config_dict = load_yaml_file(user_config_path)
+    config_file = ConfigFile(user_config_path)
+    config_dict = config_file.dict
+
     write_config = False
 
     if list or show_origin:
@@ -387,6 +412,4 @@ def config(ctx, list, add, unset, show_origin, param_name, param_value):
 
     if write_config:
         # Update config file.
-        yaml = ruamel.yaml.YAML()
-        with open(user_config_path, 'w') as f:
-            yaml.dump(config_dict, f)
+        config_file.write()

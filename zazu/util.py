@@ -14,6 +14,7 @@ def lazy_import(scope, imports):
     Args:
         scope: the scope to import the modules into.
         imports: the list of modules to import.
+
     """
     class LazyImport(object):
 
