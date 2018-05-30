@@ -8,6 +8,7 @@ zazu.util.lazy_import(locals(), [
     'functools',
     'git',
     'os',
+    'semantic_version',
     'socket'
 ])
 
@@ -82,7 +83,7 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
 @click.option('-y', '--yes', is_flag=True, help='Don\'t ask to before deleting branches')
 @click.pass_context
 def cleanup(ctx, remote, target_branch, yes):
-    """Clean up merged branches that have been merged or are associated with closed/resolved tickets."""
+    """Clean up merged/closed branches."""
     ctx.obj.check_repo()
     repo_obj = ctx.obj.repo
     develop_branch_name = ctx.obj.develop_branch_name()
@@ -122,6 +123,108 @@ def cleanup(ctx, remote, target_branch, yes):
         confirmation = 'These local branches will be deleted: {}\n Proceed?'.format(zazu.util.pprint_list(branches_to_delete))
         if yes or click.confirm(confirmation):
             repo_obj.git.branch('-D', *branches_to_delete)
+
+
+def tag_to_version(tag):
+    """Convert a git tag into a semantic version string.
+
+    i.e. R4.1 becomes 4.1.0. A leading 'r' or 'v' is optional on the tag.
+
+    """
+    components = []
+    if tag is not None:
+        if tag.lower().startswith('r') or tag.lower().startswith('v'):
+            tag = tag[1:]
+        components = tag.split('.')
+    major = '0'
+    minor = '0'
+    patch = '0'
+    try:
+        major = components[0]
+        minor = components[1]
+        patch = components[2]
+    except IndexError:
+        pass
+
+    return '.'.join([major, minor, patch])
+
+
+def make_semver(repo_root, prerelease=None):
+    """Parse SCM info and creates a semantic version."""
+    branch_name, sha, tags = parse_describe(repo_root)
+    if tags:
+        # There are git tags to consider. Parse them all then choose the one that is latest (sorted by semver rules).
+        return sorted([make_version_number(branch_name, prerelease, tag, sha) for tag in tags])[-1]
+
+    return make_version_number(branch_name, prerelease, None, sha)
+
+
+def parse_describe(repo_root):
+    """Parse the results of git describe into branch name, sha, and tags."""
+    repo = git.Repo(repo_root)
+    try:
+        sha = 'g{}{}'.format(repo.git.rev_parse('HEAD')[:7], '-dirty' if repo.git.status(['--porcelain']) else '')
+        branch_name = repo.git.rev_parse(['--abbrev-ref', 'HEAD']).strip()
+        # Get the list of tags that point to HEAD
+        tag_result = repo.git.tag(['--points-at', 'HEAD'])
+        tags = filter(None, tag_result.strip().split('\n'))
+    except git.GitCommandError as e:
+        raise click.ClickException(str(e))
+
+    return branch_name, sha, tags
+
+
+def sanitize_branch_name(branch_name):
+    """Replace punctuation that cannot be in semantic version from a branch name with dashes."""
+    return branch_name.replace('/', '-').replace('_', '-')
+
+
+def make_version_number(branch_name, prerelease, tag, sha):
+    """Convert repo metadata and build version into a semantic version."""
+    branch_name_sanitized = sanitize_branch_name(branch_name)
+    build_info = ['sha', sha, 'branch', branch_name_sanitized]
+    prerelease_list = [str(prerelease)] if prerelease is not None else ['0']
+    if tag is not None:
+        version = tag_to_version(tag)
+        if prerelease is not None:
+            raise click.ClickException('Pre-release specifier is not allowed on tagged commits')
+        prerelease_list = []
+    elif branch_name.startswith('release/') or branch_name.startswith('hotfix/'):
+        version = tag_to_version(branch_name.split('/', 1)[1])
+    else:
+        version = '0.0.0'
+    semver = semantic_version.Version(version)
+    semver.prerelease = prerelease_list
+    semver.build = build_info
+
+    return semver
+
+
+def pep440_from_semver(semver):
+    """Convert semantic version to PEP440 compliant version."""
+    segment = ''
+    if semver.prerelease:
+        segment = '.dev{}'.format('.'.join(semver.prerelease))
+    local_version = '.'.join(semver.build)
+    local_version = local_version.replace('-', '.')
+    version_str = '{}.{}.{}{}'.format(semver.major, semver.minor, semver.patch, segment)
+    # Include the local version if we are not a true release
+    if local_version and semver.prerelease:
+        version_str = '{}+{}'.format(version_str, local_version)
+    return version_str
+
+
+@repo.command()
+@click.option('--pep440', is_flag=True, help='Format the output as PEP 440 compliant')
+@click.option('--prerelease', type=int, help='Pre-release number (invalid for tagged commits)')
+@click.pass_context
+def describe(ctx, pep440, prerelease):
+    """Get version string describing current commit."""
+    ctx.obj.check_repo()
+    version = make_semver(ctx.obj.repo_root, prerelease)
+    if pep440:
+        version = pep440_from_semver(version)
+    click.echo(str(version))
 
 
 def descriptors_from_branches(branches, require_type=False):

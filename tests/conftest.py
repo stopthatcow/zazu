@@ -88,8 +88,12 @@ def git_repo_with_local_origin(git_repo):
 
 @pytest.fixture()
 def git_repo_with_out_of_date_local_origin(git_repo):
-    """Create a local remote with 2 clients. Use 1 client to update develop so that the other client is out of date.
-     Return the out of date client."""
+    """Create a local remote with 2 clients.
+
+    Use 1 client to update develop so that the other client is out of date.
+    Return the out of date client.
+
+    """
     temp_dir = tempfile.mkdtemp()
     git.Repo.init(temp_dir, bare=True)
     git_repo.create_remote('origin', temp_dir)
