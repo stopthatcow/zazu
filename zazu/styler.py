@@ -21,6 +21,7 @@ class Styler(object):
             options (list): flags to pass to the styler.
             excludes (list): file patterns to exclude from styling.
             includes (list): file patterns to include for styling.
+
         """
         self.command = self.type() if command is None else command
         self.options = [] if options is None else options
@@ -28,11 +29,12 @@ class Styler(object):
         self.includes = [] if includes is None else includes
         self.options += self.required_options()
 
-    def style_string(self, string):
+    def style_string(self, string, filepath):
         """Fix a string to be within style guidelines.
 
         Args:
             string (str): the string to style
+            filepath (str): the filepath of the file being styled
 
         Returns:
             Styled string.
@@ -62,12 +64,12 @@ class Styler(object):
 
     @staticmethod
     def required_options():
-        """Options required to make the tool use stdin for input and output styled version to stdout."""
+        """Get options required to make the tool use stdin for input and output styled version to stdout."""
         return []
 
     @staticmethod
     def default_extensions():
-        """Extensions that this styler can fix."""
+        """Get extensions that this styler can fix."""
         raise NotImplementedError('Must implement default_extensions()')
 
     @staticmethod

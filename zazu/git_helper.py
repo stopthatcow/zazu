@@ -82,28 +82,12 @@ def install_git_hook(hooks_folder, hook_name, hook_resource_path):
         shutil.copy(hook_resource_path, hook_path)
 
 
-def parse_branch_return_list(branches):
-    """Parse return from git branch into list of branch names."""
-    ret = branches
-    for i, branch in enumerate(ret):
-        if branch.startswith('* '):
-            ret[i] = branch[2:]
-            break
-    return ret
-
-
-def get_merged_branches(repo, target_branch, remote=False):
-    """Return list of branches that have been merged with the target_branch."""
+def merged_branches(repo, target_branch, remote=False):
+    """Return set of branches that have been merged with the target_branch."""
     args = ['--merged', target_branch]
     if remote:
         args.insert(0, '-r')
-    return parse_branch_return_list([b.strip() for b in repo.git.branch(args).strip().split('\n') if b])
-
-
-def filter_undeletable(branches):
-    """Filter out branches that we don't want to delete."""
-    undeletable = set(['master', 'develop', 'origin/develop', 'origin/master', '-', 'HEAD'])
-    return [b for b in branches if (b not in undeletable) and (not b.startswith('*')) and (not b.startswith('origin/HEAD'))]
+    return {b.strip() for b in repo.git.branch(args).strip().split('\n') if b and not b.startswith('*')}
 
 
 def get_undeletable_branches(repo):

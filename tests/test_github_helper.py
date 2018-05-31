@@ -28,6 +28,22 @@ def test_make_gh_with_no_credentials(mocker):
     github.Github.assert_called_once_with('token')
 
 
+def test_make_gh_with_bad_token(mocker):
+    def side_effect(token):
+        if token == 'token':
+            raise github.BadCredentialsException('status', 'data')
+        return token
+    mocker.patch('keyring.get_password', return_value='token')
+    mocker.patch('keyring.set_password')
+    mocker.patch('zazu.github_helper.make_gh_token', return_value='token2')
+    mocker.patch('github.Github', side_effect=side_effect)
+    zazu.github_helper.make_gh()
+    calls = github.Github.call_args_list
+    assert github.Github.call_count == 2
+    assert calls[0] == mocker.call('token')
+    assert calls[1] == mocker.call('token2')
+
+
 class MockResponce(object):
 
     def __init__(self, status_code, json=None):

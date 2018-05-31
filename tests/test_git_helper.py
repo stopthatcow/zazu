@@ -38,13 +38,18 @@ def test_touched_files(git_repo):
     assert len(zazu.git_helper.get_touched_files(git_repo)) == 2
 
 
-def test_get_merged_branches(git_repo):
-    merged = zazu.git_helper.get_merged_branches(git_repo, 'master')
-    assert merged == ['master']
-    zazu.git_helper.get_merged_branches(git_repo, 'master', True)
-    assert merged == ['master']
-
-
-def test_git_filter_undeletable():
-    some_branches = ['-', 'master', 'develop', '*current', 'HEAD', 'origin/HEAD', 'feature/foo']
-    assert zazu.git_helper.filter_undeletable(some_branches) == ['feature/foo']
+def test_merged_branches(git_repo):
+    with zazu.util.cd(git_repo.working_tree_dir):
+        git_repo.create_head('foo').checkout()
+        with open('test', 'w') as f:
+            pass
+        git_repo.index.add(['test'])
+        git_repo.index.commit('commit')
+        git_repo.git.checkout('master')
+        merged = zazu.git_helper.merged_branches(git_repo, 'master')
+        assert not merged
+        git_repo.git.merge('foo')
+        merged = zazu.git_helper.merged_branches(git_repo, 'master')
+        assert merged == {'foo'}
+        zazu.git_helper.merged_branches(git_repo, 'master', True)
+        assert merged == {'foo'}

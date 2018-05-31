@@ -21,5 +21,5 @@ class DocformatterStyler(zazu.styler.Styler):
 
     @staticmethod
     def required_options():
-        """Options required to make docformatter use stdin."""
+        """Get options required to make docformatter use stdin."""
         return ['-']

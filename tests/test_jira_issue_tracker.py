@@ -52,15 +52,37 @@ def get_mock_issue_no_description(id):
     return mock_issue_no_description
 
 
+JIRA_ADDRESS = 'https://jira'
+
+
 def test_jira_issue_tracker(mocker):
     mocker.patch('zazu.credential_helper.get_user_pass_credentials', return_value=('user', 'pass'))
     mocker.patch('jira.JIRA', autospec=True)
-    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker('https://jira', 'ZZ', ['comp'])
+    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
     uut.connect()
     assert uut.default_project() == 'ZZ'
     assert uut.issue_components() == ['comp']
     assert uut.issue_types() == ['Task', 'Bug', 'Story']
     assert uut.issue('ZZ-1')
+
+
+def test_jira_issue_tracker_bad_credentials(mocker):
+    mocker.patch('zazu.credential_helper.get_user_pass_credentials', side_effect=[('user', 'pass'), ('user', 'pass2')])
+    mocker.patch('jira.JIRA', autospec=True, side_effect=[jira.JIRAError(status_code=401), object()])
+    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
+    uut.connect()
+    calls = zazu.credential_helper.get_user_pass_credentials.call_args_list
+    assert calls[0] == mocker.call(JIRA_ADDRESS, use_saved=True)
+    assert calls[1] == mocker.call(JIRA_ADDRESS, use_saved=False)
+
+
+def test_jira_issue_tracker_exception(mocker):
+    mocker.patch('zazu.credential_helper.get_user_pass_credentials', return_value=('user', 'pass'))
+    mocker.patch('jira.JIRA', autospec=True, side_effect=jira.JIRAError(status_code=400))
+    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
+    with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
+        uut.connect()
+        assert '400' in str(e.value)
 
 
 def test_jira_issue_tracker_no_description(mocker, mocked_jira_issue_tracker):

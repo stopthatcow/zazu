@@ -13,9 +13,9 @@ __copyright__ = "Copyright 2017"
 
 
 def test_issue_descriptor():
-    uut = zazu.dev.commands.IssueDescriptor('feature', '3')
+    uut = zazu.dev.commands.IssueDescriptor('feature/', '3')
     assert uut.get_branch_name() == 'feature/3'
-    uut = zazu.dev.commands.IssueDescriptor('feature', '3', 'a description')
+    uut = zazu.dev.commands.IssueDescriptor('feature/', '3', 'a description')
     assert uut.get_branch_name() == 'feature/3_a_description'
     assert uut.readable_description() == 'A description'
 
@@ -45,18 +45,18 @@ def test_offer_to_stash_changes(mocker):
 
 def test_make_issue_descriptor_bad_type():
     with pytest.raises(click.ClickException) as e:
-        zazu.dev.commands.make_issue_descriptor('bad/1')
-    assert str(e.value).startswith('Branch type specifier must be one of ')
+        zazu.dev.commands.make_issue_descriptor('bad/1', require_type=True)
+    assert str(e.value).startswith('Branch prefix must be one of ')
 
 
 def test_make_issue_descriptor_github_style():
     with pytest.raises(click.ClickException) as e:
-        zazu.dev.commands.make_issue_descriptor('bad/1')
-    assert str(e.value).startswith('Branch type specifier must be one of ')
+        zazu.dev.commands.make_issue_descriptor('bad/1', require_type=True)
+    assert str(e.value).startswith('Branch prefix must be one of ')
     branch_name = 'feature/1_description'
     uut = zazu.dev.commands.make_issue_descriptor(branch_name)
     assert uut.get_branch_name() == branch_name
-    assert uut.type == 'feature'
+    assert uut.type == 'feature/'
     assert uut.id == '1'
     assert uut.description == 'description'
 
@@ -65,7 +65,7 @@ def test_make_issue_descriptor_jira_style():
     branch_name = 'feature/ZZ-1_description'
     uut = zazu.dev.commands.make_issue_descriptor(branch_name)
     assert uut.get_branch_name() == branch_name
-    assert uut.type == 'feature'
+    assert uut.type == 'feature/'
     assert uut.id == 'ZZ-1'
     assert uut.description == 'description'
 
@@ -135,11 +135,18 @@ def test_rename_detached_head(git_repo):
         assert result.exit_code != 0
 
 
-def test_start(git_repo_with_local_origin, mocker):
-    git_repo = git_repo_with_local_origin
+def test_branch_is_current(git_repo_with_out_of_date_local_origin):
+    assert not zazu.dev.commands.branch_is_current(git_repo_with_out_of_date_local_origin, 'develop')
+    git_repo_with_out_of_date_local_origin.git.pull('origin', 'develop')
+    assert zazu.dev.commands.branch_is_current(git_repo_with_out_of_date_local_origin, 'develop')
+    git_repo_with_out_of_date_local_origin.git.branch('--unset-upstream')
+    assert zazu.dev.commands.branch_is_current(git_repo_with_out_of_date_local_origin, 'develop')
+
+
+def test_start(git_repo_with_out_of_date_local_origin, mocker):
+    git_repo = git_repo_with_out_of_date_local_origin
     mocker.patch('zazu.util.prompt', return_value='description')
     with zazu.util.cd(git_repo.working_tree_dir):
-        git_repo.git.checkout('HEAD', b='develop')
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'bar-1', '--no-verify'])
         assert not result.exception
@@ -164,6 +171,11 @@ def test_start(git_repo_with_local_origin, mocker):
         assert 'feature/foo-1_description2' in git_repo.heads
         # Test with exactly same name.
         result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'foo-1_description2', '--no-verify', '--rename'])
+        assert not result.exception
+        assert result.exit_code == 0
+        # Test with no origin.
+        git_repo_with_out_of_date_local_origin.git.remote('remove', 'origin')
+        result = runner.invoke(zazu.cli.cli, ['dev', 'start', 'bar-2', '--no-verify'])
         assert not result.exception
         assert result.exit_code == 0
 

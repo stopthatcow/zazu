@@ -1,14 +1,14 @@
 # Zazu config file for zazu itself.
 
-issueTracker:
-    type: github
-    owner: stopthatcow
-    repo: zazu
-
 #issueTracker:
-#    type: jira
-#    url: https://zazucli.atlassian.net/
-#    project: ZZ
+#    type: github
+#    owner: stopthatcow
+#    repo: zazu
+
+issueTracker:
+    type: jira
+    url: https://zazucli.atlassian.net/
+    project: ZZ
 
 codeReviewer:
     type: github
@@ -25,6 +25,11 @@ style:
       - type: autopep8
         options:
           - "--max-line-length=150"
+      - type: docformatter
+        options:
+          - "--wrap-summaries=0"
+          - "--wrap-descriptions=0"
+          - "--blank"
       # Fix common misspellings.
       - type: generic
         command: sed

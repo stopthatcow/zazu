@@ -42,6 +42,7 @@ def stage_patch(path, input_string, styled_string):
         path: the path of the file being patched.
         input_string: the current state of the file in the git stage.
         styled_string: the properly styled string to stage.
+
     """
     # If the input was the same as the current file contents, apply the styling locally and add it.
     if read_file(path) == input_string:
@@ -70,9 +71,10 @@ def style_file(styler, path, read_fn, write_fn):
         path: the file path.
         read_fn: function used to read in the file contents.
         write_fn: function used to write out the styled file, or None
+
     """
     input_string = read_fn(path)
-    styled_string = styler.style_string(input_string)
+    styled_string = styler.style_string(input_string, path)
     violation = styled_string != input_string
     if violation and callable(write_fn):
         write_fn(path, input_string, styled_string)

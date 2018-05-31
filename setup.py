@@ -13,9 +13,9 @@ with open('README.rst', 'r') as f:
 # Generate PEP-440 version string. This requires zazu dependencies i.e. zazu needs to already be installed.
 try:
     sys.path.insert(0, os.path.abspath('.'))
-    import zazu.build
-    semver = zazu.build.make_semver('.', 0)
-    version = zazu.build.pep440_from_semver(semver)
+    import zazu.repo.commands
+    semver = zazu.repo.commands.make_semver('.')
+    version = zazu.repo.commands.pep440_from_semver(semver)
 except ImportError:
     # Missing dependencies at this point.
     version = '0.0.0'
@@ -57,13 +57,11 @@ setuptools.setup(
                       'GitPython>=2.1.8',              # BSD
                       'dict-recursive-update>=1.0.1',  # MIT
                       'ruamel.yaml<=0.15',             # MIT
-                      'keyring>=11.0',                 # MIT
+                      'keyring>=8.0',                 # MIT
                       'keyrings.alt>=2.3',             # MIT
                       'autopep8>=1.3.4',               # MIT
                       'docformatter>=1.0',             # Expat
                       'semantic_version>=2.6.0',       # BSD
-                      'gcovr>=3.4',                    # BSD
-                      'teamcity-messages>=1.21',       # Apache 2.0
                       'future>=0.16.0',                # MIT
                       'futures>=3.2.0',                # PSF
                       'inquirer>=2.2.0',               # MIT

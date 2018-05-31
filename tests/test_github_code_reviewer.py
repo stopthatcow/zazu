@@ -109,7 +109,6 @@ def test_github_issue_tracker(mocker):
     mocker.patch('zazu.github_helper.make_gh', return_value=MockGitHub())
     uut = zazu.plugins.github_code_reviewer.GitHubCodeReviewer.from_config({'owner': 'foo',
                                                                             'repo': 'bar'})
-    assert uut._base_url == 'https://github.com/foo/bar'
     assert uut._owner == 'foo'
     assert uut._repo == 'bar'
     uut.connect()
