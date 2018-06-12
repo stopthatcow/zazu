@@ -74,7 +74,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
     def issues(self):
         """Get all issues."""
         try:
-            return [GitHubIssueAdaptor(i) for i in self._github_repo().get_issues() if i.pull_request is None]
+            return [GitHubIssueAdaptor(i) for i in self._github_repo().get_issues()]
         except github.GithubException as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
@@ -183,3 +183,9 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
     def id(self):
         """Get the string id of the issue."""
         return str(self._github_issue.number)
+
+    def __lt__(self, other):
+        """Allow issues to be sorted as numbers."""
+        if isinstance(other, GitHubIssueAdaptor):
+            return self._github_issue.number < other._github_issue.number
+        return str(self) < other

@@ -227,3 +227,18 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     def id(self):
         """Get the string id of the issue."""
         return self._jira_issue.key
+
+    def parse_key(self):
+        """Parse key into project prefix and issue number."""
+        components = self._jira_issue.key.split('-')
+        return components[0], int(components[1])
+
+    def __lt__(self, other):
+        """Allow issues to be sorted in natural order.
+
+        First by project prefix, then by ID.
+
+        """
+        if isinstance(other, JiraIssueAdaptor):
+            return self.parse_key() < other.parse_key()
+        return str(self) < other
