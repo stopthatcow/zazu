@@ -155,6 +155,7 @@ def find_branch_with_id(repo, id):
 
 
 def branch_is_current(repo, branch):
+    """Return True if branch is up to date with its tracking branch or if it doesn't have a tracking branch."""
     repo.remotes.origin.fetch()
     if repo.heads[branch].tracking_branch() is None:
         return True

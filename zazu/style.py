@@ -32,6 +32,7 @@ def write_file(path, _, styled_string):
         return f.write(styled_string)
 
 
+"""The git binary doesn't allow concurrent access, so serailize calls to it using a lock."""
 git_lock = threading.Lock()
 
 
@@ -84,6 +85,7 @@ def style_file(stylers, path, read_fn, write_fn):
 
 
 def styler_list(file, sets, keys):
+    """Get the list of stylers to apply to a file based on the file set of each styler."""
     return [s for s in keys if file in sets[s]]
 
 
