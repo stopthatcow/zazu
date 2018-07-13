@@ -6,6 +6,10 @@ import pytest
 import subprocess
 import zazu.cli
 import zazu.plugins.clang_format_styler
+import zazu.plugins.eslint_styler
+import zazu.plugins.esformatter_styler
+import zazu.plugins.generic_styler
+import zazu.plugins.goimports_styler
 import zazu.plugins.astyle_styler
 import zazu.plugins.autopep8_styler
 import zazu.plugins.docformatter_styler

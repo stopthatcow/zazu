@@ -43,6 +43,7 @@ def repo_with_style(git_repo):
             {'exclude': ['dependency'],
              'stylers':[
                 {'type': 'autopep8'},
+                {'type': 'docformatter'},
                 {'type': 'clang-format'}
             ]
             }
