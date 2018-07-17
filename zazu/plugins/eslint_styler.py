@@ -26,7 +26,6 @@ class ESLintStyler(zazu.styler.Styler):
             Styled string.
 
         """
-
         eslint = 'eslint'
         cwd = os.path.normpath(os.getcwd())
         dirname = os.path.normpath(os.path.dirname(filepath))
