@@ -156,7 +156,7 @@ def complete_git_branch(ctx, args, incomplete):
 def complete_issue(ctx, args, incomplete):
     """Completion fn that returns ids for open issues."""
     tracker = ctx.obj.issue_tracker()
-    return [(i, i.name) for i in tracker.issues()]
+    return [(i, i.name) for i in tracker.issues() if str(i).startswith(incomplete) or incomplete.lower() in i.name.lower()]
 
 
 @pass_context
