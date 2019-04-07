@@ -32,6 +32,7 @@ def write_file(path, _, styled_string):
         return f.write(styled_string)
 
 
+"""The git binary doesn't allow concurrent access, so serailize calls to it using a lock."""
 git_lock = threading.Lock()
 
 
@@ -63,7 +64,7 @@ def stage_patch(path, input_string, styled_string):
             zazu.util.check_popen(args=['git', 'apply', '--cached', '--verbose', '-'], stdin_str=patch_string)
 
 
-def style_file(styler, path, read_fn, write_fn):
+def style_file(stylers, path, read_fn, write_fn):
     """Style a file.
 
     Args:
@@ -74,11 +75,18 @@ def style_file(styler, path, read_fn, write_fn):
 
     """
     input_string = read_fn(path)
-    styled_string = styler.style_string(input_string, path)
+    styled_string = input_string
+    for styler in stylers:
+        styled_string = styler.style_string(styled_string, path)
     violation = styled_string != input_string
     if violation and callable(write_fn):
         write_fn(path, input_string, styled_string)
-    return path, violation
+    return path, stylers, violation
+
+
+def styler_list(file, sets, keys):
+    """Get the list of stylers to apply to a file based on the file set of each styler."""
+    return [s for s in keys if file in sets[s]]
 
 
 @click.command()
@@ -92,37 +100,49 @@ def style(ctx, verbose, check, cached):
     file_count = 0
     violation_count = 0
     stylers = ctx.obj.stylers()
-    FIXED_OK = [click.style('FIXED', fg='red', bold=True), click.style(' OK  ', fg='green', bold=True)]
-    tags = zazu.util.FAIL_OK if check else FIXED_OK
+    fixed_ok_tags = [click.style('FIXED', fg='red', bold=True), click.style(' OK  ', fg='green', bold=True)]
+    tags = zazu.util.FAIL_OK if check else fixed_ok_tags
     with zazu.util.cd(ctx.obj.repo_root):
         if stylers:
             if cached:
                 staged_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
-            # Run each Styler
+                read_fn = zazu.git_helper.read_staged
+                write_fn = stage_patch
+            else:
+                read_fn = read_file
+                write_fn = write_file
+            if check:
+                write_fn = None
+            # Determine files for each styler.
+            file_sets = {}
+            styler_file_sets = {}
+            all_files = set()
             for s in stylers:
-                files = zazu.util.scantree(ctx.obj.repo_root,
-                                           s.includes,
-                                           s.excludes,
-                                           exclude_hidden=True)
-                if cached:
-                    files = set(files).intersection(staged_files)
-                    read_fn = zazu.git_helper.read_staged
-                    write_fn = stage_patch
+                includes = tuple(s.includes)
+                excludes = tuple(s.excludes)
+                if (includes, excludes) not in file_sets:
+                    files = set(zazu.util.scantree(ctx.obj.repo_root,
+                                                   includes,
+                                                   excludes,
+                                                   exclude_hidden=True))
+                    if cached:
+                        files = files.intersection(staged_files)
+                    file_sets[(includes, excludes)] = files
                 else:
-                    read_fn = read_file
-                    write_fn = write_file
-                if check:
-                    write_fn = None
-                file_count += len(files)
-                work = [functools.partial(style_file, s, f, read_fn, write_fn) for f in files]
-                checked_files = zazu.util.dispatch(work)
-                for f, violation in checked_files:
-                    if verbose:
-                        click.echo(zazu.util.format_checklist_item(not violation,
-                                                                   text='({}) {}'.format(s.name(), f),
-                                                                   tag_formats=tags))
+                    files = file_sets[(includes, excludes)]
+                styler_file_sets[s] = files
+                all_files |= files
+
+            work = [functools.partial(style_file, styler_list(f, styler_file_sets, stylers), f, read_fn, write_fn) for f in all_files]
+            checked_files = zazu.util.dispatch(work)
+            for f, stylers, violation in checked_files:
+                if verbose:
+                    click.echo(zazu.util.format_checklist_item(not violation,
+                                                               text='({}) {}'.format(', '.join([s.name() for s in stylers]), f),
+                                                               tag_formats=tags))
                     violation_count += violation
             if verbose:
+                file_count = len(all_files)
                 if check:
                     click.echo('{} files with violations in {} files'.format(violation_count, file_count))
                 else:

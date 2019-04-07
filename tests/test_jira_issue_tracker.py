@@ -140,8 +140,8 @@ def test_from_config_no_url():
     assert str(e.value) == 'Jira config requires a "url" field'
 
 
-def test_jira_validate_id_format():
-    uut = tracker_mock()
+def test_jira_validate_id_format(tracker_mock):
+    uut = tracker_mock
     assert uut.validate_id_format('ZZ-10') == 'ZZ-10'
     assert uut.validate_id_format('Zz-10') == 'ZZ-10'
     assert uut.validate_id_format('zz-10') == 'ZZ-10'
