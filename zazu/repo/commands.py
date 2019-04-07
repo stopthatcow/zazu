@@ -18,8 +18,7 @@ __copyright__ = 'Copyright 2016'
 
 
 @click.group()
-@zazu.config.pass_config
-def repo(config):
+def repo():
     """Manage repository."""
     pass
 
