@@ -56,7 +56,7 @@ setuptools.setup(
                       'GitPython>=2.1.8',              # BSD
                       'dict-recursive-update>=1.0.1',  # MIT
                       'ruamel.yaml<=0.15',             # MIT
-                      'keyring>=8.0',                  # MIT
+                      'keyring<=8.0',                  # MIT
                       'keyrings.alt>=2.3',             # MIT
                       'autopep8>=1.3.4',               # MIT
                       'docformatter>=1.0',             # Expat

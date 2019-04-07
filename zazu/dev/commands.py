@@ -99,10 +99,10 @@ def make_issue_descriptor(name, require_type=False):
 
 
 @click.group()
-@click.pass_context
-def dev(ctx):
+@zazu.config.pass_config
+def dev(config):
     """Create or update work items."""
-    ctx.obj.check_repo()
+    config.check_repo()
 
 
 def check_if_branch_is_protected(branch_name):
@@ -137,29 +137,18 @@ def rename_branch(repo, old_branch, new_branch):
         pass
 
 
-def pass_context(fn):
-    """Decorator that adds the normal zazu config object to the click context."""
-    def inner(*args, **kwargs):
-        if 'ctx' in kwargs:
-            kwargs['ctx'].obj = zazu.config.Config(zazu.git_helper.get_repo_root(os.getcwd()))
-        return fn(*args, **kwargs)
-    return inner
-
-
 def complete_git_branch(ctx, args, incomplete):
     """Completion fn that returns current branch list."""
     repo = git.Repo(os.getcwd())
     return [b.name for b in repo.branches]
 
 
-@pass_context
 def complete_issue(ctx, args, incomplete):
     """Completion fn that returns ids for open issues."""
-    tracker = ctx.obj.issue_tracker()
-    return [(i, i.name) for i in tracker.issues()]
+    issues = zazu.config.Config().issue_tracker().issues()
+    return [(i, i.name) for i in issues if str(i).startswith(incomplete) or incomplete.lower() in i.name.lower()]
 
 
-@pass_context
 def complete_feature(ctx, args, incomplete):
     """Completion fn that returns feature/<id> for open issues."""
     return [('feature/{}'.format(id), description) for id, description in complete_issue(ctx, args, incomplete)]
@@ -167,10 +156,10 @@ def complete_feature(ctx, args, incomplete):
 
 @dev.command()
 @click.argument('name', autocompletion=complete_feature)
-@click.pass_context
-def rename(ctx, name):
+@zazu.config.pass_config
+def rename(config, name):
     """Rename the current branch, locally and remotely."""
-    repo = ctx.obj.repo
+    repo = config.repo
     check_if_active_branch_can_be_renamed(repo)
     rename_branch(repo, repo.active_branch.name, name)
 
@@ -199,20 +188,20 @@ def branch_is_current(repo, branch):
 @click.option('rename_flag', '--rename', is_flag=True, help='Rename the current branch rather than making a new one')
 @click.option('-t', '--type', type=click.Choice(['feature/', 'release/', 'hotfix/', 'support/']), help='the ticket type to make',
               default='feature/')
-@click.pass_context
-def start(ctx, name, no_verify, head, rename_flag, type):
+@zazu.config.pass_config
+def start(config, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar."""
-    repo = ctx.obj.repo
+    repo = config.repo
     if rename_flag:
         check_if_active_branch_can_be_renamed(repo)
 
     # Fetch in the background.
-    develop_branch_name = ctx.obj.develop_branch_name()
+    develop_branch_name = config.develop_branch_name()
     if not (head or rename_flag):
         develop_is_current_future = zazu.util.async(branch_is_current, repo, develop_branch_name)
     if name is None:
         try:
-            name = str(make_ticket(ctx.obj.issue_tracker()))
+            name = str(make_ticket(config.issue_tracker()))
             no_verify = True  # Making the ticket implicitly verifies it.
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
@@ -228,7 +217,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
     existing_branch = find_branch_with_id(repo, issue_descriptor.id)
     if existing_branch and not (rename_flag and repo.active_branch.name == existing_branch):
         raise click.ClickException('branch with same id exists: {}'.format(existing_branch))
-    issue = None if no_verify else verify_ticket_exists(ctx.obj.issue_tracker(), issue_descriptor.id)
+    issue = None if no_verify else verify_ticket_exists(config.issue_tracker(), issue_descriptor.id)
     if not issue_descriptor.description:
         issue_descriptor.description = zazu.util.prompt('Enter a short description for the branch')
     issue_descriptor.type = type
@@ -252,7 +241,7 @@ def start(ctx, name, no_verify, head, rename_flag, type):
             click.echo('Creating new branch named "{}"...'.format(branch_name))
             repo.git.checkout('HEAD', b=branch_name)
     if issue is not None:
-        ctx.obj.issue_tracker().assign_issue(issue, ctx.obj.issue_tracker().user())
+        config.issue_tracker().assign_issue(issue, config.issue_tracker().user())
 
 
 def wrap_text(text, width=90, indent=''):
@@ -275,14 +264,14 @@ def wrap_text(text, width=90, indent=''):
 
 @dev.command()
 @click.argument('name', required=False, autocompletion=complete_issue)
-@click.pass_context
-def status(ctx, name):
+@zazu.config.pass_config
+def status(config, name):
     """Get status of a issue."""
-    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if name is None else name
+    issue_id = make_issue_descriptor(config.repo.active_branch.name).id if name is None else name
     # Dispatch REST calls asynchronously
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
-        pulls_future = executor.submit(ctx.obj.code_reviewer().review, status='all', head=ctx.obj.repo.active_branch.name)
+        issue_future = executor.submit(config.issue_tracker().issue, issue_id)
+        pulls_future = executor.submit(config.code_reviewer().review, status='all', head=config.repo.active_branch.name)
 
         click.echo(click.style('Ticket info:', bg='white', fg='black'))
         try:
@@ -307,13 +296,13 @@ def status(ctx, name):
 
 
 @dev.command()
-@click.pass_context
+@zazu.config.pass_config
 @click.option('--base', help='The base branch to target', autocompletion=complete_git_branch)
 @click.option('--head', help='The head branch (defaults to current branch and origin organization)')
-def review(ctx, base, head):
+def review(config, base, head):
     """Create or display pull request."""
-    code_reviewer = ctx.obj.code_reviewer()
-    head = ctx.obj.repo.active_branch.name if head is None else head
+    code_reviewer = config.code_reviewer()
+    head = config.repo.active_branch.name if head is None else head
     existing_reviews = code_reviewer.review(status='open', head=head, base=base)
     if existing_reviews:
         pr = zazu.util.pick(existing_reviews, 'Multiple reviews found, pick one')
@@ -321,8 +310,8 @@ def review(ctx, base, head):
         descriptor = make_issue_descriptor(head)
         issue_id = descriptor.id
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            issue_future = executor.submit(ctx.obj.issue_tracker().issue, issue_id)
-            base = ctx.obj.develop_branch_name() if base is None else base
+            issue_future = executor.submit(config.issue_tracker().issue, issue_id)
+            base = config.develop_branch_name() if base is None else base
             click.echo('No existing review found, creating one...')
             title = zazu.util.prompt('Title', default=descriptor.readable_description())
             body = zazu.util.prompt('Summary')
@@ -336,12 +325,12 @@ def review(ctx, base, head):
 
 
 @dev.command()
-@click.pass_context
+@zazu.config.pass_config
 @click.argument('ticket', required=False, autocompletion=complete_issue)
-def ticket(ctx, ticket):
+def ticket(config, ticket):
     """Open the ticket for the current feature or the one supplied in the ticket argument."""
-    issue_id = make_issue_descriptor(ctx.obj.repo.active_branch.name).id if not ticket else ticket
-    issue = verify_ticket_exists(ctx.obj.issue_tracker(), issue_id)
+    issue_id = make_issue_descriptor(config.repo.active_branch.name).id if not ticket else ticket
+    issue = verify_ticket_exists(config.issue_tracker(), issue_id)
     url = issue.browse_url
     click.echo('Opening "{}"'.format(url))
     webbrowser.open_new(url)

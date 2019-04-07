@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import conftest
+import copy
 import jira
 import jira.client
 import pytest
@@ -121,6 +122,14 @@ def test_jira_assign_issue(mocker, mocked_jira_issue_tracker):
     mocked_jira_issue_tracker._jira_handle.assign_issue.assert_called_once_with(mock_issue, 'me')
 
 
+def test_jira_list_issues(mocker, mocked_jira_issue_tracker):
+    mocked_jira_issue_tracker._jira_handle.current_user = mocker.Mock(return_value='me')
+    mocked_jira_issue_tracker._jira_handle.search_issues = mocker.Mock(return_value=[])
+    mocked_jira_issue_tracker.issues()
+    mocked_jira_issue_tracker._jira_handle.search_issues.assert_called_once_with(
+        'assignee=me AND resolution="Unresolved"', fields='key, summary, description')
+
+
 def test_jira_issue_tracker_no_components(mocker):
     uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker.from_config({'url': 'https://jira',
                                                                         'project': 'ZZ'})
@@ -167,5 +176,11 @@ def test_jira_issue_adaptor(tracker_mock):
     assert uut.type == 'type'
     assert uut.browse_url == 'https://jira/browse/ZZ-1'
     assert uut.id == 'ZZ-1'
+    assert uut.parse_key() == ('ZZ', 1)
     assert str(uut) == uut.id
     assert repr(uut) == uut.id
+    mock_issue2 = copy.copy(mock_issue)
+    mock_issue2.key = 'ZZ-2'
+    uut2 = zazu.plugins.jira_issue_tracker.JiraIssueAdaptor(mock_issue2, tracker_mock)
+    assert uut < uut2
+    assert uut < 'ZZ-2'

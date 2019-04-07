@@ -90,11 +90,6 @@ def merged_branches(repo, target_branch, remote=False):
     return {b.strip() for b in repo.git.branch(args).strip().split('\n') if b and not b.startswith('*')}
 
 
-def get_undeletable_branches(repo):
-    branches = [b.name for b in repo.branches]
-    return filter_undeletable(branches)
-
-
 def read_staged(path):
     """Read the contents of the staged version of the file."""
     return zazu.util.check_output(['git', 'show', ':{}'.format(path)])

@@ -188,4 +188,4 @@ class GitHubIssueAdaptor(zazu.issue_tracker.Issue):
         """Allow issues to be sorted as numbers."""
         if isinstance(other, GitHubIssueAdaptor):
             return self._github_issue.number < other._github_issue.number
-        return str(self) < other
+        return self._github_issue.number < int(str(other))

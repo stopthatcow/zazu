@@ -109,8 +109,8 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def issues(self):
         """List all open issues."""
-        issues = self._jira().search_issues('assignee={} AND resolution="Unresolved"'.format(self.user(),
-                                                                                             fields='key, summary, description'))
+        issues = self._jira().search_issues('assignee={} AND resolution="Unresolved"'.format(self.user()),
+                                            fields='key, summary, description')
         return [JiraIssueAdaptor(i, self) for i in issues]
 
     def assign_issue(self, issue, user):
@@ -241,4 +241,4 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
         """
         if isinstance(other, JiraIssueAdaptor):
             return self.parse_key() < other.parse_key()
-        return str(self) < other
+        return str(self) < str(other)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Config classes and methods for zazu."""
 import zazu.code_reviewer
+import zazu.git_helper
 import zazu.issue_tracker
 import zazu.scm_host
 import zazu.util
@@ -199,8 +200,10 @@ class ConfigFile(object):
 class Config(object):
     """Hold all zazu configuration info."""
 
-    def __init__(self, repo_root):
+    def __init__(self, repo_root=None):
         """Constructor, doesn't parse configuration or require repo to be valid."""
+        if repo_root is None:
+            repo_root = zazu.git_helper.get_repo_root(os.getcwd())
         self.repo_root = repo_root
         if self.repo_root is not None:
             try:
@@ -337,6 +340,9 @@ class Config(object):
         """Check that the config has a valid repo set."""
         if self.repo_root is None or self.repo is None:
             raise click.UsageError('The current working directory is not in a git repo')
+
+
+pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
 def maybe_write_default_user_config(path):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Holds the zazu repo subcommand."""
+import zazu.config
 import zazu.git_helper
 import zazu.github_helper
 import zazu.util
@@ -17,18 +18,18 @@ __copyright__ = 'Copyright 2016'
 
 
 @click.group()
-@click.pass_context
-def repo(ctx):
+@zazu.config.pass_config
+def repo(config):
     """Manage repository."""
     pass
 
 
 @repo.command()
-@click.pass_context
-def init(ctx):
+@zazu.config.pass_config
+def init(config):
     """Install git hooks to repo."""
-    ctx.obj.check_repo()
-    zazu.git_helper.install_git_hooks(ctx.obj.repo_root)
+    config.check_repo()
+    zazu.git_helper.install_git_hooks(config.repo_root)
 
 
 @repo.command()
@@ -36,8 +37,8 @@ def init(ctx):
 @click.argument('destination', required=False)
 @click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.option('--nosubmodules', is_flag=True, help='does not update submodules')
-@click.pass_context
-def clone(ctx, repository, destination, nohooks, nosubmodules):
+@zazu.config.pass_config
+def clone(config, repository, destination, nohooks, nosubmodules):
     """Clone and initialize a repo.
 
     Args:
@@ -49,8 +50,8 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
     """
     if os.path.isdir(repository) or ':' in repository:
         repository_url = repository
-    elif ctx.obj.scm_hosts():
-        scm_repo = ctx.obj.scm_host_repo(repository)
+    elif config.scm_hosts():
+        scm_repo = config.scm_host_repo(repository)
         if scm_repo is None:
             raise click.ClickException('Unable to find hosted SCM repo {}'.format(repository))
         repository_url = scm_repo.ssh_url
@@ -81,22 +82,22 @@ def clone(ctx, repository, destination, nohooks, nosubmodules):
 @click.option('-r', '--remote', is_flag=True, help='Also clean up remote branches')
 @click.option('-b', '--target_branch', default='origin/master', help='Delete branches merged with this branch')
 @click.option('-y', '--yes', is_flag=True, help='Don\'t ask to before deleting branches')
-@click.pass_context
-def cleanup(ctx, remote, target_branch, yes):
+@zazu.config.pass_config
+def cleanup(config, remote, target_branch, yes):
     """Clean up merged/closed branches."""
-    ctx.obj.check_repo()
-    repo_obj = ctx.obj.repo
-    develop_branch_name = ctx.obj.develop_branch_name()
+    config.check_repo()
+    repo_obj = config.repo
+    develop_branch_name = config.develop_branch_name()
     try:
         repo_obj.heads[develop_branch_name].checkout()
     except IndexError:
         raise click.ClickException('unable to checkout "{}"'.format(develop_branch_name))
     try:
-        issue_tracker = ctx.obj.issue_tracker()
+        issue_tracker = config.issue_tracker()
     except click.ClickException:
         issue_tracker = None
     closed_branches = set()
-    protected_branches = ctx.obj.protected_branches()
+    protected_branches = config.protected_branches()
     if remote:
         repo_obj.git.fetch('--prune')
         remote_branch_names = {b.name.replace('origin/', '') for b in repo_obj.remotes.origin.refs} - protected_branches
@@ -217,11 +218,11 @@ def pep440_from_semver(semver):
 @repo.command()
 @click.option('--pep440', is_flag=True, help='Format the output as PEP 440 compliant')
 @click.option('--prerelease', type=int, help='Pre-release number (invalid for tagged commits)')
-@click.pass_context
-def describe(ctx, pep440, prerelease):
+@zazu.config.pass_config
+def describe(config, pep440, prerelease):
     """Get version string describing current commit."""
-    ctx.obj.check_repo()
-    version = make_semver(ctx.obj.repo_root, prerelease)
+    config.check_repo()
+    version = make_semver(config.repo_root, prerelease)
     if pep440:
         version = pep440_from_semver(version)
     click.echo(str(version))
