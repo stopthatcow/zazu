@@ -50,8 +50,7 @@ setuptools.setup(
     keywords='jira, git, github',
     packages=setuptools.find_packages(exclude=('tests', 'docs')),
     package_data={'zazu': ['githooks/*', 'version.txt']},
-    install_requires=['click>=6.7',                    # BSD
-                      'requests>=2.18.4',              # Apache 2.0
+    install_requires=['click>=7.0',                    # BSD
                       'PyGithub>=1.36.0',              # LGPL 3
                       'jira>=1.0.11',                  # BSD
                       'GitPython>=2.1.8',              # BSD
