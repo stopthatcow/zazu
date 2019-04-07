@@ -140,18 +140,18 @@ def rename_branch(repo, old_branch, new_branch):
 def complete_git_branch(ctx, args, incomplete):
     """Completion function that returns current branch list."""
     repo = git.Repo(os.getcwd())
-    return [b.name for b in repo.branches]
+    return sorted([b.name for b in repo.branches])
 
 
 def complete_issue(ctx, args, incomplete):
     """Completion function that returns ids for open issues."""
     issues = zazu.config.Config().issue_tracker().issues()
-    return [(i, i.name) for i in issues if str(i).startswith(incomplete) or incomplete.lower() in i.name.lower()]
+    return sorted([(i, i.name) for i in issues if str(i).startswith(incomplete) or incomplete.lower() in i.name.lower()])
 
 
 def complete_feature(ctx, args, incomplete):
     """Completion function that returns feature/<id> for open issues."""
-    return [('feature/{}'.format(id), description) for id, description in complete_issue(ctx, args, incomplete)]
+    return sorted([('feature/{}'.format(id), description) for id, description in complete_issue(ctx, args, incomplete)])
 
 
 @dev.command()

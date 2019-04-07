@@ -360,13 +360,23 @@ def maybe_write_default_user_config(path):
             f.write(DEFAULT_USER_CONFIG)
 
 
+def complete_param(ctx, args, incomplete):
+    """Completion function that returns parameter names."""
+    if '--add' in args:
+        return []  # Don't offer completions when adding new params.
+    config_file = ConfigFile(user_config_filepath())
+    config_dict = config_file.dict
+    flattened = zazu.util.flatten_dict(config_dict)
+    return sorted([param for param in flattened.keys() if incomplete in param])
+
+
 @click.command()
 @click.pass_context
 @click.option('-l', '--list', is_flag=True, help='list config')
 @click.option('--show-origin', is_flag=True, help='show origin of each config variable, (implies --list)')
 @click.option('--add', is_flag=True, help='add a new variable')
 @click.option('--unset', is_flag=True, help='remove a variable')
-@click.argument('param_name', required=False, type=str)
+@click.argument('param_name', required=False, type=str, autocompletion=complete_param)
 @click.argument('param_value', required=False, type=str)
 def config(ctx, list, add, unset, show_origin, param_name, param_value):
     """Manage zazu user configuration."""
