@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import conftest
+import copy
 import github
 import pytest
 import zazu.git_helper
@@ -62,6 +63,19 @@ def test_github_issue_tracker_create_issue(mocker, mocked_github_issue_tracker):
     mocked_github_issue_tracker._github.create_issue = mocker.Mock(return_value=mock_issue)
     mocked_github_issue_tracker.create_issue('project', 'issue_type', 'summary', 'description', 'component')
     zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo.create_issue.call_count == 1
+
+
+def test_github_issue_tracker_list_issues(mocker, mocked_github_issue_tracker):
+    mocked_github_issue_tracker._github.get_issues = mocker.Mock(return_value=[mock_issue])
+    mocked_github_issue_tracker.get_issues = mocker.Mock()
+    zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo.get_issues.call_count == 1
+
+
+def test_github_issue_tracker_list_issues_error(mocker, mocked_github_issue_tracker):
+    mocked_github_issue_tracker._github.get_issues = mocker.Mock(side_effect=github.GithubException(404, {}))
+    with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
+        mocked_github_issue_tracker.issues()
+    assert '404' in str(e.value)
 
 
 def test_from_config_no_project(git_repo):
@@ -135,3 +149,9 @@ def test_github_issue_adaptor():
     assert uut.browse_url == 'https://github.com/stopthatcow/zazu/issues/1'
     assert uut.id == '1'
     assert str(uut) == uut.id
+    mock_issue2 = copy.copy(mock_issue)
+    mock_issue2.number = 2
+    uut2 = zazu.plugins.github_issue_tracker.GitHubIssueAdaptor(mock_issue2)
+    assert uut < uut2
+    assert uut < 2
+    assert uut < '2'

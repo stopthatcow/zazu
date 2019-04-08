@@ -305,3 +305,9 @@ def test_alt_branch_names(git_repo):
         uut = zazu.config.Config('')
         assert uut.develop_branch_name() == 'alt_develop'
         assert uut.master_branch_name() == 'alt_master'
+
+
+def test_complete_param(mocker, temp_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
+    assert zazu.config.complete_param(None, [], '') == ['scmHost.gh.type', 'scmHost.gh.user']
+    assert zazu.config.complete_param(None, ['--add'], '') == []

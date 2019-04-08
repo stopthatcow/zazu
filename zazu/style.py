@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Style functions for zazu."""
+import zazu.config
 import zazu.git_helper
 import zazu.styler
 import zazu.util
@@ -8,7 +9,8 @@ zazu.util.lazy_import(locals(), [
     'difflib',
     'functools',
     'os',
-    'threading'
+    'threading',
+    'sys'
 ])
 
 __author__ = 'Nicholas Wiles'
@@ -90,22 +92,22 @@ def styler_list(file, sets, keys):
 
 
 @click.command()
-@click.pass_context
+@zazu.config.pass_config
 @click.option('-v', '--verbose', is_flag=True, help='print files that are dirty')
 @click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them')
 @click.option('--cached', is_flag=True, help='only examine/fix files that are staged for CI commit')
-def style(ctx, verbose, check, cached):
+def style(config, verbose, check, cached):
     """Style repo files or check that they are valid style."""
-    ctx.obj.check_repo()
+    config.check_repo()
     file_count = 0
     violation_count = 0
-    stylers = ctx.obj.stylers()
+    stylers = config.stylers()
     fixed_ok_tags = [click.style('FIXED', fg='red', bold=True), click.style(' OK  ', fg='green', bold=True)]
     tags = zazu.util.FAIL_OK if check else fixed_ok_tags
-    with zazu.util.cd(ctx.obj.repo_root):
+    with zazu.util.cd(config.repo_root):
         if stylers:
             if cached:
-                staged_files = zazu.git_helper.get_touched_files(ctx.obj.repo)
+                staged_files = zazu.git_helper.get_touched_files(config.repo)
                 read_fn = zazu.git_helper.read_staged
                 write_fn = stage_patch
             else:
@@ -121,7 +123,7 @@ def style(ctx, verbose, check, cached):
                 includes = tuple(s.includes)
                 excludes = tuple(s.excludes)
                 if (includes, excludes) not in file_sets:
-                    files = set(zazu.util.scantree(ctx.obj.repo_root,
+                    files = set(zazu.util.scantree(config.repo_root,
                                                    includes,
                                                    excludes,
                                                    exclude_hidden=True))
@@ -147,6 +149,6 @@ def style(ctx, verbose, check, cached):
                     click.echo('{} files with violations in {} files'.format(violation_count, file_count))
                 else:
                     click.echo('{} files fixed in {} files'.format(violation_count, file_count))
-            ctx.exit(-1 if check and violation_count else 0)
+            sys.exit(-1 if check and violation_count else 0)
         else:
             click.echo('no style settings found')

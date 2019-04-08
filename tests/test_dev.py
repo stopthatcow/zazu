@@ -325,3 +325,24 @@ def test_builds():
     result = runner.invoke(zazu.cli.cli, ['dev', 'builds'])
     assert result.exception
     assert result.exit_code != 0
+
+
+def test_complete_git_branch(git_repo):
+    with zazu.util.cd(git_repo.working_tree_dir):
+        assert zazu.dev.commands.complete_git_branch(None, [], 'mas') == ['master']
+
+
+def test_complete_issue_and_complete_feature(mocker):
+    mocked_config = mocker.Mock()
+    mocked_tracker = mocker.Mock()
+    mocked_issue = mocker.Mock()
+    mocked_issue.__str__ = mocker.Mock(return_value='ZZ-1')
+    mocked_issue.name = 'name'
+    mocked_tracker.issues = mocker.Mock(return_value=[mocked_issue])
+    mocked_config.issue_tracker = mocker.Mock(return_value=mocked_tracker)
+    mocker.patch('zazu.config.Config', return_value=mocked_config)
+    assert zazu.dev.commands.complete_issue(None, [], 'Z') == [(mocked_issue, 'name')]
+    assert zazu.dev.commands.complete_issue(None, [], 'Na') == [(mocked_issue, 'name')]
+    assert zazu.dev.commands.complete_issue(None, [], '') == [(mocked_issue, 'name')]
+    assert zazu.dev.commands.complete_issue(None, [], 'foo') == []
+    assert zazu.dev.commands.complete_feature(None, [], 'Z') == [('feature/ZZ-1', 'name')]

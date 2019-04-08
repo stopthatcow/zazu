@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Config classes and methods for zazu."""
 import zazu.code_reviewer
+import zazu.git_helper
 import zazu.issue_tracker
 import zazu.scm_host
 import zazu.util
@@ -199,8 +200,10 @@ class ConfigFile(object):
 class Config(object):
     """Hold all zazu configuration info."""
 
-    def __init__(self, repo_root):
+    def __init__(self, repo_root=None):
         """Constructor, doesn't parse configuration or require repo to be valid."""
+        if repo_root is None:
+            repo_root = zazu.git_helper.get_repo_root(os.getcwd())
         self.repo_root = repo_root
         if self.repo_root is not None:
             try:
@@ -339,6 +342,9 @@ class Config(object):
             raise click.UsageError('The current working directory is not in a git repo')
 
 
+pass_config = click.make_pass_decorator(Config, ensure=True)
+
+
 def maybe_write_default_user_config(path):
     """Write a default user config file if it doesn't exist."""
     DEFAULT_USER_CONFIG = """# User configuration file for zazu.
@@ -354,13 +360,23 @@ def maybe_write_default_user_config(path):
             f.write(DEFAULT_USER_CONFIG)
 
 
+def complete_param(ctx, args, incomplete):
+    """Completion function that returns parameter names."""
+    if '--add' in args:
+        return []  # Don't offer completions when adding new params.
+    config_file = ConfigFile(user_config_filepath())
+    config_dict = config_file.dict
+    flattened = zazu.util.flatten_dict(config_dict)
+    return sorted([param for param in flattened.keys() if incomplete in param])
+
+
 @click.command()
 @click.pass_context
 @click.option('-l', '--list', is_flag=True, help='list config')
 @click.option('--show-origin', is_flag=True, help='show origin of each config variable, (implies --list)')
 @click.option('--add', is_flag=True, help='add a new variable')
 @click.option('--unset', is_flag=True, help='remove a variable')
-@click.argument('param_name', required=False, type=str)
+@click.argument('param_name', required=False, type=str, autocompletion=complete_param)
 @click.argument('param_value', required=False, type=str)
 def config(ctx, list, add, unset, show_origin, param_name, param_value):
     """Manage zazu user configuration."""

@@ -107,6 +107,12 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
+    def issues(self):
+        """List all open issues."""
+        issues = self._jira().search_issues('assignee={} AND resolution="Unresolved"'.format(self.user()),
+                                            fields='key, summary, description')
+        return [JiraIssueAdaptor(i, self) for i in issues]
+
     def assign_issue(self, issue, user):
         """Assign an issue to a user."""
         self._jira().assign_issue(issue._jira_issue, user)
@@ -221,3 +227,18 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
     def id(self):
         """Get the string id of the issue."""
         return self._jira_issue.key
+
+    def parse_key(self):
+        """Parse key into project prefix and issue number."""
+        components = self._jira_issue.key.split('-')
+        return components[0], int(components[1])
+
+    def __lt__(self, other):
+        """Allow issues to be sorted in natural order.
+
+        First by project prefix, then by ID.
+
+        """
+        if isinstance(other, JiraIssueAdaptor):
+            return self.parse_key() < other.parse_key()
+        return str(self) < str(other)
