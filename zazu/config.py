@@ -349,11 +349,12 @@ def maybe_write_default_user_config(path):
     """Write a default user config file if it doesn't exist."""
     DEFAULT_USER_CONFIG = """# User configuration file for zazu.
     
-# SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
-# scmHost:
-#    default:                # This is the default SCM host.
-#        type: github        # Type of this SCM host.
-#        user: user          # GitHub username
+#SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
+scmHost:
+   default:                          # This is the default SCM host.
+       type: github                  # Type of this SCM host.
+       user: user                    # GitHub username
+       url: https://api.github.com   # GitHub URL
 """
     if not os.path.isfile(path):
         with open(path, 'w') as f:
