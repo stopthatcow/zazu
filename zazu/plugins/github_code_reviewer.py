@@ -16,7 +16,7 @@ __copyright__ = 'Copyright 2017'
 class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
     """Implements zazu code review interface for GitHub."""
 
-    def __init__(self, owner, repo):
+    def __init__(self, owner, repo, url=None):
         """Create a GitHubCodeReviewer.
 
         Args:
@@ -26,6 +26,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         """
         self._owner = owner
         self._repo = repo
+        self._url = url
         self._github = None
 
     def connect(self):
@@ -34,7 +35,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
 
     def _github_handle(self):
         if self._github is None:
-            self._github = zazu.github_helper.make_gh()
+            self._github = zazu.github_helper.make_gh(self._url)
         return self._github
 
     def _github_repo(self):
@@ -71,6 +72,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         # Get URL from current git repo:
         owner = config.get('owner', None)
         repo_name = config.get('repo', None)
+        github_url = config.get('url', None)
         if owner is None or repo_name is None:
             repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
             try:
@@ -78,7 +80,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
             except AttributeError:
                 raise zazu.code_reviewer.CodeReviewerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
-        return GitHubCodeReviewer(owner, repo_name)
+        return GitHubCodeReviewer(owner, repo_name, github_url)
 
     @staticmethod
     def type():
