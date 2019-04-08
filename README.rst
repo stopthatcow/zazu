@@ -228,9 +228,7 @@ Add the following to your ``~/.zshrc`` file
 
 ::
 
-    autoload bashcompinit
-    bashcompinit
-    eval "$(_ZAZU_COMPLETE=source zazu)"
+    eval "$(_ZAZU_COMPLETE=source_zsh zazu)"
 
 Handy aliases
 -------------
