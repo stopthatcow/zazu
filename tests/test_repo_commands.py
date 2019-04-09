@@ -250,3 +250,19 @@ def test_describe(mocker, git_repo):
         result = runner.invoke(zazu.cli.cli, ['repo', 'describe', '--prerelease=4', '--pep440'])
         assert result.exit_code == 0
         assert PEP440_RE.match(result.output)
+
+
+def test_complete_repo(mocker):
+    mocked_scm_host = mocker.Mock()
+    mocked_repo = mocker.Mock()
+    mocked_repo.id = 'repo_id'
+    mocked_scm_host.repos = mocker.Mock(return_value=[mocked_repo])
+    mocked_config = mocker.Mock()
+    mocked_config.scm_hosts = mocker.Mock(return_value={'default': mocked_scm_host})
+    mocker.patch('zazu.config.Config', return_value=mocked_config)
+    assert zazu.repo.commands.complete_repo(None, [], '') == ['default/repo_id']
+    assert zazu.repo.commands.complete_repo(None, [], 'repo') == ['default/repo_id']
+    assert zazu.repo.commands.complete_repo(None, [], 'foo') == []
+    # Test with unresponsive host.
+    mocked_scm_host.repos = mocker.Mock(side_effect=IOError)
+    assert zazu.repo.commands.complete_repo(None, [], '') == []
