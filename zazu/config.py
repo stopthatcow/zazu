@@ -5,6 +5,19 @@ import zazu.git_helper
 import zazu.issue_tracker
 import zazu.scm_host
 import zazu.util
+# TODO(stopthatcow): Clean these up so they are not enumerated here.
+import zazu.plugins.github_scm_host
+import zazu.plugins.github_issue_tracker
+import zazu.plugins.jira_issue_tracker
+import zazu.plugins.github_code_reviewer
+import zazu.plugins.astyle_styler
+import zazu.plugins.autopep8_styler
+import zazu.plugins.clang_format_styler
+import zazu.plugins.docformatter_styler
+import zazu.plugins.esformatter_styler
+import zazu.plugins.eslint_styler
+import zazu.plugins.generic_styler
+import zazu.plugins.goimports_styler
 zazu.util.lazy_import(locals(), [
     'click',
     'dict_recursive_update',
@@ -25,7 +38,7 @@ PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 class PluginFactory(object):
     """A genetic plugin factory that uses the type field of the config to create the appropriate class."""
 
-    def __init__(self, name, subclass):
+    def __init__(self, name, subclass, known_plugins):
         """Constructor.
 
         Args:
@@ -35,15 +48,19 @@ class PluginFactory(object):
         """
         self._subclass = subclass
         self._name = name
+        self._known_plugins = known_plugins
 
     def from_config(self, config):
         """Make and initialize a plugin object from a config."""
-        plugins = straight.plugin.load('zazu.plugins', subclasses=self._subclass)
-        known_types = {p.type().lower(): p.from_config for p in plugins}
+        known_types = {p.type(): p for p in self._known_plugins}
         if 'type' in config:
             type = config['type']
+            if type not in known_types:
+                all_plugins = {p.type().lower(): p for p in straight.plugin.load('zazu.plugins',
+                                                                                 subclasses=self._subclass)}
+                known_types.update(all_plugins)
             if type in known_types:
-                return known_types[type](config)
+                return known_types[type].from_config(config)
             else:
                 raise click.ClickException('{} is not a known {}, please choose from {}'.format(type,
                                                                                                 self._name,
@@ -52,15 +69,17 @@ class PluginFactory(object):
             raise click.ClickException('{} config requires a "type" field'.format(self._name))
 
 
-issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker)
-code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer)
+# TODO(stopthatcow): Clean these up so they are not enumerated here.
+issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker, [zazu.plugins.github_issue_tracker.GitHubIssueTracker,
+                                                                                        zazu.plugins.jira_issue_tracker.JiraIssueTracker])
+code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer, [zazu.plugins.github_code_reviewer.GitHubCodeReviewer])
 
 
 def scm_host_factory(user_config, config):
     """Make and initialize the ScmHosts from the config."""
     hosts = {}
     default_host = ''
-    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.scm_host.ScmHost)
+    plugins = [zazu.plugins.github_scm_host.GitHubScmHost]
     known_types = {p.type(): p for p in plugins}
     for name, value in config.iteritems():
         # The "default" host is unique.
@@ -72,6 +91,10 @@ def scm_host_factory(user_config, config):
                 continue
         if 'type' in value:
             type = value['type']
+            if type not in known_types:
+                external_plugins = {p.type(): p for p in straight.plugin.load('zazu.plugins',
+                                                                              subclasses=zazu.scm_host.ScmHost)}
+                known_types.update(external_plugins)
             if type in known_types:
                 hosts[name] = known_types[type].from_config(value)
             else:
@@ -92,12 +115,23 @@ def scm_host_factory(user_config, config):
 def styler_factory(config):
     """Make and initialize the Stylers from the config."""
     stylers = []
-    plugins = straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)
+    # TODO(stopthatcow): Clean these up so they are not enumerated here.
+    plugins = [zazu.plugins.astyle_styler.AstyleStyler,
+               zazu.plugins.autopep8_styler.Autopep8Styler,
+               zazu.plugins.clang_format_styler.ClangFormatStyler,
+               zazu.plugins.docformatter_styler.DocformatterStyler,
+               zazu.plugins.esformatter_styler.EsformatterStyler,
+               zazu.plugins.eslint_styler.ESLintStyler,
+               zazu.plugins.generic_styler.GenericStyler,
+               zazu.plugins.goimports_styler.GoimportsStyler]
     known_types = {p.type(): p for p in plugins}
     for entry in config:
         excludes = entry.get('exclude', [])
         for styler in entry['stylers']:
             name = styler['type']
+            if name not in known_types:
+                all_stylers = {p.type(): p for p in straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)}
+                known_types.update(all_stylers)
             if name in known_types:
                 includes = entry.get('include', known_types[name].default_extensions())
                 stylers.append(known_types[name].from_config(styler, excludes, includes))
