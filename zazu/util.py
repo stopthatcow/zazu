@@ -20,11 +20,11 @@ def lazy_import(scope, imports):
 
         def __init__(self, **entries):
             self.__dict__.update(entries)
-    import peak.util.imports
-    assert peak.util.imports
+    import zazu.imports
+    assert zazu.imports
     for i in imports:
         modules = i.split('.')
-        import_mock = peak.util.imports.lazyModule(i)
+        import_mock = zazu.imports.lazyModule(i)
         if len(modules) > 1:
             d = import_mock
             while len(modules) > 1:
