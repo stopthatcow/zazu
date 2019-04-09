@@ -21,9 +21,8 @@ import git
 import os
 import sphinx_rtd_theme
 import sys
-import zazu.build
 sys.path.insert(0, os.path.abspath('..'))
-
+import zazu.build
 
 # -- General configuration ------------------------------------------------
 
