@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Package level defines for zazu."""
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
-class LazyVersion():
+class LazyVersion(object):
     """Lazily loads version information only when it is converted to a string."""
 
     def __str__(self):

@@ -3,24 +3,25 @@
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
-    'pip'
+    'subprocess',
+    'sys'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2018'
 
 
 @click.command()
-@click.pass_context
+@zazu.config.pass_config
 @click.option('--version', default='', help='version spec to upgrade to or empty to use the version specified in the zazu.yaml file')
-def upgrade(ctx, version):
+def upgrade(config, version):
     """Upgrade Zazu using pip."""
-    required_zazu_version = ctx.obj.zazu_version_required()
+    required_zazu_version = config.zazu_version_required()
     if not version:
         if required_zazu_version:
             version = '=={}'.format(required_zazu_version)
         else:
             click.echo('No version specified in zazu.yaml file, upgrading to latest')
-    pip_args = ['install', '--upgrade', 'zazu{}'.format(version)]
-    click.echo('pip {}'.format(' '.join(pip_args)))
-    ctx.exit(pip.main(pip_args))
+    pip_args = ['pip', 'install', '--upgrade', 'zazu{}'.format(version)]
+    click.echo(' '.join(pip_args))
+    sys.exit(subprocess.call(pip_args))

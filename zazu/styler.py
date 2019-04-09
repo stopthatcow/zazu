@@ -6,39 +6,42 @@ zazu.util.lazy_import(locals(), [
     'os'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
 class Styler(object):
     """Parent of all style plugins."""
 
-    def __init__(self, options=[], excludes=[], includes=[]):
+    def __init__(self, command=None, options=None, excludes=None, includes=None):
         """Constructor.
 
         Args:
-            options: array of flags to pass to the styler.
-            excludes: list of file patterns to exclude from styling.
-            includes: list of file patterns to include for styling.
-        """
-        self.options = options
-        self.excludes = excludes
-        self.includes = includes
+            command (str): command to use when running the styler.
+            options (list): flags to pass to the styler.
+            excludes (list): file patterns to exclude from styling.
+            includes (list): file patterns to include for styling.
 
-    def style_string(self, string):
-        """Style a string and return a diff of requested changes.
+        """
+        self.command = self.type() if command is None else command
+        self.options = [] if options is None else options
+        self.excludes = [] if excludes is None else excludes
+        self.includes = [] if includes is None else includes
+        self.options += self.required_options()
+
+    def style_string(self, string, filepath):
+        """Fix a string to be within style guidelines.
 
         Args:
-            string: the string to style
+            string (str): the string to style
+            filepath (str): the filepath of the file being styled
 
         Returns:
-                A unified diff of requested changes or an empty string if no changes are requested.
-
-        Raises:
-            NotImplementedError
+            Styled string.
 
         """
-        raise NotImplementedError('All style plugins must implement style_string')
+        args = [self.command] + self.options
+        return zazu.util.check_popen(args=args, stdin_str=string)
 
     @classmethod
     def from_config(cls, config, excludes, includes):
@@ -46,14 +49,34 @@ class Styler(object):
 
         Args:
             config: the configuration dictionary.
-            excludes: patterns to exclude.
-            includes: patterns to include.
+            excludes (list): file patterns to exclude from styling.
+            includes (list): file patterns to include for styling.
 
         Returns:
             Styler with config options set.
 
         """
-        obj = cls(config.get('options', []),
+        obj = cls(config.get('command', None),
+                  config.get('options', []),
                   excludes + config.get('excludes', []),
                   includes + config.get('includes', []))
         return obj
+
+    @staticmethod
+    def required_options():
+        """Get options required to make the tool use stdin for input and output styled version to stdout."""
+        return []
+
+    @staticmethod
+    def default_extensions():
+        """Get extensions that this styler can fix."""
+        raise NotImplementedError('Must implement default_extensions()')
+
+    @staticmethod
+    def type():
+        """Return the type of this styler."""
+        raise NotImplementedError('Must implement type()')
+
+    def name(self):
+        """Get name of this styler."""
+        return self.command

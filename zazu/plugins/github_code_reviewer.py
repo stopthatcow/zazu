@@ -9,8 +9,8 @@ zazu.util.lazy_import(locals(), [
     'os'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2017"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2017'
 
 
 class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
@@ -22,8 +22,8 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
         Args:
             owner (str): the github repo owner's username or organization name.
             repo (str): the github repo name.
+
         """
-        self._base_url = 'https://github.com/{}/{}'.format(owner, repo)
         self._owner = owner
         self._repo = repo
         self._github = None

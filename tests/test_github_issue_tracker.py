@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import conftest
+import copy
 import github
 import pytest
+import zazu.git_helper
 import zazu.github_helper
 import zazu.plugins.github_issue_tracker
 
@@ -29,7 +31,8 @@ mock_issue_dict = {
     'title': 'name',
     'state': 'closed',
     'body': 'description',
-    'assignees': [{'login': 'assignee'}]
+    'assignees': [{'login': 'assignee'}],
+    'html_url': 'https://github.com/stopthatcow/zazu/issues/1'
 }
 mock_issue = conftest.dict_to_obj(mock_issue_dict)
 
@@ -62,6 +65,19 @@ def test_github_issue_tracker_create_issue(mocker, mocked_github_issue_tracker):
     zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo.create_issue.call_count == 1
 
 
+def test_github_issue_tracker_list_issues(mocker, mocked_github_issue_tracker):
+    mocked_github_issue_tracker._github.get_issues = mocker.Mock(return_value=[mock_issue])
+    mocked_github_issue_tracker.get_issues = mocker.Mock()
+    zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo.get_issues.call_count == 1
+
+
+def test_github_issue_tracker_list_issues_error(mocker, mocked_github_issue_tracker):
+    mocked_github_issue_tracker._github.get_issues = mocker.Mock(side_effect=github.GithubException(404, {}))
+    with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
+        mocked_github_issue_tracker.issues()
+    assert '404' in str(e.value)
+
+
 def test_from_config_no_project(git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
         with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
@@ -86,7 +102,6 @@ def test_from_config(git_repo):
                                                                                 'repo': 'zazu'})
         assert uut._owner == 'stopthatcow'
         assert uut._repo == 'zazu'
-        assert uut._base_url == 'https://github.com/stopthatcow/zazu'
         assert not uut.default_project()
         assert ['issue'] == uut.issue_types()
         assert [] == uut.issue_components()
@@ -97,7 +112,6 @@ def test_from_config_from_origin(repo_with_github_as_origin):
         uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({})
         assert uut._owner == 'stopthatcow'
         assert uut._repo == 'zazu'
-        assert uut._base_url == 'https://github.com/stopthatcow/zazu'
         assert not uut.default_project()
         assert ['issue'] == uut.issue_types()
         assert [] == uut.issue_components()
@@ -113,8 +127,19 @@ def test_github_validate_id_format(tracker_mock):
         uut.validate_id_format('10a')
 
 
-def test_github_issue_adaptor(tracker_mock):
-    uut = zazu.plugins.github_issue_tracker.GitHubIssueAdaptor(mock_issue, tracker_mock)
+def test_assign(mocker, tracker_mock):
+    uut = tracker_mock
+    uut._user = 'me'
+    mock_gh_issue = mocker.Mock()
+    mock_gh_issue.edit = mocker.Mock()
+    mock_gh_issue_wrapper = mocker.Mock()
+    mock_gh_issue_wrapper._github_issue = mock_gh_issue
+    uut.assign_issue(mock_gh_issue_wrapper, uut.user())
+    mock_gh_issue.edit.assert_called_once_with(assignee='me')
+
+
+def test_github_issue_adaptor():
+    uut = zazu.plugins.github_issue_tracker.GitHubIssueAdaptor(mock_issue)
     assert uut.name == 'name'
     assert uut.status == 'closed'
     assert uut.description == 'description'
@@ -124,3 +149,9 @@ def test_github_issue_adaptor(tracker_mock):
     assert uut.browse_url == 'https://github.com/stopthatcow/zazu/issues/1'
     assert uut.id == '1'
     assert str(uut) == uut.id
+    mock_issue2 = copy.copy(mock_issue)
+    mock_issue2.number = 2
+    uut2 = zazu.plugins.github_issue_tracker.GitHubIssueAdaptor(mock_issue2)
+    assert uut < uut2
+    assert uut < 2
+    assert uut < '2'

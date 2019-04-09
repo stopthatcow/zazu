@@ -10,30 +10,31 @@ zazu.util.lazy_import(locals(), [
     'socket'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 
-def make_gh_token():
+GITHUB_API_URL = 'https://api.github.com'
+
+
+def make_gh_token(api_url=GITHUB_API_URL):
     """Make new GitHub token."""
-    api_url = 'https://api.github.com'
     add_auth = {
-        "scopes": [
-            "repo"
+        'scopes': [
+            'repo'
         ],
-        "note": "zazu for {}@{}".format(getpass.getuser(), socket.gethostname())
+        'note': 'zazu for {}@{}'.format(getpass.getuser(), socket.gethostname())
     }
     token = None
     while token is None:
-        user = zazu.util.prompt("GitHub username", expected_type=str)
-        password = click.prompt("GitHub password", type=str, hide_input=True)
+        user, password = zazu.credential_helper.get_user_pass_credentials(api_url, offer_to_save=False)
         r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
         if r.status_code == 401:
             if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
                 headers = {'X-GitHub-OTP': zazu.util.prompt('GitHub two-factor code (6 digits)', expected_type=str)}
                 r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
             else:
-                click.echo("Invalid username or password!")
+                click.echo('Invalid username or password!')
                 continue
         if r.status_code == 201:
             token = r.json()['token']
@@ -42,19 +43,28 @@ def make_gh_token():
                        'Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
             token = zazu.util.prompt('Enter new token manually')
         else:
-            raise Exception("Error authenticating with GitHub, status:{} content:{}".format(r.status_code, r.json()))
+            raise Exception('Error authenticating with GitHub, status:{} content:{}'.format(r.status_code, r.json()))
     return token
 
 
-def make_gh():
+def make_gh(api_url=GITHUB_API_URL):
     """Make github object with token from the keychain."""
     import keyring  # For some reason this doesn't play nicely with threads on lazy import.
-    token = keyring.get_password('https://api.github.com', 'token')
+    gh = None
+    token = keyring.get_password(api_url, 'token')
     if token is None:
-        click.echo("No saved GitHub token found in keychain, lets add one...")
-        token = make_gh_token()
-        keyring.set_password('https://api.github.com', 'token', token)
-    gh = github.Github(token)
+        click.echo('No saved GitHub token found in keychain, lets add one...')
+    while gh is None:
+        try:
+            if token is None:
+                token = make_gh_token(api_url)
+                gh = github.Github(token)
+                keyring.set_password(api_url, 'token', token)
+            else:
+                gh = github.Github(token)
+        except github.BadCredentialsException:
+            click.echo("GitHub token rejected, you will need to create a new token.")
+            token = None
     return gh
 
 

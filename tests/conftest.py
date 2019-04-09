@@ -3,7 +3,7 @@ import git
 import tempfile
 import os
 import pytest
-import yaml
+import ruamel.yaml as yaml
 
 
 @pytest.fixture
@@ -39,55 +39,18 @@ def git_repo_with_bad_config(git_repo):
 def repo_with_style(git_repo):
     root = git_repo.working_tree_dir
     style_config = {
-        'style': {
-            'exclude': ['dependency'],
-            'autopep8': {},
-            'clang-format': {}
-        }
-    }
-    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(style_config))
-    return git_repo
-
-
-@pytest.fixture()
-def repo_with_build_config(git_repo):
-    root = git_repo.working_tree_dir
-    config = {
-        'components': [
-            {
-                'name': 'zazu',
-                'description': 'A description',
-                'goals': [
-                    {
-                        'name': 'echo_foobar',
-                        'description': 'echo_foobar description',
-                        'builds': [
-                            {
-                                'arch': 'host',
-                                'description': 'echo_foobar build description',
-                                'script': ['echo "foobar"'],
-                                'artifacts': ['artifact.zip']
-                            },
-                            {
-                                'arch': 'arm-linux-gnueabihf'
-                            }
-                        ]
-                    },
-                    {
-                        'name': 'cmake_build',
-                        'builds': [
-                            {
-                                'arch': 'host'
-                            }
-                        ]
-                    }
-                ]
+        'style': [
+            {'exclude': ['dependency'],
+             'stylers':[
+                {'type': 'autopep8'},
+                {'type': 'docformatter'},
+                {'type': 'clang-format'}
+            ]
             }
         ]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(config))
+        yaml.dump(style_config, file)
     return git_repo
 
 
@@ -106,7 +69,7 @@ def repo_with_missing_style(git_repo):
         'components': [{'name': 'zazu'}]
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        file.write(yaml.dump(config))
+        yaml.dump(config, file)
     return git_repo
 
 
@@ -124,9 +87,36 @@ def git_repo_with_local_origin(git_repo):
     return git_repo
 
 
+@pytest.fixture()
+def git_repo_with_out_of_date_local_origin(git_repo):
+    """Create a local remote with 2 clients.
+
+    Use 1 client to update develop so that the other client is out of date.
+    Return the out of date client.
+
+    """
+    temp_dir = tempfile.mkdtemp()
+    git.Repo.init(temp_dir, bare=True)
+    git_repo.create_remote('origin', temp_dir)
+    git_repo.git.checkout('-b', 'develop')
+    git_repo.git.push('-u', 'origin', 'develop')
+    other_client = git.Repo.init(tempfile.mkdtemp())
+    other_client.create_remote('origin', temp_dir)
+    other_client.git.checkout('-b', 'develop')
+    other_client.git.pull('origin', 'develop')
+    readme = os.path.join(other_client.working_tree_dir, 'README.md')
+    with open(readme, 'w') as f:
+        f.write('foo')
+    other_client.index.add([readme])
+    other_client.index.commit('updated readme')
+    other_client.git.push('-u', 'origin', 'develop')
+
+    return git_repo
+
+
 @contextlib.contextmanager
 def working_directory(path):
-    """Changes the working directory to the given path back to its previous value on exit"""
+    """Changes the working directory to the given path back to its previous value on exit."""
     prev_cwd = os.getcwd()
     os.chdir(path)
     try:
@@ -136,7 +126,7 @@ def working_directory(path):
 
 
 def dict_to_obj(dictionary):
-    """Creates a object from a dictionary"""
+    """Creates a object from a dictionary."""
     class Struct(object):
 
         def __init__(self, d):

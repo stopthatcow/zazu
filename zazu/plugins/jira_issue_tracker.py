@@ -4,12 +4,13 @@ import zazu.credential_helper
 import zazu.issue_tracker
 import zazu.util
 zazu.util.lazy_import(locals(), [
+    'click',
     'jira',
     're'
 ])
 
-__author__ = "Nicholas Wiles"
-__copyright__ = "Copyright 2016"
+__author__ = 'Nicholas Wiles'
+__copyright__ = 'Copyright 2016'
 
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
@@ -26,8 +27,10 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             base_url (str): base URL for the JIRA instance.
             default_project (str): project that new issues will be created in by default.
             components (list of str): list of components that new issues can be associated with.
+
         """
         self._base_url = base_url
+        self._user = None
         self._default_project = default_project
         self._components = components
         self._jira_handle = None
@@ -38,22 +41,38 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _jira(self):
         if self._jira_handle is None:
-            username, password = zazu.credential_helper.get_user_pass_credentials('Jira')
-            self._jira_handle = jira.JIRA(self._base_url,
-                                          basic_auth=(username, password),
-                                          options={'check_update': False}, max_retries=0)
+            use_saved = True
+            while True:
+                user, password = zazu.credential_helper.get_user_pass_credentials(self._base_url, use_saved=use_saved)
+                try:
+                    self._jira_handle = jira.JIRA(self._base_url,
+                                                  basic_auth=(user, password),
+                                                  options={'check_update': False}, max_retries=0)
+                    break
+                except jira.JIRAError as e:
+                    if e.status_code == 401:
+                        click.echo('{} rejected password for user {}!'.format(self._base_url, user))
+                        use_saved = False
+                    else:
+                        raise zazu.issue_tracker.IssueTrackerError(str(e))
         return self._jira_handle
 
     def browse_url(self, id):
         """Get the url to open to display the issue."""
-        self.validate_id_format(id)
-        return '{}/browse/{}'.format(self._base_url, id)
+        normalized_id = self.validate_id_format(id)
+        return '{}/browse/{}'.format(self._base_url, normalized_id)
+
+    def user(self):
+        """Get username of authenticated user."""
+        if self._user is None:
+            self._user = self._jira().current_user()
+        return self._user
 
     def issue(self, id):
         """Get an issue by id."""
-        self.validate_id_format(id)
+        normalized_id = self.validate_id_format(id)
         try:
-            ret = self._jira().issue(id)
+            ret = self._jira().issue(normalized_id)
             # Only show description up to the separator
             if ret.fields.description is None:
                 ret.fields.description = ''
@@ -71,6 +90,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
             summary (str): a summary of the issue.
             description (str): a detailed description of the issue.
             component (str): the JIRA component to associate with the issue.
+
         """
         try:
             issue_dict = {
@@ -87,6 +107,16 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
 
+    def issues(self):
+        """List all open issues."""
+        issues = self._jira().search_issues('assignee={} AND resolution="Unresolved"'.format(self.user()),
+                                            fields='key, summary, description')
+        return [JiraIssueAdaptor(i, self) for i in issues]
+
+    def assign_issue(self, issue, user):
+        """Assign an issue to a user."""
+        self._jira().assign_issue(issue._jira_issue, user)
+
     def default_project(self):
         """JIRA project associated with this tracker."""
         return self._default_project
@@ -96,11 +126,10 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         return ['Task', 'Bug', 'Story']
 
     def issue_components(self):
-        """Components that are associated with this tracker."""
+        """Get components that are associated with this tracker."""
         return self._components
 
-    @staticmethod
-    def validate_id_format(id):
+    def validate_id_format(self, id):
         """Validate that an id is the proper format for Jira.
 
         Args:
@@ -109,9 +138,19 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         Raises:
             zazu.issue_tracker.IssueTrackerError: if the id is not valid.
 
+        Returns:
+            normalized id string
+
         """
-        if not re.match('[A-Z]+-[0-9]+$', id):
-            raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not of the form PROJ-#'.format(id))
+        components = id.split('-', 1)
+        number = components.pop()
+        project = components.pop().upper() if components else self._default_project
+        if project != self._default_project:
+            raise zazu.issue_tracker.IssueTrackerError('project "{}" is not "{}"'.format(project, self._default_project))
+
+        if not re.match('[0-9]+$', number):
+            raise zazu.issue_tracker.IssueTrackerError('issue number is not numeric')
+        return '{}-{}'.format(project, number)
 
     @staticmethod
     def from_config(config):
@@ -132,7 +171,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
     @staticmethod
     def type():
         """Return the name of this IssueTracker type."""
-        return 'Jira'
+        return 'jira'
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
@@ -144,6 +183,7 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
         Args:
             jira_issue: Jira issue handle.
             tracker_handle: The tracker associated with this issue.
+
         """
         self._jira_issue = jira_issue
         self._tracker = tracker_handle
@@ -188,6 +228,17 @@ class JiraIssueAdaptor(zazu.issue_tracker.Issue):
         """Get the string id of the issue."""
         return self._jira_issue.key
 
-    def __str__(self):
-        """Return the id as the string representation."""
-        return self.id
+    def parse_key(self):
+        """Parse key into project prefix and issue number."""
+        components = self._jira_issue.key.split('-')
+        return components[0], int(components[1])
+
+    def __lt__(self, other):
+        """Allow issues to be sorted in natural order.
+
+        First by project prefix, then by ID.
+
+        """
+        if isinstance(other, JiraIssueAdaptor):
+            return self.parse_key() < other.parse_key()
+        return str(self) < str(other)
