@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
 
+# Work around issue where setuptools creates very slow entry points for non-wheel distributions.
+# See https://pypi.org/project/fastentrypoints/
+try:
+    import fastentrypoints
+except ImportError:
+    from setuptools.command import easy_install
+    import pkg_resources
+    easy_install.main(['fastentrypoints'])
+    pkg_resources.require('fastentrypoints')
+    import fastentrypoints
+
 import setuptools
 import os.path
 import sys
@@ -56,7 +67,7 @@ setuptools.setup(
                       'GitPython>=2.1.8',              # BSD
                       'dict-recursive-update>=1.0.1',  # MIT
                       'ruamel.yaml<=0.15',             # MIT
-                      'keyring<=8.0',                  # MIT
+                      'keyring>=18.0.1',               # MIT
                       'keyrings.alt>=2.3',             # MIT
                       'autopep8>=1.3.4',               # MIT
                       'docformatter>=1.0',             # Expat
@@ -64,7 +75,6 @@ setuptools.setup(
                       'future>=0.16.0',                # MIT
                       'futures>=3.2.0; python_version == "2.7"',  # PSF
                       'inquirer>=2.2.0',               # MIT
-                      'Importing>=1.10',               # PSF
                       'straight.plugin>=1.5.0'],       # MIT
     extras_require={
         ':sys_platform == "win32"': [
