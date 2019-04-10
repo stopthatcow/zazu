@@ -62,10 +62,10 @@ def make_gh(api_url=None):
         try:
             if token is None:
                 token = make_gh_token(api_url)
-                gh = github.Github(token)
+                gh = github.Github(base_url=api_url, login_or_token=token)
                 keyring.set_password(api_url, 'token', token)
             else:
-                gh = github.Github(token)
+                gh = github.Github(base_url=api_url, login_or_token=token)
         except github.BadCredentialsException:
             click.echo("GitHub token rejected, you will need to create a new token.")
             token = None

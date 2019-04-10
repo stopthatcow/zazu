@@ -10,12 +10,13 @@ __author__ = "Nicholas Wiles"
 __copyright__ = "Copyright 2016"
 
 
-def test_make_gh_with_sacved_credentials(mocker):
+def test_make_gh_with_saved_credentials(mocker):
     mocker.patch('keyring.get_password', return_value='token')
     mocker.patch('keyring.set_password')
     mocker.patch('github.Github')
-    zazu.github_helper.make_gh()
-    github.Github.assert_called_once_with('token')
+    custom_url = 'https://custom.github.com'
+    zazu.github_helper.make_gh(custom_url)
+    github.Github.assert_called_once_with(base_url=custom_url, login_or_token='token')
 
 
 def test_make_gh_with_no_credentials(mocker):
@@ -25,14 +26,14 @@ def test_make_gh_with_no_credentials(mocker):
     mocker.patch('github.Github')
     zazu.github_helper.make_gh()
     zazu.github_helper.make_gh_token.assert_called_once()
-    github.Github.assert_called_once_with('token')
+    github.Github.assert_called_once_with(base_url=zazu.github_helper.GITHUB_API_URL, login_or_token='token')
 
 
 def test_make_gh_with_bad_token(mocker):
-    def side_effect(token):
-        if token == 'token':
+    def side_effect(base_url, login_or_token):
+        if login_or_token == 'token':
             raise github.BadCredentialsException('status', 'data')
-        return token
+        return login_or_token
     mocker.patch('keyring.get_password', return_value='token')
     mocker.patch('keyring.set_password')
     mocker.patch('zazu.github_helper.make_gh_token', return_value='token2')
@@ -40,8 +41,10 @@ def test_make_gh_with_bad_token(mocker):
     zazu.github_helper.make_gh()
     calls = github.Github.call_args_list
     assert github.Github.call_count == 2
-    assert calls[0] == mocker.call('token')
-    assert calls[1] == mocker.call('token2')
+    assert calls[0] == mocker.call(base_url=zazu.github_helper.GITHUB_API_URL,
+                                   login_or_token='token')
+    assert calls[1] == mocker.call(base_url=zazu.github_helper.GITHUB_API_URL,
+                                   login_or_token='token2')
 
 
 class MockResponce(object):
