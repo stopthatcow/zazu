@@ -351,3 +351,8 @@ def raise_uninstalled(pkg_name):
 
     """
     raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
+
+
+def warn(text):
+    """Emits a red warning to stderr."""
+    click.secho('Warning: {}'.format(text), fg='red', err=True)

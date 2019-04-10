@@ -284,7 +284,7 @@ class Config(object):
             try:
                 scm_repo = next((r for r in host.repos() if match_host(host_name, r.id)), None)
             except IOError:
-                click.secho('Warning: unable to connect to "{}" SCM host'.format(host_name), fg='red')
+                zazu.util.warn('unable to connect to "{}" SCM host'.format(host_name))
                 scm_repo = None
             if scm_repo is not None:
                 return scm_repo
@@ -296,8 +296,8 @@ class Config(object):
             self._project_config = find_and_load_yaml_file([self.repo_root], PROJECT_FILE_NAMES)
             required_zazu_version = self._project_config.get('zazu', '')
             if required_zazu_version and required_zazu_version != zazu.__version__:
-                click.secho('Warning: this repo has requested zazu {}, which doesn\'t match the installed version ({}). '
-                            'Use "zazu upgrade" to fix this'.format(required_zazu_version, zazu.__version__), fg='red')
+                zazu.util.warn('this repo has requested zazu {}, which doesn\'t match the installed version ({}). '
+                               'Use "zazu upgrade" to fix this'.format(required_zazu_version, zazu.__version__))
         return self._project_config
 
     def user_config(self):
