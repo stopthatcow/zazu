@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Work around issue where setuptools creates very slow entry points for non-wheel distributions.
-# See https://pypi.org/project/fastentrypoints/
-try:
-    import fastentrypoints
-except ImportError:
-    from setuptools.command import easy_install
-    import pkg_resources
-    easy_install.main(['fastentrypoints'])
-    pkg_resources.require('fastentrypoints')
-    import fastentrypoints
-
+import fastentrypoints  # Work around issue where setuptools creates very slow entry points for non-wheel distributions.
 import setuptools
 import os.path
 import sys
