@@ -3,7 +3,7 @@ from sys import modules
 from types import ModuleType
 import sys
 import __main__
--"""Tools for doing dynamic imports Modified from https://pypi.org/project/Importing/."""
+"""Tools for doing dynamic imports Modified from https://pypi.org/project/Importing/."""
 
 __all__ = [
     'lazyModule', 'joinPath', 'whenImported', 'getModuleHooks',
