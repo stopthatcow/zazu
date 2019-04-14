@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import conftest
+import tests.conftest as conftest
 import copy
 import jira
 import jira.client

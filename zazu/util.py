@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Utility functions for zazu."""
 
+import sys
+
 try:
     import readline  # NOQA
 except ImportError:
@@ -20,11 +22,18 @@ def lazy_import(scope, imports):
 
         def __init__(self, **entries):
             self.__dict__.update(entries)
-    import zazu.imports
-    assert zazu.imports
-    for i in imports:
-        modules = i.split('.')
-        import_mock = zazu.imports.lazyModule(i)
+    if sys.version_info[0] < 3:
+        import zazu.imports
+        import_module = zazu.imports.lazyModule
+    else:
+        # Python 3 lazy imports do not yet work, so import them eagerly.
+        import importlib
+        import_module = importlib.import_module
+
+    for m in imports:
+        modules = m.split('.')
+        import_mock = import_module(m)
+
         if len(modules) > 1:
             d = import_mock
             while len(modules) > 1:
@@ -67,12 +76,12 @@ def call(*args, **kwargs):
         raise_uninstalled(args[0])
 
 
-def check_popen(args, stdin_str='', *other_args, **kwargs):
+def check_popen(args, stdin_str=None, *other_args, **kwargs):
     """Like subprocess.Popen but raises an exception if the program cannot be found.
 
     Args:
         args: passed to Popen.
-        stdinput_str: a string that will be sent to std input via communicate().
+        stdin_str: a bytes that will be sent to std input via communicate().
         other_args: other arguments passed to Popen.
         kwargs: other kwargs passed to Popen.
     Raises:
@@ -124,7 +133,7 @@ def dispatch(work):
             yield future.result()
 
 
-def async(call, *args, **kwargs):
+def async_do(call, *args, **kwargs):
     """Dispatch a call asynchronously and return the future.
 
     Args:
@@ -278,7 +287,7 @@ def unflatten_dict(d, separator='.'):
 
     """
     ret = dict()
-    for key, value in d.iteritems():
+    for key, value in d.items():
         parts = key.split(separator)
         d = ret
         for part in parts[:-1]:

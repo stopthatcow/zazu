@@ -81,7 +81,7 @@ def scm_host_factory(user_config, config):
     default_host = ''
     plugins = [zazu.plugins.github_scm_host.GitHubScmHost]
     known_types = {p.type(): p for p in plugins}
-    for name, value in config.iteritems():
+    for name, value in config.items():
         # The "default" host is unique.
         if name == 'default':
             if isinstance(value, dict):
@@ -107,7 +107,7 @@ def scm_host_factory(user_config, config):
         if default_host not in hosts:
             raise click.ClickException('default scmHost \'{}\' not found'.format(default_host))
     elif len(hosts) == 1:  # Only 1 known host makes it the default.
-        default_host = hosts.keys()[0]
+        default_host = next(iter(hosts.keys()))
 
     return hosts, default_host
 
@@ -314,9 +314,10 @@ class Config(object):
             full_id = '/'.join([host, id])
             return full_id == repository or full_id == default_prefixed_id
 
-        for host_name, host in self.scm_hosts().iteritems():
+        scm_hosts = self.scm_hosts()
+        for host_name in scm_hosts:
             try:
-                scm_repo = next((r for r in host.repos() if match_host(host_name, r.id)), None)
+                scm_repo = next((r for r in scm_hosts[host_name].repos() if match_host(host_name, r.id)), None)
             except IOError:
                 zazu.util.warn('unable to connect to "{}" SCM host'.format(host_name))
                 scm_repo = None

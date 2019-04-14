@@ -149,7 +149,7 @@ def test_scm_host_repo(mocker, temp_user_config):
     mock_scm_host.repos = mocker.Mock(side_effect=IOError)
     uut._scm_hosts = {'foo': mock_scm_host}
     uut._default_scm_host = 'foo'
-    assert uut.scm_host_repo('foo/bar') == None
+    assert uut.scm_host_repo('foo/bar') is None
 
 
 def test_github_scm_host():
@@ -190,7 +190,6 @@ def test_github_user_config(mocker, temp_user_config):
     mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
     uut = zazu.config.Config('')
     assert uut.scm_hosts()
-    print uut.scm_hosts()
     assert uut.scm_hosts()['gh']
 
 

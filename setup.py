@@ -27,7 +27,7 @@ try:
     import zazu.repo.commands
     semver = zazu.repo.commands.make_semver('.')
     version = zazu.repo.commands.pep440_from_semver(semver)
-except ImportError:
+except:
     # Missing dependencies at this point.
     version = '0.0.0'
 
@@ -52,7 +52,7 @@ setuptools.setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python',
         'Topic :: Software Development',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Quality Assurance',
@@ -66,14 +66,14 @@ setuptools.setup(
                       'jira>=1.0.11',                  # BSD
                       'GitPython>=2.1.8',              # BSD
                       'dict-recursive-update>=1.0.1',  # MIT
-                      'ruamel.yaml<=0.15',             # MIT
+                      'ruamel.yaml>0.15',              # MIT
                       'keyring>=18.0.1',               # MIT
                       'keyrings.alt>=2.3',             # MIT
                       'autopep8>=1.3.4',               # MIT
                       'docformatter>=1.0',             # Expat
                       'semantic_version>=2.6.0',       # BSD
                       'future>=0.16.0',                # MIT
-                      'futures>=3.2.0; python_version == "2.7"',  # PSF
+                      'futures>=3.2.0 ; python_version<"3.0"',  # PSF
                       'inquirer>=2.2.0',               # MIT
                       'straight.plugin>=1.5.0'],       # MIT
     extras_require={

@@ -37,11 +37,11 @@ class Styler(object):
             filepath (str): the filepath of the file being styled
 
         Returns:
-            Styled string.
+            Styled string (str).
 
         """
         args = [self.command] + self.options
-        return zazu.util.check_popen(args=args, stdin_str=string)
+        return zazu.util.check_popen(args=args, stdin_str=string, universal_newlines=True)
 
     @classmethod
     def from_config(cls, config, excludes, includes):

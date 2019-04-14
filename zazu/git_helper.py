@@ -92,4 +92,4 @@ def merged_branches(repo, target_branch, remote=False):
 
 def read_staged(path):
     """Read the contents of the staged version of the file."""
-    return zazu.util.check_output(['git', 'show', ':{}'.format(path)])
+    return zazu.util.check_output(['git', 'show', ':{}'.format(path)], universal_newlines=True)

@@ -45,7 +45,7 @@ def test_astyle(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
     ret = styler.style_string('foo', None)
-    zazu.util.check_popen.assert_called_once_with(args=['astyle', '-U'], stdin_str='foo')
+    zazu.util.check_popen.assert_called_once_with(args=['astyle', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.c',
                                            '*.cc',
@@ -123,7 +123,7 @@ def test_goimports(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.goimports_styler.GoimportsStyler(options=['-U'])
     ret = styler.style_string('foo', None)
-    zazu.util.check_popen.assert_called_once_with(args=['goimports', '-U'], stdin_str='foo')
+    zazu.util.check_popen.assert_called_once_with(args=['goimports', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.go']
 
@@ -132,7 +132,7 @@ def test_generic(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.generic_styler.GenericStyler(command='sed', options=['-U'])
     ret = styler.style_string('foo', None)
-    zazu.util.check_popen.assert_called_once_with(args=['sed', '-U'], stdin_str='foo')
+    zazu.util.check_popen.assert_called_once_with(args=['sed', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
     assert styler.default_extensions() == []
 
@@ -141,7 +141,7 @@ def test_esformatter(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
     styler = zazu.plugins.esformatter_styler.EsformatterStyler(options=['-U'])
     ret = styler.style_string('foo', None)
-    zazu.util.check_popen.assert_called_once_with(args=['esformatter', '-U'], stdin_str='foo')
+    zazu.util.check_popen.assert_called_once_with(args=['esformatter', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.js', '*.es', '*.es6']
 
@@ -163,10 +163,10 @@ def test_bad_style(repo_with_style_errors):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '-v'])
         assert result.exit_code
-        assert result.output.endswith('6 files with violations in 6 files\n')
+        assert result.output.rstrip().endswith('6 files with violations in 6 files')
         result = runner.invoke(zazu.cli.cli, ['style', '-v'])
         assert result.exit_code == 0
-        assert result.output.endswith('6 files fixed in 6 files\n')
+        assert result.output.rstrip().endswith('6 files fixed in 6 files')
         result = runner.invoke(zazu.cli.cli, ['style', '--check'])
         assert result.exit_code == 0
 
@@ -179,21 +179,21 @@ def test_dirty_style(repo_with_style_errors):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert result.exit_code == 0
-        assert result.output == '0 files with violations in 0 files\n'
+        assert result.output.rstrip() == '0 files with violations in 0 files'
         repo_with_style_errors.git.add('temp.c')
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert result.exit_code
-        assert result.output.endswith('1 files with violations in 1 files\n')
+        assert result.output.rstrip().endswith('1 files with violations in 1 files')
         result = runner.invoke(zazu.cli.cli, ['style', '--cached', '-v'])
-        assert result.output.endswith('1 files fixed in 1 files\n')
+        assert result.output.rstrip().endswith('1 files fixed in 1 files')
         result = runner.invoke(zazu.cli.cli, ['style', '--check', '--cached', '-v'])
         assert not result.exit_code
-        assert result.output.endswith('0 files with violations in 1 files\n')
+        assert result.output.rstrip().endswith('0 files with violations in 1 files')
         repo_with_style_errors.git.add('temp.cpp')
         with open('temp.cpp', 'a') as f:
             f.write('//comment\n')
         result = runner.invoke(zazu.cli.cli, ['style', '--cached', '-v'])
-        assert result.output.endswith('1 files fixed in 2 files\n')
+        assert result.output.rstrip().endswith('1 files fixed in 2 files')
         # File with missing newline at end of file.
         with open('temp.h', 'a') as f:
             f.write('//comment')
@@ -201,7 +201,7 @@ def test_dirty_style(repo_with_style_errors):
         with open('temp.h', 'a') as f:
             f.write('//another')
         result = runner.invoke(zazu.cli.cli, ['style', '--cached'])
-        assert result.output.endswith('File "temp.h" must have a trailing newline\n')
+        assert result.output.rstrip().endswith('File "temp.h" must have a trailing newline')
 
 
 def test_style_no_config(repo_with_missing_style):

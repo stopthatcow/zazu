@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import click.testing
-import conftest
+import tests.conftest as conftest
 import git
 import os
 import pytest
@@ -19,7 +19,6 @@ def test_init(git_repo):
     with zazu.util.cd(dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['repo', 'init'])
-        print result.output
         assert result.exit_code == 0
         assert zazu.git_helper.check_git_hooks(dir)
 
@@ -180,7 +179,7 @@ def test_branch_is_empty(git_repo):
         git_repo.create_head('empty').checkout()
         git_repo.create_head('not_empty').checkout()
         tmp_file = os.path.join(dir, 'temp.txt')
-        with open(tmp_file, 'wb') as f:
+        with open(tmp_file, 'w') as f:
             f.write('\n')
         git_repo.index.add([tmp_file])
         git_repo.index.commit('make this not empty')
@@ -214,7 +213,7 @@ def test_make_version_number():
 
 
 def test_make_semver_tagged(git_repo):
-    ver_re = re.compile('1\.2\.3\+sha\..*\.branch\.master')
+    ver_re = re.compile(r'1\.2\.3\+sha\..*\.branch\.master')
     git_repo.git.tag('-a', '1.2.3', '-m', 'my message')
     version = zazu.repo.commands.make_semver(git_repo.working_tree_dir, None)
     assert ver_re.match(str(version))
@@ -229,8 +228,8 @@ def test_make_semver_empty_repo(empty_repo):
         zazu.repo.commands.make_semver(empty_repo.working_tree_dir, 0)
 
 
-VERSION_RE = re.compile('0\.0\.0-4\+sha\..*\.branch\.master')
-PEP440_RE = re.compile('0\.0\.0.dev4\+sha\..*\.branch\.master')
+VERSION_RE = re.compile(r'0\.0\.0-4\+sha\..*\.branch\.master')
+PEP440_RE = re.compile(r'0\.0\.0.dev4\+sha\..*\.branch\.master')
 
 
 def test_make_semver(git_repo):

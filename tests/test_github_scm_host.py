@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import conftest
+import tests.conftest as conftest
 import github
 import pytest
 import zazu.github_helper

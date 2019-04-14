@@ -17,7 +17,6 @@ codeReviewer:
 
 style:
   - include:
-    - setup.py
     - docs/**.py
     - tests/**.py
     - zazu/**.py
