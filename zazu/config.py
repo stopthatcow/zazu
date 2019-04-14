@@ -1,23 +1,7 @@
 # -*- coding: utf-8 -*-
 """Config classes and methods for zazu."""
-import zazu.code_reviewer
-import zazu.git_helper
-import zazu.issue_tracker
-import zazu.scm_host
+
 import zazu.util
-# TODO(stopthatcow): Clean these up so they are not enumerated here.
-import zazu.plugins.github_scm_host
-import zazu.plugins.github_issue_tracker
-import zazu.plugins.jira_issue_tracker
-import zazu.plugins.github_code_reviewer
-import zazu.plugins.astyle_styler
-import zazu.plugins.autopep8_styler
-import zazu.plugins.clang_format_styler
-import zazu.plugins.docformatter_styler
-import zazu.plugins.esformatter_styler
-import zazu.plugins.eslint_styler
-import zazu.plugins.generic_styler
-import zazu.plugins.goimports_styler
 zazu.util.lazy_import(locals(), [
     'click',
     'dict_recursive_update',
@@ -26,7 +10,23 @@ zazu.util.lazy_import(locals(), [
     'ruamel.yaml',
     'straight.plugin',
     'subprocess',
-    'sys'
+    'sys',
+    'zazu.code_reviewer',
+    'zazu.git_helper',
+    'zazu.issue_tracker',
+    'zazu.scm_host',
+    'zazu.plugins.github_scm_host',
+    'zazu.plugins.github_issue_tracker',
+    'zazu.plugins.jira_issue_tracker',
+    'zazu.plugins.github_code_reviewer',
+    'zazu.plugins.astyle_styler',
+    'zazu.plugins.autopep8_styler',
+    'zazu.plugins.clang_format_styler',
+    'zazu.plugins.docformatter_styler',
+    'zazu.plugins.esformatter_styler',
+    'zazu.plugins.eslint_styler',
+    'zazu.plugins.generic_styler',
+    'zazu.plugins.goimports_styler',
 ])
 
 __author__ = 'Nicholas Wiles'
@@ -67,12 +67,6 @@ class PluginFactory(object):
                                                                                                 sorted(known_types.keys())))
         else:
             raise click.ClickException('{} config requires a "type" field'.format(self._name))
-
-
-# TODO(stopthatcow): Clean these up so they are not enumerated here.
-issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker, [zazu.plugins.github_issue_tracker.GitHubIssueTracker,
-                                                                                        zazu.plugins.jira_issue_tracker.JiraIssueTracker])
-code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer, [zazu.plugins.github_code_reviewer.GitHubCodeReviewer])
 
 
 def scm_host_factory(user_config, config):
@@ -255,6 +249,8 @@ class Config(object):
     def issue_tracker(self):
         """Lazily create a IssueTracker object."""
         if self._issue_tracker is None:
+            issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker, [zazu.plugins.github_issue_tracker.GitHubIssueTracker,
+                                                                                                    zazu.plugins.jira_issue_tracker.JiraIssueTracker])
             self._issue_tracker = issue_tracker_factory.from_config(self.issue_tracker_config())
         return self._issue_tracker
 
@@ -285,6 +281,8 @@ class Config(object):
     def code_reviewer(self):
         """Lazily create and return code reviewer object."""
         if self._code_reviewer is None:
+            code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer, [
+                                                  zazu.plugins.github_code_reviewer.GitHubCodeReviewer])
             self._code_reviewer = code_reviewer_factory.from_config(self.code_reviewer_config())
         return self._code_reviewer
 

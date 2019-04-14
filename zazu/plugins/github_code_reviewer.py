@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Enables code review using github."""
-import zazu.code_reviewer
-import zazu.plugins.github_issue_tracker
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'git',
     'github',
-    'os'
+    'os',
+    'zazu.code_reviewer'
+    'zazu.plugins.github_issue_tracker'
 ])
 
 __author__ = 'Nicholas Wiles'

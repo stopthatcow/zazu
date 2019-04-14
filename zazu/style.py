@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """Style functions for zazu."""
-import zazu.config
-import zazu.git_helper
-import zazu.styler
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
@@ -10,7 +7,10 @@ zazu.util.lazy_import(locals(), [
     'functools',
     'os',
     'threading',
-    'sys'
+    'sys',
+    'zazu.config',
+    'zazu.git_helper',
+    'zazu.styler',
 ])
 
 __author__ = 'Nicholas Wiles'

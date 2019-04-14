@@ -29,6 +29,8 @@ def lazy_import(scope, imports):
             d = import_mock
             while len(modules) > 1:
                 d = {modules.pop(): d}
+            if modules[0] in scope:
+                continue
             scope[modules[0]] = LazyImport(**d)
         else:
             scope[modules[0]] = import_mock

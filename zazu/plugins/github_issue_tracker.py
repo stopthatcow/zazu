@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Clasess that adapt GitHub for use as a zazu IssueTracker."""
-import zazu.github_helper
-import zazu.issue_tracker
+"""Classes that adapt GitHub for use as a zazu IssueTracker."""
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'git',
     'github',
-    'os'
+    'os',
+    'zazu.github_helper',
+    'zazu.issue_tracker',
 ])
 
 __author__ = 'Nicholas Wiles'
