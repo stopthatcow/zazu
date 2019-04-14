@@ -31,8 +31,22 @@ def init(config):
     zazu.git_helper.install_git_hooks(config.repo_root)
 
 
+def complete_repo(ctx, args, incomplete):
+    """Completion function that completes repos from SCM hosts."""
+    paths = []
+    for host_name, host in zazu.config.Config().scm_hosts().iteritems():
+        try:
+            for r in host.repos():
+                path = '/'.join([host_name, r.id])
+                if incomplete in path:
+                    paths.append(path)
+        except IOError:
+            zazu.util.warn('unable to connect to "{}" SCM host.'.format(host_name))
+    return paths
+
+
 @repo.command()
-@click.argument('repository')
+@click.argument('repository', autocompletion=complete_repo)
 @click.argument('destination', required=False)
 @click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.option('--nosubmodules', is_flag=True, help='does not update submodules')

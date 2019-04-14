@@ -212,7 +212,7 @@ def start(config, name, no_verify, head, rename_flag, type):
         try:
             develop_is_current = develop_is_current_future.result()
         except (git.exc.GitCommandError, AttributeError):
-            click.secho('WARNING: unable to fetch from origin!', fg='red')
+            zazu.util.warn('unable to fetch from origin!')
             develop_is_current = True
     existing_branch = find_branch_with_id(repo, issue_descriptor.id)
     if existing_branch and not (rename_flag and repo.active_branch.name == existing_branch):

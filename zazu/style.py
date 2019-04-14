@@ -95,7 +95,7 @@ def styler_list(file, sets, keys):
 @zazu.config.pass_config
 @click.option('-v', '--verbose', is_flag=True, help='print files that are dirty')
 @click.option('--check', is_flag=True, help='only check the repo for style violations, do not correct them')
-@click.option('--cached', is_flag=True, help='only examine/fix files that are staged for CI commit')
+@click.option('--cached', is_flag=True, help='only examine/fix files that are staged for SCM commit')
 def style(config, verbose, check, cached):
     """Style repo files or check that they are valid style."""
     config.check_repo()
