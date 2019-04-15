@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Clasess that adapt GitHub for use as a zazu ScmHost."""
-import zazu.github_helper
-import zazu.scm_host
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'github',
-    'os'
+    'os',
+    'zazu.github_helper',
+    'zazu.scm_host',
 ])
 
 __author__ = 'Nicholas Wiles'

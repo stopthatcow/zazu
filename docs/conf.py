@@ -16,13 +16,13 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import zazu.build
 import datetime
 import git
 import os
 import sphinx_rtd_theme
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+import zazu.repo.commands  # noqa
 
 # -- General configuration ------------------------------------------------
 
@@ -56,7 +56,7 @@ author = u'Nicholas Wiles'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-semver = zazu.build.make_semver('../', 0)
+semver = zazu.repo.commands.make_semver('../', 0)
 pep440_version = zazu.build.pep440_from_semver(semver)
 version = '{}.{}.{}'.format(semver.major, semver.minor, semver.patch)
 if version == '0.0.0':

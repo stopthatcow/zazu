@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Clasess that adapt JIRA for use as a zazu IssueTracker."""
-import zazu.credential_helper
-import zazu.issue_tracker
+"""Classes that adapt JIRA for use as a zazu IssueTracker."""
 import zazu.util
 zazu.util.lazy_import(locals(), [
     'click',
     'jira',
-    're'
+    're',
+    'zazu.credential_helper',
+    'zazu.issue_tracker',
 ])
 
 __author__ = 'Nicholas Wiles'
