@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Classes that adapt GitHub for use as a zazu IssueTracker."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'git',
     'github',
     'os',

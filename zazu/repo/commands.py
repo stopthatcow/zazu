@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Holds the zazu repo subcommand."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'functools',
     'git',
@@ -11,6 +11,7 @@ zazu.util.lazy_import(locals(), [
     'zazu.config',
     'zazu.git_helper',
     'zazu.github_helper',
+    'zazu.util',
 ])
 
 __author__ = 'Nicholas Wiles'

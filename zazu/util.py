@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Utility functions for zazu."""
 
-import sys
 
 try:
     import readline  # NOQA
@@ -9,43 +8,8 @@ except ImportError:
     # This will be available on Windows
     import pyreadline  # NOQA
 
-
-def lazy_import(scope, imports):
-    """Declare a list of modules to import on their first use.
-
-    Args:
-        scope: the scope to import the modules into.
-        imports: the list of modules to import.
-
-    """
-    class LazyImport(object):
-
-        def __init__(self, **entries):
-            self.__dict__.update(entries)
-    if sys.version_info[0] < 3:
-        import zazu.imports
-        import_module = zazu.imports.lazyModule
-    else:
-        # Python 3 lazy imports do not yet work, so import them eagerly.
-        import importlib
-        import_module = importlib.import_module
-
-    for m in imports:
-        modules = m.split('.')
-        import_mock = import_module(m)
-
-        if len(modules) > 1:
-            d = import_mock
-            while len(modules) > 1:
-                d = {modules.pop(): d}
-            if modules[0] in scope:
-                continue
-            scope[modules[0]] = LazyImport(**d)
-        else:
-            scope[modules[0]] = import_mock
-
-
-lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'builtins',
     'click',
     'concurrent.futures',

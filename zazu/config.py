@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Config classes and methods for zazu."""
 
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'dict_recursive_update',
     'git',
@@ -27,6 +27,7 @@ zazu.util.lazy_import(locals(), [
     'zazu.plugins.eslint_styler',
     'zazu.plugins.generic_styler',
     'zazu.plugins.goimports_styler',
+    'zazu.util',
 ])
 
 __author__ = 'Nicholas Wiles'

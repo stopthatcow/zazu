@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ESLint plugin for zazu."""
-import zazu.styler
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'json',
     'os',

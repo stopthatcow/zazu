@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Styler class for zazu."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'functools',
-    'os'
+    'os',
+    'zazu.util'
 ])
 
 __author__ = 'Nicholas Wiles'

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Git functions for zazu."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'filecmp',
     'git',
     'os',
     'pkg_resources',
-    'shutil'
+    'shutil',
+    'zazu.util',
 ])
 
 

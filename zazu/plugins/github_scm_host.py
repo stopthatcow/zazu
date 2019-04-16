@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Clasess that adapt GitHub for use as a zazu ScmHost."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'github',
     'os',
     'zazu.github_helper',
