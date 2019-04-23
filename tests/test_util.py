@@ -132,13 +132,13 @@ def test_pick_single():
 
 def test_pick(monkeypatch):
     choices = ['one', 'two']
-    monkeypatch.setattr('inquirer.prompt', lambda x: {' ': choices[0]})
+    monkeypatch.setattr(inquirer, 'prompt', lambda x: {' ': choices[0]})
     assert zazu.util.pick(choices, 'foo') == choices[0]
 
 
 def test_pick_interupted(monkeypatch):
     choices = ['one', 'two']
-    monkeypatch.setattr('inquirer.prompt', lambda x: None)
+    monkeypatch.setattr(inquirer, 'prompt', lambda x: None)
     with pytest.raises(KeyboardInterrupt):
         zazu.util.pick(choices, 'foo')
 

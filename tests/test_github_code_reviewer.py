@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import tests.conftest
 import pytest
+import zazu.util
 import zazu.plugins.github_code_reviewer
 
 __author__ = "Nicholas Wiles"

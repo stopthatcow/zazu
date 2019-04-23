@@ -46,6 +46,8 @@ def test_github_issue_tracker_issue(mocker, mocked_github_issue_tracker):
 
 
 def test_github_issue_tracker_issue_error(mocker, mocked_github_issue_tracker):
+    print("mocker.Mock {}".format(mocker.Mock))
+    print('github.GithubException {}'.format(github.GithubException))
     mocked_github_issue_tracker._github.get_issue = mocker.Mock(side_effect=github.GithubException(404, {}))
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
         mocked_github_issue_tracker.issue('1')

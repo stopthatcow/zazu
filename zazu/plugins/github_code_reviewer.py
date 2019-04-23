@@ -6,6 +6,7 @@ zazu.imports.lazy_import(locals(), [
     'github',
     'os',
     'zazu.code_reviewer',
+    'zazu.git_helper',
     'zazu.plugins.github_issue_tracker',
 ])
 
