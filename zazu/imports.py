@@ -5,9 +5,8 @@ import importlib
 import sys
 from types import ModuleType
 try:
-    from importlib._bootstrap import _ImportLockContext
     reload = importlib.reload
-except (ImportError, AttributeError):
+except AttributeError:
     import imp
 
     class _ImportLockContext:
