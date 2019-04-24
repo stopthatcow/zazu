@@ -15,7 +15,7 @@ import time
 import zazu.util
 try:
     import __builtin__ as builtins  # NOQA
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     import builtins  # NOQA
 
 __author__ = "Nicholas Wiles"
