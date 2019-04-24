@@ -16,7 +16,7 @@ __copyright__ = 'Copyright 2016'
 class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for GitHub."""
 
-    def __init__(self, owner, repo):
+    def __init__(self, owner, repo, url=None):
         """Create a GitHubIssueTracker.
 
         Args:
@@ -26,6 +26,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         """
         self._owner = owner
         self._repo = repo
+        self._url = url
         self._github_handle = None
         self._user = None
 
@@ -35,7 +36,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _github(self):
         if self._github_handle is None:
-            self._github_handle = zazu.github_helper.make_gh()
+            self._github_handle = zazu.github_helper.make_gh(self._url)
         return self._github_handle
 
     def _github_repo(self):
@@ -117,6 +118,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
         # Get URL from current git repo:
         owner = config.get('owner', None)
         repo_name = config.get('repo', None)
+        github_url = config.get('url', None)
         if owner is None or repo_name is None:
             repo = git.Repo(zazu.git_helper.get_repo_root(os.getcwd()))
             try:
@@ -124,7 +126,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
             except AttributeError:
                 raise zazu.issue_tracker.IssueTrackerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
-        return GitHubIssueTracker(owner, repo_name)
+        return GitHubIssueTracker(owner, repo_name, github_url)
 
     @staticmethod
     def type():

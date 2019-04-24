@@ -17,8 +17,10 @@ __copyright__ = 'Copyright 2016'
 GITHUB_API_URL = 'https://api.github.com'
 
 
-def make_gh_token(api_url=GITHUB_API_URL):
+def make_gh_token(api_url=None):
     """Make new GitHub token."""
+    if api_url is None:
+        api_url = GITHUB_API_URL
     add_auth = {
         'scopes': [
             'repo'
@@ -47,8 +49,10 @@ def make_gh_token(api_url=GITHUB_API_URL):
     return token
 
 
-def make_gh(api_url=GITHUB_API_URL):
+def make_gh(api_url=None):
     """Make github object with token from the keychain."""
+    if api_url is None:
+        api_url = GITHUB_API_URL
     import keyring  # For some reason this doesn't play nicely with threads on lazy import.
     gh = None
     token = keyring.get_password(api_url, 'token')
@@ -58,10 +62,10 @@ def make_gh(api_url=GITHUB_API_URL):
         try:
             if token is None:
                 token = make_gh_token(api_url)
-                gh = github.Github(token)
+                gh = github.Github(base_url=api_url, login_or_token=token)
                 keyring.set_password(api_url, 'token', token)
             else:
-                gh = github.Github(token)
+                gh = github.Github(base_url=api_url, login_or_token=token)
         except github.BadCredentialsException:
             click.echo("GitHub token rejected, you will need to create a new token.")
             token = None
