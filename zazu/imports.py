@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 """Lazy module importing for zazu."""
 
+import imp
 import importlib
 import sys
 from types import ModuleType
 try:
     reload = importlib.reload
 except AttributeError:
-    import imp
+    pass
 
-    class _ImportLockContext:
-        """Python 2.7 compatible _ImportLockContext."""
 
-        def __enter__(self):
-            imp.acquire_lock()
+class _ImportLockContext:
+    """Context manager to aquire and release the import lock."""
 
-        def __exit__(self, exc_type, exc_value, exc_traceback):
-            imp.release_lock()
+    def __enter__(self):
+        imp.acquire_lock()
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        imp.release_lock()
 
 
 def debug_print(string):
