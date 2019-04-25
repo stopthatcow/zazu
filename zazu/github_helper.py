@@ -9,6 +9,7 @@ zazu.imports.lazy_import(locals(), [
     'requests',
     'socket',
     'zazu.util',
+    'zazu.credential_helper',
 ])
 
 __author__ = 'Nicholas Wiles'
