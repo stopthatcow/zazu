@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """Style functions for zazu."""
-import zazu.config
-import zazu.git_helper
-import zazu.styler
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'difflib',
     'functools',
     'os',
     'threading',
-    'sys'
+    'sys',
+    'zazu.config',
+    'zazu.git_helper',
+    'zazu.styler',
+    'zazu.util'
 ])
 
 __author__ = 'Nicholas Wiles'
@@ -63,7 +64,8 @@ def stage_patch(path, input_string, styled_string):
             # the patch will fail to apply.
             raise click.ClickException('File "{}" must have a trailing newline'.format(path))
         with git_lock:
-            zazu.util.check_popen(args=['git', 'apply', '--cached', '--verbose', '-'], stdin_str=patch_string)
+            zazu.util.check_popen(args=['git', 'apply', '--cached', '--verbose', '-'], stdin_str=patch_string,
+                                  universal_newlines=True)
 
 
 def style_file(stylers, path, read_fn, write_fn):
@@ -99,7 +101,6 @@ def styler_list(file, sets, keys):
 def style(config, verbose, check, cached):
     """Style repo files or check that they are valid style."""
     config.check_repo()
-    file_count = 0
     violation_count = 0
     stylers = config.stylers()
     fixed_ok_tags = [click.style('FIXED', fg='red', bold=True), click.style(' OK  ', fg='green', bold=True)]

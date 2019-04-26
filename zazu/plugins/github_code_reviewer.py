@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """Enables code review using github."""
-import zazu.code_reviewer
-import zazu.plugins.github_issue_tracker
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'git',
     'github',
-    'os'
+    'os',
+    'zazu.code_reviewer',
+    'zazu.git_helper',
+    'zazu.plugins.github_issue_tracker',
 ])
 
 __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2017'
 
 
-class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
+class CodeReviewer(zazu.code_reviewer.CodeReviewer):
     """Implements zazu code review interface for GitHub."""
 
     def __init__(self, owner, repo, url=None):
@@ -80,7 +81,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
             except AttributeError:
                 raise zazu.code_reviewer.CodeReviewerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
-        return GitHubCodeReviewer(owner, repo_name, github_url)
+        return CodeReviewer(owner, repo_name, github_url)
 
     @staticmethod
     def type():

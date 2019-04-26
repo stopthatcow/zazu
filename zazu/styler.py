@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Styler class for zazu."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'functools',
-    'os'
+    'os',
+    'zazu.util'
 ])
 
 __author__ = 'Nicholas Wiles'
@@ -37,11 +38,11 @@ class Styler(object):
             filepath (str): the filepath of the file being styled
 
         Returns:
-            Styled string.
+            Styled string (str).
 
         """
         args = [self.command] + self.options
-        return zazu.util.check_popen(args=args, stdin_str=string)
+        return zazu.util.check_popen(args=args, stdin_str=string, universal_newlines=True)
 
     @classmethod
     def from_config(cls, config, excludes, includes):

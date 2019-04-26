@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Update command for zazu."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'subprocess',
     'sys'

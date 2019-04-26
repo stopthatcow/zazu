@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import conftest
+import tests.conftest as conftest
 import copy
 import github
 import pytest
@@ -13,7 +13,7 @@ __copyright__ = "Copyright 2016"
 
 @pytest.fixture
 def tracker_mock():
-    return zazu.plugins.github_issue_tracker.GitHubIssueTracker('stopthatcow', 'zazu')
+    return zazu.plugins.github_issue_tracker.IssueTracker('stopthatcow', 'zazu')
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def mocked_github_issue_tracker(mocker, tracker_mock):
     github_mock = mocker.Mock('github.Github', autospec=True)
     mocker.patch('zazu.github_helper.make_gh', return_value=github_mock)
     repo_obj_mock = mocker.Mock('github.Repository', autospec=True)
-    mocker.patch('zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo', return_value=repo_obj_mock)
+    mocker.patch('zazu.plugins.github_issue_tracker.IssueTracker._github_repo', return_value=repo_obj_mock)
     tracker_mock._github = repo_obj_mock
     return tracker_mock
 
@@ -62,13 +62,13 @@ def test_github_issue_tracker_create_issue_error(mocker, mocked_github_issue_tra
 def test_github_issue_tracker_create_issue(mocker, mocked_github_issue_tracker):
     mocked_github_issue_tracker._github.create_issue = mocker.Mock(return_value=mock_issue)
     mocked_github_issue_tracker.create_issue('project', 'issue_type', 'summary', 'description', 'component')
-    zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo.create_issue.call_count == 1
+    zazu.plugins.github_issue_tracker.IssueTracker._github_repo.create_issue.call_count == 1
 
 
 def test_github_issue_tracker_list_issues(mocker, mocked_github_issue_tracker):
     mocked_github_issue_tracker._github.get_issues = mocker.Mock(return_value=[mock_issue])
     mocked_github_issue_tracker.get_issues = mocker.Mock()
-    zazu.plugins.github_issue_tracker.GitHubIssueTracker._github_repo.get_issues.call_count == 1
+    zazu.plugins.github_issue_tracker.IssueTracker._github_repo.get_issues.call_count == 1
 
 
 def test_github_issue_tracker_list_issues_error(mocker, mocked_github_issue_tracker):
@@ -81,7 +81,7 @@ def test_github_issue_tracker_list_issues_error(mocker, mocked_github_issue_trac
 def test_from_config_no_project(git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
         with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
-            zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({})
+            zazu.plugins.github_issue_tracker.IssueTracker.from_config({})
         assert str(e.value) == 'No "origin" remote specified for this repo'
 
 
@@ -98,18 +98,19 @@ def test_github_issue_tracker_get_repo(mocker, tracker_mock):
 
 def test_from_config(git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
-        uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({'owner': 'stopthatcow',
-                                                                                'repo': 'zazu'})
+        uut = zazu.plugins.github_issue_tracker.IssueTracker.from_config({'owner': 'stopthatcow',
+                                                                          'repo': 'zazu'})
         assert uut._owner == 'stopthatcow'
         assert uut._repo == 'zazu'
         assert not uut.default_project()
         assert ['issue'] == uut.issue_types()
         assert [] == uut.issue_components()
+        assert uut.type() == 'github'
 
 
 def test_from_config_from_origin(repo_with_github_as_origin):
     with zazu.util.cd(repo_with_github_as_origin.working_tree_dir):
-        uut = zazu.plugins.github_issue_tracker.GitHubIssueTracker.from_config({})
+        uut = zazu.plugins.github_issue_tracker.IssueTracker.from_config({})
         assert uut._owner == 'stopthatcow'
         assert uut._repo == 'zazu'
         assert not uut.default_project()

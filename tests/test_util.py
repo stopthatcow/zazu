@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+try:
+    import importlib
+    reload = importlib.reload
+except (ImportError, AttributeError):
+    pass
 import click
 import functools
 import inquirer
@@ -127,13 +132,13 @@ def test_pick_single():
 
 def test_pick(monkeypatch):
     choices = ['one', 'two']
-    monkeypatch.setattr('inquirer.prompt', lambda x: {' ': choices[0]})
+    monkeypatch.setattr(inquirer, 'prompt', lambda x: {' ': choices[0]})
     assert zazu.util.pick(choices, 'foo') == choices[0]
 
 
 def test_pick_interupted(monkeypatch):
     choices = ['one', 'two']
-    monkeypatch.setattr('inquirer.prompt', lambda x: None)
+    monkeypatch.setattr(inquirer, 'prompt', lambda x: None)
     with pytest.raises(KeyboardInterrupt):
         zazu.util.pick(choices, 'foo')
 
@@ -172,7 +177,7 @@ def test_dict_update_nested():
 
 
 def test_readline_fallback(mocker):
-    old_import = __import__
+    old_import = builtins.__import__
 
     def new_import(*args, **kwargs):
         if args[0] == 'readline':
@@ -182,7 +187,12 @@ def test_readline_fallback(mocker):
         else:
             return old_import(*args, **kwargs)
 
-    mocker.patch('__builtin__.__import__', side_effect=new_import)
+    # Dance around python 2.7 vs 3:
+    try:
+        mocker.patch('builtins.__import__', side_effect=new_import)
+    except AttributeError:
+        mocker.patch('__builtin__.__import__', side_effect=new_import)
+
     reload(zazu.util)
     imports = [arg[0][0] for arg in builtins.__import__.call_args_list]
     assert 'readline' in imports
@@ -196,13 +206,25 @@ def test_cd(tmp_dir):
     assert os.getcwd() == old_dir
 
 
+def wait(t):
+    time.sleep(t)
+    return t
+
+
 def test_dispatch():
-    def wait(t):
-        time.sleep(t)
-        return t
     times = [0.1, 0.2, 0.3]
     work = [functools.partial(wait, t) for t in times]
     start_time = time.time()
     assert sorted(zazu.util.dispatch(work)) == sorted(times)
     time_taken = time.time() - start_time
     assert time_taken < sum(times)
+
+
+def test_async_do():
+    start_time = time.time()
+    result = zazu.util.async_do(wait, 0.2)
+    time_taken = time.time() - start_time
+    assert time_taken < 0.1
+    assert result.result() == 0.2
+    time_taken = time.time() - start_time
+    assert time_taken >= 0.2

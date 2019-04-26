@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
 import click.testing
-import conftest
+import tests.conftest as conftest
 import pytest
 import webbrowser
 import zazu.cli

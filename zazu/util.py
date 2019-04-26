@@ -7,34 +7,8 @@ except ImportError:
     # This will be available on Windows
     import pyreadline  # NOQA
 
-
-def lazy_import(scope, imports):
-    """Declare a list of modules to import on their first use.
-
-    Args:
-        scope: the scope to import the modules into.
-        imports: the list of modules to import.
-
-    """
-    class LazyImport(object):
-
-        def __init__(self, **entries):
-            self.__dict__.update(entries)
-    import peak.util.imports
-    assert peak.util.imports
-    for i in imports:
-        modules = i.split('.')
-        import_mock = peak.util.imports.lazyModule(i)
-        if len(modules) > 1:
-            d = import_mock
-            while len(modules) > 1:
-                d = {modules.pop(): d}
-            scope[modules[0]] = LazyImport(**d)
-        else:
-            scope[modules[0]] = import_mock
-
-
-lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'builtins',
     'click',
     'concurrent.futures',
@@ -67,12 +41,12 @@ def call(*args, **kwargs):
         raise_uninstalled(args[0])
 
 
-def check_popen(args, stdin_str='', *other_args, **kwargs):
+def check_popen(args, stdin_str=None, *other_args, **kwargs):
     """Like subprocess.Popen but raises an exception if the program cannot be found.
 
     Args:
         args: passed to Popen.
-        stdinput_str: a string that will be sent to std input via communicate().
+        stdin_str: a str/bytes that will be sent to std input via communicate().
         other_args: other arguments passed to Popen.
         kwargs: other kwargs passed to Popen.
     Raises:
@@ -124,7 +98,7 @@ def dispatch(work):
             yield future.result()
 
 
-def async(call, *args, **kwargs):
+def async_do(call, *args, **kwargs):
     """Dispatch a call asynchronously and return the future.
 
     Args:
@@ -278,7 +252,7 @@ def unflatten_dict(d, separator='.'):
 
     """
     ret = dict()
-    for key, value in d.iteritems():
+    for key, value in d.items():
         parts = key.split(separator)
         d = ret
         for part in parts[:-1]:

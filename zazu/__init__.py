@@ -10,10 +10,11 @@ class LazyVersion(object):
     def __str__(self):
         """Load version information from version.txt file."""
         import pkg_resources
+        import sys
         version_file_path = pkg_resources.resource_filename('zazu', 'version.txt')
         with open(version_file_path, 'r') as version_file:
             version = version_file.readline().rstrip()
-        return version
+        return '{} (Python {}.{}.{})'.format(version, *sys.version_info[:3])
 
 
 __version__ = LazyVersion()

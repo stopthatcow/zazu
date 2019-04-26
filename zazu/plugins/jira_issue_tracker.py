@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Clasess that adapt JIRA for use as a zazu IssueTracker."""
-import zazu.credential_helper
-import zazu.issue_tracker
-import zazu.util
-zazu.util.lazy_import(locals(), [
+"""Classes that adapt JIRA for use as a zazu IssueTracker."""
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'jira',
-    're'
+    're',
+    'zazu.credential_helper',
+    'zazu.issue_tracker',
+    'zazu.util',
 ])
 
 __author__ = 'Nicholas Wiles'
@@ -17,7 +18,7 @@ ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
 JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
 
 
-class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
+class IssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for JIRA."""
 
     def __init__(self, base_url, default_project, components):
@@ -166,7 +167,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         components = config.get('component', None)
         if not isinstance(components, list):
             components = [components]
-        return JiraIssueTracker(url, project, components)
+        return IssueTracker(url, project, components)
 
     @staticmethod
     def type():

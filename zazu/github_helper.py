@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Github functions for zazu."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'getpass',
     'github',
     're',
     'requests',
-    'socket'
+    'socket',
+    'zazu.util',
+    'zazu.credential_helper',
 ])
 
 __author__ = 'Nicholas Wiles'

@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 """Clasess that adapt GitHub for use as a zazu ScmHost."""
-import zazu.github_helper
-import zazu.scm_host
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'github',
-    'os'
+    'os',
+    'zazu.github_helper',
+    'zazu.scm_host',
 ])
 
 __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
 
 
-class GitHubScmHost(zazu.scm_host.ScmHost):
+class ScmHost(zazu.scm_host.ScmHost):
     """Implements zazu SCM host interface for GitHub."""
 
     def __init__(self, user, url=None):
-        """Create a GitHubScmHost.
+        """Create a ScmHost for GitHub.
 
         Args:
             user (str): the github username.
@@ -47,8 +47,8 @@ class GitHubScmHost(zazu.scm_host.ScmHost):
     def from_config(config):
         """Make a GitHubScmHost from a config."""
         # Get URL from current git repo:
-        return GitHubScmHost(user=config['user'],
-                             url=config.get('url', None))
+        return ScmHost(user=config['user'],
+                       url=config.get('url', None))
 
     @staticmethod
     def type():

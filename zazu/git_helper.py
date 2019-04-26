@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Git functions for zazu."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'filecmp',
     'git',
     'os',
     'pkg_resources',
-    'shutil'
+    'shutil',
+    'zazu.util',
 ])
 
 
@@ -92,4 +93,4 @@ def merged_branches(repo, target_branch, remote=False):
 
 def read_staged(path):
     """Read the contents of the staged version of the file."""
-    return zazu.util.check_output(['git', 'show', ':{}'.format(path)])
+    return zazu.util.check_output(['git', 'show', ':{}'.format(path)], universal_newlines=True)

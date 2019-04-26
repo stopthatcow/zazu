@@ -6,7 +6,7 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2018'
 
 
-class DocformatterStyler(zazu.styler.Styler):
+class Styler(zazu.styler.Styler):
     """Docformatter plugin for code styling."""
 
     @staticmethod

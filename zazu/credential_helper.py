@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Credential functions for zazu."""
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
-    'keyring'
+    'keyring',
+    'zazu.util',
 ])
 
 __author__ = 'Nicholas Wiles'

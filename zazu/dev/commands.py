@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """Dev subcommand for zazu."""
 
-import zazu.github_helper
-import zazu.config
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'concurrent.futures',
     'git',
     'os',
     'webbrowser',
     'textwrap',
-    'urllib'
+    'urllib',
+    'zazu.github_helper',
+    'zazu.config',
+    'zazu.util',
 ])
 
 __author__ = 'Nicholas Wiles'
@@ -198,7 +199,7 @@ def start(config, name, no_verify, head, rename_flag, type):
     # Fetch in the background.
     develop_branch_name = config.develop_branch_name()
     if not (head or rename_flag):
-        develop_is_current_future = zazu.util.async(branch_is_current, repo, develop_branch_name)
+        develop_is_current_future = zazu.util.async_do(branch_is_current, repo, develop_branch_name)
     if name is None:
         try:
             name = str(make_ticket(config.issue_tracker()))

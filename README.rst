@@ -163,12 +163,12 @@ The zazu.yaml file lives at the base of the repo and describes the integrations 
 
 ::
 
-    issueTracker:
+    issue_tracker:
         type: github
         owner: stopthatcow
         repo: zazu
 
-    codeReviewer:
+    code_reviewer:
         type: github
         owner: stopthatcow
         repo: zazu

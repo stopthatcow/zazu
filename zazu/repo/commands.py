@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """Holds the zazu repo subcommand."""
-import zazu.config
-import zazu.git_helper
-import zazu.github_helper
-import zazu.util
-zazu.util.lazy_import(locals(), [
+import zazu.imports
+zazu.imports.lazy_import(locals(), [
     'click',
     'functools',
     'git',
     'os',
     'semantic_version',
-    'socket'
+    'socket',
+    'zazu.config',
+    'zazu.git_helper',
+    'zazu.github_helper',
+    'zazu.util',
 ])
 
 __author__ = 'Nicholas Wiles'
@@ -34,7 +35,9 @@ def init(config):
 def complete_repo(ctx, args, incomplete):
     """Completion function that completes repos from SCM hosts."""
     paths = []
-    for host_name, host in zazu.config.Config().scm_hosts().iteritems():
+    scm_hosts = zazu.config.Config().scm_hosts()
+    for host_name in scm_hosts:
+        host = scm_hosts[host_name]
         try:
             for r in host.repos():
                 path = '/'.join([host_name, r.id])
@@ -42,7 +45,7 @@ def complete_repo(ctx, args, incomplete):
                     paths.append(path)
         except IOError:
             zazu.util.warn('unable to connect to "{}" SCM host.'.format(host_name))
-    return paths
+    return sorted(paths)
 
 
 @repo.command()
@@ -181,7 +184,7 @@ def parse_describe(repo_root):
         branch_name = repo.git.rev_parse(['--abbrev-ref', 'HEAD']).strip()
         # Get the list of tags that point to HEAD
         tag_result = repo.git.tag(['--points-at', 'HEAD'])
-        tags = filter(None, tag_result.strip().split('\n'))
+        tags = [t for t in tag_result.strip().split('\n') if t]
     except git.GitCommandError as e:
         raise click.ClickException(str(e))
 

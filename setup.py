@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import fastentrypoints  # Work around issue where setuptools creates very slow entry points for non-wheel distributions.
 import setuptools
 import os.path
 import sys
@@ -16,7 +17,7 @@ try:
     import zazu.repo.commands
     semver = zazu.repo.commands.make_semver('.')
     version = zazu.repo.commands.pep440_from_semver(semver)
-except ImportError:
+except:
     # Missing dependencies at this point.
     version = '0.0.0'
 
@@ -36,12 +37,18 @@ setuptools.setup(
     url='https://github.com/stopthatcow/zazu',
     license='MIT',
     platforms='POSIX,MacOS,Windows',
+    # Python 2.7 and 3.6+ are supported.
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Software Development',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Quality Assurance',
@@ -55,17 +62,15 @@ setuptools.setup(
                       'jira>=1.0.11',                  # BSD
                       'GitPython>=2.1.8',              # BSD
                       'dict-recursive-update>=1.0.1',  # MIT
-                      'ruamel.yaml<=0.15',             # MIT
-                      'keyring<=8.0',                  # MIT
+                      'ruamel.yaml>0.15',              # MIT
+                      'keyring>=18.0.1',               # MIT
                       'keyrings.alt>=2.3',             # MIT
                       'autopep8>=1.3.4',               # MIT
                       'docformatter>=1.0',             # Expat
                       'semantic_version>=2.6.0',       # BSD
                       'future>=0.16.0',                # MIT
-                      'futures>=3.2.0',                # PSF
-                      'inquirer>=2.2.0',               # MIT
-                      'Importing>=1.10',               # PSF
-                      'straight.plugin>=1.5.0'],       # MIT
+                      'futures>=3.2.0 ; python_version<"3.0"',  # PSF
+                      'inquirer>=2.2.0'],              # MIT
     extras_require={
         ':sys_platform == "win32"': [
             'pyreadline>=2.1'                          # BSD
