@@ -13,7 +13,7 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
 
 
-class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
+class IssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for GitHub."""
 
     def __init__(self, owner, repo, url=None):
@@ -126,7 +126,7 @@ class GitHubIssueTracker(zazu.issue_tracker.IssueTracker):
             except AttributeError:
                 raise zazu.issue_tracker.IssueTrackerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
-        return GitHubIssueTracker(owner, repo_name, github_url)
+        return IssueTracker(owner, repo_name, github_url)
 
     @staticmethod
     def type():

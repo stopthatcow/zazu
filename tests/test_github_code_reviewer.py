@@ -51,7 +51,7 @@ class MockGitHub(object):
 def test_github_issue_tracker_auto_url(repo_with_github_as_origin):
     dir = repo_with_github_as_origin.working_tree_dir
     with zazu.util.cd(dir):
-        uut = zazu.plugins.github_code_reviewer.GitHubCodeReviewer.from_config({})
+        uut = zazu.plugins.github_code_reviewer.CodeReviewer.from_config({})
         assert uut._owner == 'stopthatcow'
         assert uut._repo == 'zazu'
 
@@ -60,7 +60,7 @@ def test_github_issue_tracker_no_origin(git_repo):
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         with pytest.raises(zazu.code_reviewer.CodeReviewerError):
-            zazu.plugins.github_code_reviewer.GitHubCodeReviewer.from_config({})
+            zazu.plugins.github_code_reviewer.CodeReviewer.from_config({})
 
 
 mock_review_dict = {
@@ -108,8 +108,8 @@ class MockGithubIssue(zazu.plugins.github_issue_tracker.GitHubIssueAdaptor):
 
 def test_github_issue_tracker(mocker):
     mocker.patch('zazu.github_helper.make_gh', return_value=MockGitHub())
-    uut = zazu.plugins.github_code_reviewer.GitHubCodeReviewer.from_config({'owner': 'foo',
-                                                                            'repo': 'bar'})
+    uut = zazu.plugins.github_code_reviewer.CodeReviewer.from_config({'owner': 'foo',
+                                                                      'repo': 'bar'})
     assert uut._owner == 'foo'
     assert uut._repo == 'bar'
     uut.connect()

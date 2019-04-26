@@ -12,11 +12,11 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
 
 
-class GitHubScmHost(zazu.scm_host.ScmHost):
+class ScmHost(zazu.scm_host.ScmHost):
     """Implements zazu SCM host interface for GitHub."""
 
     def __init__(self, user, url=None):
-        """Create a GitHubScmHost.
+        """Create a ScmHost for GitHub.
 
         Args:
             user (str): the github username.
@@ -47,8 +47,8 @@ class GitHubScmHost(zazu.scm_host.ScmHost):
     def from_config(config):
         """Make a GitHubScmHost from a config."""
         # Get URL from current git repo:
-        return GitHubScmHost(user=config['user'],
-                             url=config.get('url', None))
+        return ScmHost(user=config['user'],
+                       url=config.get('url', None))
 
     @staticmethod
     def type():

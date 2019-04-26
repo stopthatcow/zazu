@@ -18,7 +18,7 @@ ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
 JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
 
 
-class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
+class IssueTracker(zazu.issue_tracker.IssueTracker):
     """Implements zazu issue tracker interface for JIRA."""
 
     def __init__(self, base_url, default_project, components):
@@ -167,7 +167,7 @@ class JiraIssueTracker(zazu.issue_tracker.IssueTracker):
         components = config.get('component', None)
         if not isinstance(components, list):
             components = [components]
-        return JiraIssueTracker(url, project, components)
+        return IssueTracker(url, project, components)
 
     @staticmethod
     def type():
