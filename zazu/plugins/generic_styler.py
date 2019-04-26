@@ -6,7 +6,7 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2018'
 
 
-class GenericStyler(zazu.styler.Styler):
+class Styler(zazu.styler.Styler):
     """GenericStyler plugin for code styling."""
 
     @staticmethod

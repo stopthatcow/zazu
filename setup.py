@@ -70,8 +70,7 @@ setuptools.setup(
                       'semantic_version>=2.6.0',       # BSD
                       'future>=0.16.0',                # MIT
                       'futures>=3.2.0 ; python_version<"3.0"',  # PSF
-                      'inquirer>=2.2.0',               # MIT
-                      'straight.plugin>=1.5.0'],       # MIT
+                      'inquirer>=2.2.0'],              # MIT
     extras_require={
         ':sys_platform == "win32"': [
             'pyreadline>=2.1'                          # BSD

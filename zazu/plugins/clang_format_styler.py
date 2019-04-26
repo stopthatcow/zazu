@@ -6,7 +6,7 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2017'
 
 
-class ClangFormatStyler(zazu.styler.Styler):
+class Styler(zazu.styler.Styler):
     """ClangFormat plugin for code styling."""
 
     @staticmethod

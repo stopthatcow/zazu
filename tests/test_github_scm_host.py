@@ -11,7 +11,7 @@ __copyright__ = "Copyright 2016"
 
 @pytest.fixture
 def scm_host_mock(mocker):
-    return zazu.plugins.github_scm_host.GitHubScmHost('stopthatcow')
+    return zazu.plugins.github_scm_host.ScmHost('stopthatcow')
 
 
 mock_repo_dict = {
@@ -52,9 +52,10 @@ def test_github_scm_host_get_repos_error(mocker, scm_host_mock):
 
 def test_from_config(git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
-        uut = zazu.plugins.github_scm_host.GitHubScmHost.from_config({'user': 'stopthatcow',
-                                                                      'type': 'github'})
+        uut = zazu.plugins.github_scm_host.ScmHost.from_config({'user': 'stopthatcow',
+                                                                'type': 'github'})
         assert uut._user == 'stopthatcow'
+        assert uut.type() == 'github'
 
 
 def test_github_scm_host_repo_adaptor():

@@ -12,7 +12,7 @@ __copyright__ = "Copyright 2016"
 
 @pytest.fixture
 def tracker_mock():
-    return zazu.plugins.jira_issue_tracker.JiraIssueTracker('https://jira', 'ZZ', None)
+    return zazu.plugins.jira_issue_tracker.IssueTracker('https://jira', 'ZZ', None)
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ JIRA_ADDRESS = 'https://jira'
 def test_jira_issue_tracker(mocker):
     mocker.patch('zazu.credential_helper.get_user_pass_credentials', return_value=('user', 'pass'))
     mocker.patch('jira.JIRA', autospec=True)
-    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
+    uut = zazu.plugins.jira_issue_tracker.IssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
     uut.connect()
     assert uut.default_project() == 'ZZ'
     assert uut.issue_components() == ['comp']
@@ -70,7 +70,7 @@ def test_jira_issue_tracker(mocker):
 def test_jira_issue_tracker_bad_credentials(mocker):
     mocker.patch('zazu.credential_helper.get_user_pass_credentials', side_effect=[('user', 'pass'), ('user', 'pass2')])
     mocker.patch('jira.JIRA', autospec=True, side_effect=[jira.JIRAError(status_code=401), object()])
-    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
+    uut = zazu.plugins.jira_issue_tracker.IssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
     uut.connect()
     calls = zazu.credential_helper.get_user_pass_credentials.call_args_list
     assert calls[0] == mocker.call(JIRA_ADDRESS, use_saved=True)
@@ -80,7 +80,7 @@ def test_jira_issue_tracker_bad_credentials(mocker):
 def test_jira_issue_tracker_exception(mocker):
     mocker.patch('zazu.credential_helper.get_user_pass_credentials', return_value=('user', 'pass'))
     mocker.patch('jira.JIRA', autospec=True, side_effect=jira.JIRAError(status_code=400))
-    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
+    uut = zazu.plugins.jira_issue_tracker.IssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
         uut.connect()
         assert '400' in str(e.value)
@@ -131,21 +131,21 @@ def test_jira_list_issues(mocker, mocked_jira_issue_tracker):
 
 
 def test_jira_issue_tracker_no_components(mocker):
-    uut = zazu.plugins.jira_issue_tracker.JiraIssueTracker.from_config({'url': 'https://jira',
-                                                                        'project': 'ZZ'})
+    uut = zazu.plugins.jira_issue_tracker.IssueTracker.from_config({'url': 'https://jira',
+                                                                    'project': 'ZZ'})
     uut._jira_handle = mocker.Mock('jira.JIRA', autospec=True)
     assert uut.issue_components() == [None]
 
 
 def test_from_config_no_project():
     with pytest.raises(zazu.ZazuException) as e:
-        zazu.plugins.jira_issue_tracker.JiraIssueTracker.from_config({'url': 'https://jira'})
+        zazu.plugins.jira_issue_tracker.IssueTracker.from_config({'url': 'https://jira'})
     assert str(e.value) == 'Jira config requires a "project" field'
 
 
 def test_from_config_no_url():
     with pytest.raises(zazu.ZazuException) as e:
-        zazu.plugins.jira_issue_tracker.JiraIssueTracker.from_config({'project': 'ZZ'})
+        zazu.plugins.jira_issue_tracker.IssueTracker.from_config({'project': 'ZZ'})
     assert str(e.value) == 'Jira config requires a "url" field'
 
 

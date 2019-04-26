@@ -14,7 +14,7 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2017'
 
 
-class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
+class CodeReviewer(zazu.code_reviewer.CodeReviewer):
     """Implements zazu code review interface for GitHub."""
 
     def __init__(self, owner, repo, url=None):
@@ -81,7 +81,7 @@ class GitHubCodeReviewer(zazu.code_reviewer.CodeReviewer):
             except AttributeError:
                 raise zazu.code_reviewer.CodeReviewerError('No "origin" remote specified for this repo')
             owner, repo_name = zazu.github_helper.parse_github_url(remote.url)
-        return GitHubCodeReviewer(owner, repo_name, github_url)
+        return CodeReviewer(owner, repo_name, github_url)
 
     @staticmethod
     def type():

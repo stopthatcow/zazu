@@ -42,7 +42,7 @@ def repo_with_style_errors(repo_with_style):
 
 def test_astyle(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
-    styler = zazu.plugins.astyle_styler.AstyleStyler(options=['-U'])
+    styler = zazu.plugins.astyle_styler.Styler(options=['-U'])
     ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['astyle', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
@@ -53,20 +53,23 @@ def test_astyle(mocker):
                                            '*.h',
                                            '*.hpp',
                                            '*.java']
+    assert styler.type() == 'astyle'
 
 
 def test_autopep8():
-    styler = zazu.plugins.autopep8_styler.Autopep8Styler()
+    styler = zazu.plugins.autopep8_styler.Styler()
     ret = styler.style_string('def foo ():\n  pass', None)
     assert ret == 'def foo():\n    pass\n'
     assert ['*.py'] == styler.default_extensions()
+    assert styler.type() == 'autopep8'
 
 
 def test_docformatter():
-    styler = zazu.plugins.docformatter_styler.DocformatterStyler()
+    styler = zazu.plugins.docformatter_styler.Styler()
     ret = styler.style_string('def foo ():\n"""doc"""\n  pass', None)
     assert ret == 'def foo ():\n"""doc"""\n  pass'
     assert ['*.py'] == styler.default_extensions()
+    assert styler.type() == 'docformatter'
 
 
 def test_eslint(mocker):
@@ -83,7 +86,8 @@ def test_eslint(mocker):
     mock_popen = MockPopen()
     mocker.patch.object(MockPopen, 'communicate', return_value=('[{"output":"bar"}]', None))
     mocker.patch('subprocess.Popen', return_value=mock_popen)
-    styler = zazu.plugins.eslint_styler.ESLintStyler(options=['--color'])
+    styler = zazu.plugins.eslint_styler.Styler(options=['--color'])
+    assert styler.type() == 'eslint'
     ret = styler.style_string('foo', 'baz')
     subprocess.Popen.assert_called_once_with(
         args=['eslint', '-f', 'json', '--fix-dry-run', '--stdin', '--stdin-filename', 'baz', '--color'],
@@ -120,38 +124,42 @@ def test_eslint(mocker):
 
 def test_goimports(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
-    styler = zazu.plugins.goimports_styler.GoimportsStyler(options=['-U'])
+    styler = zazu.plugins.goimports_styler.Styler(options=['-U'])
     ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['goimports', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.go']
+    assert styler.type() == 'goimports'
 
 
 def test_generic(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
-    styler = zazu.plugins.generic_styler.GenericStyler(command='sed', options=['-U'])
+    styler = zazu.plugins.generic_styler.Styler(command='sed', options=['-U'])
     ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['sed', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
     assert styler.default_extensions() == []
+    assert styler.type() == 'generic'
 
 
 def test_esformatter(mocker):
     mocker.patch('zazu.util.check_popen', return_value='bar')
-    styler = zazu.plugins.esformatter_styler.EsformatterStyler(options=['-U'])
+    styler = zazu.plugins.esformatter_styler.Styler(options=['-U'])
     ret = styler.style_string('foo', None)
     zazu.util.check_popen.assert_called_once_with(args=['esformatter', '-U'], stdin_str='foo', universal_newlines=True)
     assert ret == 'bar'
     assert styler.default_extensions() == ['*.js', '*.es', '*.es6']
+    assert styler.type() == 'esformatter'
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),
                     reason="requires clang-format")
 def test_clang_format():
-    styler = zazu.plugins.clang_format_styler.ClangFormatStyler(options=['-style=google'])
+    styler = zazu.plugins.clang_format_styler.Styler(options=['-style=google'])
     ret = styler.style_string('void  main ( ) { }', None)
     assert ret == 'void main() {}'
     assert styler.default_extensions()
+    assert styler.type() == 'clang-format'
 
 
 @pytest.mark.skipif(not distutils.spawn.find_executable('clang-format'),

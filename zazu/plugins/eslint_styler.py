@@ -12,7 +12,7 @@ __author__ = "Patrick Moore"
 __copyright__ = "Copyright 2018"
 
 
-class ESLintStyler(zazu.styler.Styler):
+class Styler(zazu.styler.Styler):
     """ESLint plugin for code styling."""
 
     def style_string(self, string, filepath):

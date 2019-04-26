@@ -15,7 +15,7 @@ __copyright__ = "Copyright 2016"
 
 @pytest.fixture()
 def temp_user_config(tmp_dir):
-    config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
+    config = {'scm_host': {'gh': {'type': 'github', 'user': 'user'}}}
     path = os.path.join(tmp_dir, '.zazuconfig.yaml')
     with open(path, 'w') as file:
         yaml.dump(config, file)
@@ -34,7 +34,7 @@ def empty_user_config(tmp_dir):
 def repo_with_invalid_issue_tracker(git_repo):
     root = git_repo.working_tree_dir
     config = {
-        'issueTracker': {
+        'issue_tracker': {
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
@@ -46,7 +46,7 @@ def repo_with_invalid_issue_tracker(git_repo):
 def repo_with_unknown_issue_tracker(git_repo):
     root = git_repo.working_tree_dir
     config = {
-        'issueTracker': {
+        'issue_tracker': {
             'type': 'foobar',
         }
     }
@@ -59,7 +59,7 @@ def repo_with_unknown_issue_tracker(git_repo):
 def repo_with_jira(git_repo):
     root = git_repo.working_tree_dir
     jira_config = {
-        'issueTracker': {
+        'issue_tracker': {
             'type': 'jira',
             'url': 'https://zazu.atlassian.net/',
             'project': 'TEST',
@@ -123,14 +123,14 @@ def test_unknown_styler():
 
 def test_unknown_scm_host():
     uut = zazu.config.Config('')
-    uut._user_config = {'scmHost': {'gh': {'type': ''}}}
+    uut._user_config = {'scm_host': {'gh': {'type': ''}}}
     with pytest.raises(click.ClickException):
         uut.scm_hosts()
 
 
 def test_no_type_scm_host():
     uut = zazu.config.Config('')
-    uut._user_config = {'scmHost': {'gh': {}}}
+    uut._user_config = {'scm_host': {'gh': {}}}
     with pytest.raises(click.ClickException):
         uut.scm_hosts()
 
@@ -154,7 +154,7 @@ def test_scm_host_repo(mocker, temp_user_config):
 
 def test_github_scm_host():
     uut = zazu.config.Config('')
-    uut._user_config = {'scmHost': {'gh': {'type': 'github', 'user': 'user'}}}
+    uut._user_config = {'scm_host': {'gh': {'type': 'github', 'user': 'user'}}}
     assert uut.scm_hosts()
     assert uut.scm_hosts()['gh']
     assert uut.default_scm_host() == 'gh'
@@ -162,28 +162,28 @@ def test_github_scm_host():
 
 def test_default_string_scm_host():
     uut = zazu.config.Config('')
-    uut._user_config = {'scmHost': {'default': 'gh2',
-                                    'gh': {'type': 'github', 'user': 'user'},
-                                    'gh2': {'type': 'github', 'user': 'user'}}}
+    uut._user_config = {'scm_host': {'default': 'gh2',
+                                     'gh': {'type': 'github', 'user': 'user'},
+                                     'gh2': {'type': 'github', 'user': 'user'}}}
     assert len(uut.scm_hosts()) == 2
     assert uut.default_scm_host() == 'gh2'
 
 
 def test_default_dict_scm_host():
     uut = zazu.config.Config('')
-    uut._user_config = {'scmHost': {'default': {'type': 'github', 'user': 'user'},
-                                    'gh': {'type': 'github', 'user': 'user'}}}
+    uut._user_config = {'scm_host': {'default': {'type': 'github', 'user': 'user'},
+                                     'gh': {'type': 'github', 'user': 'user'}}}
     assert len(uut.scm_hosts()) == 2
     assert uut.default_scm_host() == 'default'
 
 
 def test_bad_default_scm_host():
     uut = zazu.config.Config('')
-    uut._user_config = {'scmHost': {'default': 'foo',
-                                    'gh': {'type': 'github', 'user': 'user'}}}
+    uut._user_config = {'scm_host': {'default': 'foo',
+                                     'gh': {'type': 'github', 'user': 'user'}}}
     with pytest.raises(click.ClickException) as e:
         assert uut.default_scm_host()
-        assert str(e.value) == 'default scmHost \'foo\' not found'
+        assert str(e.value) == 'default scm_host \'foo\' not found'
 
 
 def test_github_user_config(mocker, temp_user_config):
@@ -216,7 +216,7 @@ def test_no_code_reviewer():
 
 def test_valid_code_reviewer():
     uut = zazu.config.Config('')
-    uut._project_config = {'codeReviewer': {'type': 'github'}}
+    uut._project_config = {'code_reviewer': {'type': 'github'}}
     assert uut.code_reviewer()
 
 
@@ -252,9 +252,9 @@ def test_config_list(mocker, temp_user_config):
     mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
     runner = click.testing.CliRunner()
     result = runner.invoke(zazu.cli.cli, ['config', '--list'])
-    assert result.output == '''scmHost.gh.type=github\nscmHost.gh.user=user\n'''
+    assert result.output == '''scm_host.gh.type=github\nscm_host.gh.user=user\n'''
     assert result.exit_code == 0
-    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    result = runner.invoke(zazu.cli.cli, ['config', 'scm_host.gh.user'])
     assert result.output == 'user\n'
     assert result.exit_code == 0
 
@@ -262,17 +262,17 @@ def test_config_list(mocker, temp_user_config):
 def test_config_add_unset(mocker, temp_user_config):
     mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
     runner = click.testing.CliRunner()
-    result = runner.invoke(zazu.cli.cli, ['config', '--unset', 'scmHost.gh.user'])
+    result = runner.invoke(zazu.cli.cli, ['config', '--unset', 'scm_host.gh.user'])
     assert result.exit_code == 0
-    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    result = runner.invoke(zazu.cli.cli, ['config', 'scm_host.gh.user'])
     assert result.exit_code != 0
-    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user', 'user'])
+    result = runner.invoke(zazu.cli.cli, ['config', 'scm_host.gh.user', 'user'])
     assert result.exit_code != 0
-    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    result = runner.invoke(zazu.cli.cli, ['config', 'scm_host.gh.user'])
     assert result.exit_code != 0
-    result = runner.invoke(zazu.cli.cli, ['config', '--add', 'scmHost.gh.user', 'user'])
+    result = runner.invoke(zazu.cli.cli, ['config', '--add', 'scm_host.gh.user', 'user'])
     assert result.exit_code == 0
-    result = runner.invoke(zazu.cli.cli, ['config', 'scmHost.gh.user'])
+    result = runner.invoke(zazu.cli.cli, ['config', 'scm_host.gh.user'])
     assert result.exit_code == 0
 
 
@@ -308,5 +308,5 @@ def test_alt_branch_names(git_repo):
 
 def test_complete_param(mocker, temp_user_config):
     mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
-    assert zazu.config.complete_param(None, [], '') == ['scmHost.gh.type', 'scmHost.gh.user']
+    assert zazu.config.complete_param(None, [], '') == ['scm_host.gh.type', 'scm_host.gh.user']
     assert zazu.config.complete_param(None, ['--add'], '') == []

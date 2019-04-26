@@ -6,7 +6,7 @@ __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
 
 
-class Autopep8Styler(zazu.styler.Styler):
+class Styler(zazu.styler.Styler):
     """Autopep8 plugin for code styling."""
 
     @staticmethod

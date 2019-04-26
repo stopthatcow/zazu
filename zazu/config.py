@@ -6,27 +6,15 @@ zazu.imports.lazy_import(locals(), [
     'click',
     'dict_recursive_update',
     'git',
+    'importlib',
     'os',
     'ruamel.yaml',
-    'straight.plugin',
     'subprocess',
     'sys',
     'zazu.code_reviewer',
     'zazu.git_helper',
     'zazu.issue_tracker',
     'zazu.scm_host',
-    'zazu.plugins.github_scm_host',
-    'zazu.plugins.github_issue_tracker',
-    'zazu.plugins.jira_issue_tracker',
-    'zazu.plugins.github_code_reviewer',
-    'zazu.plugins.astyle_styler',
-    'zazu.plugins.autopep8_styler',
-    'zazu.plugins.clang_format_styler',
-    'zazu.plugins.docformatter_styler',
-    'zazu.plugins.esformatter_styler',
-    'zazu.plugins.eslint_styler',
-    'zazu.plugins.generic_styler',
-    'zazu.plugins.goimports_styler',
     'zazu.util',
 ])
 
@@ -39,7 +27,7 @@ PROJECT_FILE_NAMES = ['zazu.yaml', '.zazu.yaml']
 class PluginFactory(object):
     """A genetic plugin factory that uses the type field of the config to create the appropriate class."""
 
-    def __init__(self, name, subclass, known_plugins):
+    def __init__(self, name, subclass):
         """Constructor.
 
         Args:
@@ -47,25 +35,14 @@ class PluginFactory(object):
             subclass (type): subclasses of this type will be loaded as potential plugins.
 
         """
-        self._subclass = subclass
         self._name = name
-        self._known_plugins = known_plugins
+        self._subclass = subclass
 
     def from_config(self, config):
         """Make and initialize a plugin object from a config."""
-        known_types = {p.type(): p for p in self._known_plugins}
         if 'type' in config:
-            type = config['type']
-            if type not in known_types:
-                all_plugins = {p.type().lower(): p for p in straight.plugin.load('zazu.plugins',
-                                                                                 subclasses=self._subclass)}
-                known_types.update(all_plugins)
-            if type in known_types:
-                return known_types[type].from_config(config)
-            else:
-                raise click.ClickException('{} is not a known {}, please choose from {}'.format(type,
-                                                                                                self._name,
-                                                                                                sorted(known_types.keys())))
+            class_type = find_plugin(config['type'], self._subclass, self._name)
+            return class_type.from_config(config)
         else:
             raise click.ClickException('{} config requires a "type" field'.format(self._name))
 
@@ -74,8 +51,6 @@ def scm_host_factory(user_config, config):
     """Make and initialize the ScmHosts from the config."""
     hosts = {}
     default_host = ''
-    plugins = [zazu.plugins.github_scm_host.GitHubScmHost]
-    known_types = {p.type(): p for p in plugins}
     for name, value in config.items():
         # The "default" host is unique.
         if name == 'default':
@@ -85,22 +60,14 @@ def scm_host_factory(user_config, config):
                 default_host = value
                 continue
         if 'type' in value:
-            type = value['type']
-            if type not in known_types:
-                external_plugins = {p.type(): p for p in straight.plugin.load('zazu.plugins',
-                                                                              subclasses=zazu.scm_host.ScmHost)}
-                known_types.update(external_plugins)
-            if type in known_types:
-                hosts[name] = known_types[type].from_config(value)
-            else:
-                raise click.ClickException('{} is not a known ScmHost, please choose from {}'.format(type,
-                                                                                                     sorted(known_types.keys())))
+            scm_host_class = find_plugin(value['type'], zazu.scm_host.ScmHost, 'scm_host')
+            hosts[name] = scm_host_class.from_config(value)
         else:
-            raise click.ClickException('scmHost config requires a "type" field')
+            raise click.ClickException('scm_host config requires a "type" field')
 
     if default_host:
         if default_host not in hosts:
-            raise click.ClickException('default scmHost \'{}\' not found'.format(default_host))
+            raise click.ClickException('default scm_host \'{}\' not found'.format(default_host))
     elif len(hosts) == 1:  # Only 1 known host makes it the default.
         default_host = next(iter(hosts.keys()))
 
@@ -110,30 +77,28 @@ def scm_host_factory(user_config, config):
 def styler_factory(config):
     """Make and initialize the Stylers from the config."""
     stylers = []
-    # TODO(stopthatcow): Clean these up so they are not enumerated here.
-    plugins = [zazu.plugins.astyle_styler.AstyleStyler,
-               zazu.plugins.autopep8_styler.Autopep8Styler,
-               zazu.plugins.clang_format_styler.ClangFormatStyler,
-               zazu.plugins.docformatter_styler.DocformatterStyler,
-               zazu.plugins.esformatter_styler.EsformatterStyler,
-               zazu.plugins.eslint_styler.ESLintStyler,
-               zazu.plugins.generic_styler.GenericStyler,
-               zazu.plugins.goimports_styler.GoimportsStyler]
-    known_types = {p.type(): p for p in plugins}
     for entry in config:
         excludes = entry.get('exclude', [])
         for styler in entry['stylers']:
-            name = styler['type']
-            if name not in known_types:
-                all_stylers = {p.type(): p for p in straight.plugin.load('zazu.plugins', subclasses=zazu.styler.Styler)}
-                known_types.update(all_stylers)
-            if name in known_types:
-                includes = entry.get('include', known_types[name].default_extensions())
-                stylers.append(known_types[name].from_config(styler, excludes, includes))
-            else:
-                raise click.ClickException('{} is not a known styler, please choose from {}'.format(name,
-                                                                                                    sorted(known_types.keys())))
+            styler_class = find_plugin(styler['type'], zazu.styler.Styler, 'styler')
+            includes = entry.get('include', styler_class.default_extensions())
+            stylers.append(styler_class.from_config(styler, excludes, includes))
+
     return stylers
+
+
+def find_plugin(name, class_type, kind):
+    """Imports and finds a plugin by name and kind."""
+    canonical_name = name.replace('-', '_')
+    class_name = class_type.__name__
+    try:
+        module_name = 'zazu.plugins.{}_{}'.format(canonical_name, kind)
+        module = importlib.import_module(module_name)
+        plugin_class = getattr(module, class_name)
+        assert(issubclass(plugin_class, class_type)), 'Plugin is not a subclass of {}'.format(class_name)
+        return plugin_class
+    except ImportError:
+        raise click.ClickException('{} ({}) is not a known {}'.format(name, module_name, class_name))
 
 
 def path_gen(search_paths, file_names):
@@ -250,8 +215,7 @@ class Config(object):
     def issue_tracker(self):
         """Lazily create a IssueTracker object."""
         if self._issue_tracker is None:
-            issue_tracker_factory = PluginFactory('issueTracker', zazu.issue_tracker.IssueTracker, [zazu.plugins.github_issue_tracker.GitHubIssueTracker,
-                                                                                                    zazu.plugins.jira_issue_tracker.JiraIssueTracker])
+            issue_tracker_factory = PluginFactory('issue_tracker', zazu.issue_tracker.IssueTracker)
             self._issue_tracker = issue_tracker_factory.from_config(self.issue_tracker_config())
         return self._issue_tracker
 
@@ -263,9 +227,12 @@ class Config(object):
 
         """
         try:
-            return self.project_config()['issueTracker']
+            return self.project_config()['issue_tracker']
         except KeyError:
-            raise click.ClickException('no issueTracker config found')
+            try:
+                return self.project_config()['issueTracker']
+            except KeyError:
+                raise click.ClickException('no issue_tracker config found')
 
     def code_reviewer_config(self):
         """Return the code reviewer configuration if one exists.
@@ -275,24 +242,29 @@ class Config(object):
 
         """
         try:
-            return self.project_config()['codeReviewer']
+            return self.project_config()['code_reviewer']
         except KeyError:
-            raise click.ClickException('no codeReviewer config found')
+            try:
+                return self.project_config()['codeReviewer']
+            except KeyError:
+                raise click.ClickException('no code_reviewer config found')
 
     def code_reviewer(self):
         """Lazily create and return code reviewer object."""
         if self._code_reviewer is None:
-            code_reviewer_factory = PluginFactory('codeReviewer', zazu.code_reviewer.CodeReviewer, [
-                                                  zazu.plugins.github_code_reviewer.GitHubCodeReviewer])
+            code_reviewer_factory = PluginFactory('code_reviewer', zazu.code_reviewer.CodeReviewer)
             self._code_reviewer = code_reviewer_factory.from_config(self.code_reviewer_config())
         return self._code_reviewer
 
     def scm_host_config(self):
-        """Return scmHost config or raise ClickException if it is missing."""
+        """Return scm_host config or raise ClickException if it is missing."""
         try:
-            return self.user_config()['scmHost']
+            return self.user_config()['scm_host']
         except KeyError:
-            raise click.ClickException('no scmHost config found in ~/zazuconfig.yaml')
+            try:
+                return self.user_config()['scmHost']
+            except KeyError:
+                raise click.ClickException('no scm_host config found in ~/.zazuconfig.yaml')
 
     def scm_hosts(self):
         """Lazily create and return scm host list."""
@@ -384,7 +356,7 @@ def maybe_write_default_user_config(path):
     DEFAULT_USER_CONFIG = """# User configuration file for zazu.
     
 #SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
-scmHost:
+scm_host:
    default:                          # This is the default SCM host.
        type: github                  # Type of this SCM host.
        user: user                    # GitHub username
