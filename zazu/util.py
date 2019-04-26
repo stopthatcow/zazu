@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Utility functions for zazu."""
 
-
 try:
     import readline  # NOQA
 except ImportError:
@@ -47,7 +46,7 @@ def check_popen(args, stdin_str=None, *other_args, **kwargs):
 
     Args:
         args: passed to Popen.
-        stdin_str: a bytes that will be sent to std input via communicate().
+        stdin_str: a str/bytes that will be sent to std input via communicate().
         other_args: other arguments passed to Popen.
         kwargs: other kwargs passed to Popen.
     Raises:

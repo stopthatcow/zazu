@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import cProfile
 import click
 import click.testing
 import distutils.spawn

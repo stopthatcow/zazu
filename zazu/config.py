@@ -171,8 +171,6 @@ def find_file(search_paths, file_names):
 def load_yaml_file(filepath):
     """Load a yaml file."""
     with open(filepath, 'r') as f:
-        assert 'ruamel' in sys.modules
-        ruamel.yaml = sys.modules['ruamel.yaml']
         try:
             yaml = ruamel.yaml.YAML()
             config = yaml.load(f)
