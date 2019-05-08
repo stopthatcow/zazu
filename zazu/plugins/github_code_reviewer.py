@@ -7,6 +7,7 @@ zazu.imports.lazy_import(locals(), [
     'os',
     'zazu.code_reviewer',
     'zazu.git_helper',
+    'zazu.github_helper',
     'zazu.plugins.github_issue_tracker',
 ])
 
@@ -27,7 +28,7 @@ class CodeReviewer(zazu.code_reviewer.CodeReviewer):
         """
         self._owner = owner
         self._repo = repo
-        self._url = url
+        self._url = zazu.github_helper.get_api_url(url)
         self._github = None
 
     def connect(self):
@@ -66,6 +67,9 @@ class CodeReviewer(zazu.code_reviewer.CodeReviewer):
                 issue_markdown_link = '[{}]({})'.format(issue, issue.browse_url)
             body += '\n\nFixes {}'.format(issue_markdown_link)
         return GitHubCodeReview(self._github_repo().create_pull(title=title, base=base, head=head, body=body))
+
+    def credentials(self):
+        return zazu.github_helper.token_credential_interface(self._url)
 
     @staticmethod
     def from_config(config):

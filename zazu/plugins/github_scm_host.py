@@ -24,7 +24,7 @@ class ScmHost(zazu.scm_host.ScmHost):
         """
         self._github_handle = None
         self._user = user
-        self._url = url
+        self._url = zazu.github_helper.get_api_url(url)
 
     def connect(self):
         """Get handle to ensure that github credentials are in place."""
@@ -42,6 +42,9 @@ class ScmHost(zazu.scm_host.ScmHost):
                 yield GitHubScmRepoAdaptor(r)
         except github.GithubException as e:
             raise zazu.scm_host.ScmHostError(str(e))
+
+    def credentials(self):
+        return zazu.github_helper.token_credential_interface(self._url)
 
     @staticmethod
     def from_config(config):

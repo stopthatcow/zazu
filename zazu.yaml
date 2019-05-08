@@ -1,14 +1,14 @@
 # Zazu config file for zazu itself.
 
-issue_tracker:
-    type: github
-    owner: stopthatcow
-    repo: zazu
-
 #issue_tracker:
-#    type: jira
-#    url: https://zazucli.atlassian.net/
-#    project: ZZ
+#    type: github
+#    owner: stopthatcow
+#    repo: zazu
+
+issue_tracker:
+    type: jira
+    url: https://zazucli.atlassian.net/
+    project: ZZ
 
 code_reviewer:
     type: github

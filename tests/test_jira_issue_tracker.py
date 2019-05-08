@@ -3,6 +3,7 @@ import tests.conftest as conftest
 import copy
 import jira
 import jira.client
+import keyring
 import pytest
 import zazu.plugins.jira_issue_tracker
 
@@ -57,7 +58,7 @@ JIRA_ADDRESS = 'https://jira'
 
 
 def test_jira_issue_tracker(mocker):
-    mocker.patch('zazu.credential_helper.get_user_pass_credentials', return_value=('user', 'pass'))
+    mocker.patch('keyring.get_password', side_effect=['user', 'pass'])
     mocker.patch('jira.JIRA', autospec=True)
     uut = zazu.plugins.jira_issue_tracker.IssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
     uut.connect()
@@ -65,20 +66,26 @@ def test_jira_issue_tracker(mocker):
     assert uut.issue_components() == ['comp']
     assert uut.issue_types() == ['Task', 'Bug', 'Story']
     assert uut.issue('ZZ-1')
+    assert uut.type() == 'jira'
 
 
 def test_jira_issue_tracker_bad_credentials(mocker):
-    mocker.patch('zazu.credential_helper.get_user_pass_credentials', side_effect=[('user', 'pass'), ('user', 'pass2')])
+    mocker.patch('keyring.get_password', side_effect=['user', 'pass'])
+    mocker.patch('keyring.set_password')
+    mocker.patch('click.prompt', side_effect=['user', 'pass2'])
+    mocker.patch('click.confirm', return_value=True)
     mocker.patch('jira.JIRA', autospec=True, side_effect=[jira.JIRAError(status_code=401), object()])
     uut = zazu.plugins.jira_issue_tracker.IssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
     uut.connect()
-    calls = zazu.credential_helper.get_user_pass_credentials.call_args_list
-    assert calls[0] == mocker.call(JIRA_ADDRESS, use_saved=True)
-    assert calls[1] == mocker.call(JIRA_ADDRESS, use_saved=False)
+    calls = jira.JIRA.call_args_list
+    assert calls[0] == mocker.call(JIRA_ADDRESS, basic_auth=('user', 'pass'),
+                                   options={'check_update': False}, max_retries=0)
+    assert calls[1] == mocker.call(JIRA_ADDRESS, basic_auth=('user', 'pass2'),
+                                   options={'check_update': False}, max_retries=0)
 
 
 def test_jira_issue_tracker_exception(mocker):
-    mocker.patch('zazu.credential_helper.get_user_pass_credentials', return_value=('user', 'pass'))
+    mocker.patch('keyring.get_password', side_effect=['user', 'pass'])
     mocker.patch('jira.JIRA', autospec=True, side_effect=jira.JIRAError(status_code=400))
     uut = zazu.plugins.jira_issue_tracker.IssueTracker(JIRA_ADDRESS, 'ZZ', ['comp'])
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:

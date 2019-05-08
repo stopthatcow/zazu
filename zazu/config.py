@@ -347,6 +347,35 @@ class Config(object):
         if self.repo_root is None or self.repo is None:
             raise click.UsageError('The current working directory is not in a git repo')
 
+    def credentials(self):
+        """Collect known credentials from all plugins."""
+        credential_dict = {}
+        try:
+            issue_tracker = self.issue_tracker()
+            if issue_tracker:
+                credentials = issue_tracker.credentials()
+                credential_dict[credentials.url()] = credentials
+        except click.exceptions.ClickException:
+            pass
+
+        try:
+            scm_hosts = self.scm_hosts()
+            for host in scm_hosts:
+                credentials = scm_hosts[host].credentials()
+                credential_dict[credentials.url()] = credentials
+        except click.exceptions.ClickException:
+            pass
+
+        try:
+            code_reviewer = self.code_reviewer()
+            if code_reviewer:
+                credentials = scm_hosts[host].credentials()
+                credential_dict[credentials.url()] = credentials
+        except click.exceptions.ClickException:
+            pass
+
+        return credential_dict
+
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
 

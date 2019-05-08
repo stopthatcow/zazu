@@ -5,7 +5,7 @@ zazu.imports.lazy_import(locals(), [
     'click',
     'jira',
     're',
-    'zazu.credential_helper',
+    'zazu.keychain',
     'zazu.issue_tracker',
     'zazu.util',
 ])
@@ -16,6 +16,16 @@ __copyright__ = 'Copyright 2016'
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
 JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
+
+
+def jira_from_credentials(credentials):
+    try:
+        return jira.JIRA(credentials.url(),
+                         basic_auth=(credentials['username'], credentials['password']),
+                         options={'check_update': False}, max_retries=0)
+    except jira.JIRAError as e:
+        if e.status_code != 401:
+            raise zazu.issue_tracker.IssueTrackerError(str(e))
 
 
 class IssueTracker(zazu.issue_tracker.IssueTracker):
@@ -42,20 +52,17 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
 
     def _jira(self):
         if self._jira_handle is None:
-            use_saved = True
-            while True:
-                user, password = zazu.credential_helper.get_user_pass_credentials(self._base_url, use_saved=use_saved)
-                try:
-                    self._jira_handle = jira.JIRA(self._base_url,
-                                                  basic_auth=(user, password),
-                                                  options={'check_update': False}, max_retries=0)
-                    break
-                except jira.JIRAError as e:
-                    if e.status_code == 401:
-                        click.echo('{} rejected password for user {}!'.format(self._base_url, user))
-                        use_saved = False
-                    else:
-                        raise zazu.issue_tracker.IssueTrackerError(str(e))
+            credentials = self.credentials()
+            use_saved = credentials.load()
+            while self._jira_handle is None:
+                if not use_saved:
+                    credentials.set_interactive()
+                self._jira_handle = jira_from_credentials(credentials)
+                if self._jira_handle is None:
+                    click.echo('{} rejected password for user {}!'.format(self._base_url, credentials['username']))
+                    use_saved = False
+                elif not use_saved:
+                    credentials.offer_to_save()
         return self._jira_handle
 
     def browse_url(self, id):
@@ -153,11 +160,18 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
             raise zazu.issue_tracker.IssueTrackerError('issue number is not numeric')
         return '{}-{}'.format(project, number)
 
+    def credentials(self):
+        return zazu.keychain.CredentialInterface('jira',
+                                                 self._base_url,
+                                                 attribute_list=['username'],
+                                                 secret_attribute_list=['password'],
+                                                 validator_callback=jira_from_credentials)
+
     @staticmethod
     def from_config(config):
         """Make a JiraIssueTracker from a config."""
         try:
-            url = config['url']
+            url = zazu.util.base_url(config['url'])
         except KeyError:
             raise zazu.ZazuException('Jira config requires a "url" field')
         try:
@@ -176,7 +190,7 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
 
 
 class JiraIssueAdaptor(zazu.issue_tracker.Issue):
-    """Wraps a issue returned from the jiri api and adapts it to the zazu.issue_tracker.Issue interface."""
+    """Wraps a issue returned from the Jira api and adapts it to the zazu.issue_tracker.Issue interface."""
 
     def __init__(self, jira_issue, tracker_handle):
         """Create a JiraIssueAdaptor by wrapping a jira Issue object.

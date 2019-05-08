@@ -19,7 +19,8 @@ zazu.imports.lazy_import(locals(), [
     'multiprocessing',
     'os',
     'subprocess',
-    'sys'
+    'sys',
+    'urllib.parse'
 ])
 __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
@@ -324,9 +325,16 @@ def raise_uninstalled(pkg_name):
         click.ClickException
 
     """
-    raise click.ClickException('{0} not found, install it via "apt-get install {0}" or "brew install {0}"'.format(pkg_name))
+    raise click.ClickException('{0} not found'.format(pkg_name))
 
 
 def warn(text):
     """Emits a red warning to stderr."""
     click.secho('Warning: {}'.format(text), fg='red', err=True)
+
+
+def base_url(url):
+    """Returns a normalized form of the base url."""
+    parts = list(urllib.parse.urlparse(url))
+    parts[2:] = [''] * 4  # Clear the non-base parts.
+    return urllib.parse.urlunparse(parts)

@@ -26,7 +26,7 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
         """
         self._owner = owner
         self._repo = repo
-        self._url = url
+        self._url = zazu.github_helper.get_api_url(url)
         self._github_handle = None
         self._user = None
 
@@ -111,6 +111,9 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
         if not id.isdigit():
             raise zazu.issue_tracker.IssueTrackerError('issue id "{}" is not numeric'.format(id))
         return id
+
+    def credentials(self):
+        return zazu.github_helper.token_credential_interface(self._url)
 
     @staticmethod
     def from_config(config):

@@ -3,6 +3,7 @@
 import click
 import zazu.config
 import zazu.dev.commands
+import zazu.keychain
 import zazu.repo.commands
 import zazu.style
 import zazu.upgrade
@@ -29,4 +30,5 @@ cli.add_command(zazu.style.style)
 cli.add_command(zazu.config.config)
 cli.add_command(zazu.dev.commands.dev)
 cli.add_command(zazu.repo.commands.repo)
+cli.add_command(zazu.keychain.keychain)
 init()

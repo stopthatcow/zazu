@@ -63,6 +63,14 @@ def test_github_issue_tracker_no_origin(git_repo):
             zazu.plugins.github_code_reviewer.CodeReviewer.from_config({})
 
 
+def test_credentials(mocker, repo_with_github_as_origin):
+    with zazu.util.cd(repo_with_github_as_origin.working_tree_dir):
+        mocker.patch('zazu.github_helper.token_credential_interface')
+        uut = zazu.plugins.github_code_reviewer.CodeReviewer.from_config({})
+        uut.credentials()
+        zazu.github_helper.token_credential_interface.assert_called_once()
+
+
 mock_review_dict = {
     'number': 3,
     'title': 'name',

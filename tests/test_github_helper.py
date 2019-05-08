@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import click
 import contextlib
 import github
 import keyring  # NOQA
@@ -29,25 +30,18 @@ def test_make_gh_with_no_credentials(mocker):
     github.Github.assert_called_once_with(base_url=zazu.github_helper.GITHUB_API_URL, login_or_token='token')
 
 
-def test_make_gh_with_bad_token(mocker):
-    def side_effect(base_url, login_or_token):
-        if login_or_token == 'token':
-            raise github.BadCredentialsException('status', 'data')
-        return login_or_token
-    mocker.patch('keyring.get_password', return_value='token')
+def test_make_gh_bad_token(mocker):
+    mocker.patch('keyring.get_password', return_value=None)
     mocker.patch('keyring.set_password')
-    mocker.patch('zazu.github_helper.make_gh_token', return_value='token2')
-    mocker.patch('github.Github', side_effect=side_effect)
+    mocker.patch('zazu.github_helper.make_gh_token', return_value='token')
+    mocker.patch('click.echo')
+    mocker.patch('github.Github.get_user', side_effect=[github.BadCredentialsException('', '')])
     zazu.github_helper.make_gh()
-    calls = github.Github.call_args_list
-    assert github.Github.call_count == 2
-    assert calls[0] == mocker.call(base_url=zazu.github_helper.GITHUB_API_URL,
-                                   login_or_token='token')
-    assert calls[1] == mocker.call(base_url=zazu.github_helper.GITHUB_API_URL,
-                                   login_or_token='token2')
+    click.echo.calls[0][1] == ('No saved GitHub token found in keychain, lets add one...',)
+    click.echo.calls[1][1] == ('GitHub token rejected, you will need to create a new token.',)
 
 
-class MockResponce(object):
+class MockResponse(object):
 
     def __init__(self, status_code, json=None):
         self._json = json
@@ -77,13 +71,13 @@ def test_make_gh_token_otp(mocker):
     def require_otp(uri, headers={}, auth=(), json={}):
         assert ('user', 'password') == auth
         if 'X-GitHub-OTP' not in headers:
-            return MockResponce(json={'message': 'Must specify two-factor authentication OTP code.'}, status_code=401)
+            return MockResponse(json={'message': 'Must specify two-factor authentication OTP code.'}, status_code=401)
         else:
             assert headers['X-GitHub-OTP'] == 'token'
-            return MockResponce(json={'token': 'token'}, status_code=201)
+            return MockResponse(json={'token': 'token'}, status_code=201)
 
-    mocker.patch('zazu.util.prompt', side_effect=['user', 'token'], autospec=True)
-    mocker.patch('click.prompt', return_value='password', autospec=True)
+    mocker.patch('click.prompt', side_effect=['user', 'password', 'token'], autospec=True)
+    mocker.patch('click.confirm', return_value=True)
     mocker.patch('keyring.set_password')
 
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=require_otp)) as post_auth:
@@ -94,9 +88,9 @@ def test_make_gh_token_otp(mocker):
 def test_make_gh_token_otp_exists(mocker):
     def token_exists(uri, headers={}, auth=(), json={}):
         assert ('user', 'password') == auth
-        return MockResponce(json={}, status_code=422)
-    mocker.patch('zazu.util.prompt', side_effect=['user', 'token'], autospec=True)
-    mocker.patch('click.prompt', return_value='password', autospec=True)
+        return MockResponse(json={}, status_code=422)
+    mocker.patch('click.prompt', side_effect=['user', 'password', 'token'], autospec=True)
+    mocker.patch('click.confirm', return_value=True)
 
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=token_exists)) as post_auth:
         assert 'token' == zazu.github_helper.make_gh_token()
@@ -104,9 +98,9 @@ def test_make_gh_token_otp_exists(mocker):
 
 
 def test_make_gh_token_otp_unknown_error(mocker):
-    mocker.patch('zazu.util.prompt', return_value='user', autospec=True)
-    mocker.patch('click.prompt', return_value='password', autospec=True)
-    with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(return_value=MockResponce(json={}, status_code=400))) as post_auth:
+    mocker.patch('click.confirm', return_value=True)
+    mocker.patch('click.prompt', side_effect=['user', 'password'], autospec=True)
+    with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(return_value=MockResponse(json={}, status_code=400))) as post_auth:
         with pytest.raises(Exception):
             zazu.github_helper.make_gh_token()
             post_auth.call_count == 1
@@ -115,12 +109,12 @@ def test_make_gh_token_otp_unknown_error(mocker):
 def test_make_gh_token_try_again(mocker):
     def normal_auth(uri, headers={}, auth=(), json={}):
         if ('user', 'password') == auth:
-            return MockResponce(json={'token': 'token'}, status_code=201)
-        return MockResponce(json={'message': ''}, status_code=401)
+            return MockResponse(json={'token': 'token'}, status_code=201)
+        return MockResponse(json={'message': ''}, status_code=401)
 
-    mocker.patch('zazu.util.prompt', side_effect=['bad_user', 'user'], autospec=True)
-    mocker.patch('click.prompt', side_effect=['bad_password', 'password'], autospec=True)
+    mocker.patch('click.prompt', side_effect=['bad_user', 'bad_password', 'user', 'password', 'user', 'password'], autospec=True)
     mocker.patch('keyring.set_password')
+    mocker.patch('click.confirm', return_value=True)
     with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=normal_auth)) as post_auth:
         zazu.github_helper.make_gh_token()
         post_auth.call_count == 2
@@ -133,3 +127,17 @@ def test_parse_github_url():
     owner_out, name_out = zazu.github_helper.parse_github_url(url)
     assert owner_out == owner
     assert name_out == name
+
+
+def test_mock_and_validate_credentials(mocker):
+    mocker.patch('github.Github.get_user', side_effect=[github.BadCredentialsException('', ''), mocker.Mock()])
+    credentials = zazu.github_helper.token_credential_interface()
+    credentials['token'] = 'token'
+    assert not credentials.validate()
+    assert credentials.validate()
+
+
+def test_validate_credentials(mocker):
+    mock_gh = mocker.Mock()
+    mock_gh.get_user = mocker.Mock(side_effect=github.BadCredentialsException('', ''))
+    assert not zazu.github_helper.validate_credentials(mock_gh)
