@@ -7,6 +7,11 @@ except ImportError:
     # This will be available on Windows
     import pyreadline  # NOQA
 
+try:
+    import urllib.parse as urlparse  # NOQA
+except ImportError:
+    import urlparse  # NOQA
+
 import zazu.imports
 zazu.imports.lazy_import(locals(), [
     'builtins',
@@ -20,7 +25,6 @@ zazu.imports.lazy_import(locals(), [
     'os',
     'subprocess',
     'sys',
-    'urllib.parse'
 ])
 __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
@@ -335,6 +339,6 @@ def warn(text):
 
 def base_url(url):
     """Returns a normalized form of the base url."""
-    parts = list(urllib.parse.urlparse(url))
+    parts = list(urlparse.urlparse(url))
     parts[2:] = [''] * 4  # Clear the non-base parts.
-    return urllib.parse.urlunparse(parts)
+    return urlparse.urlunparse(parts)

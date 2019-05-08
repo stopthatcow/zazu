@@ -29,10 +29,13 @@ class CredentialInterface(object):
         self._name = name
         self._url = url
         self._attributes = {}
+        self._attribute_list = []
         if attribute_list is not None:
             self._attributes.update({a: None for a in attribute_list})
+            self._attribute_list += attribute_list
         if secret_attribute_list is not None:
             self._attributes.update({a: None for a in secret_attribute_list})
+            self._attribute_list += secret_attribute_list
         self._secret_attributes = secret_attribute_list
         self._validator_callback = validator_callback
 
@@ -46,7 +49,7 @@ class CredentialInterface(object):
 
     def attributes(self):
         """Gets attribute names."""
-        return sorted(self._attributes.keys())
+        return self._attribute_list
 
     def __getitem__(self, item):
         return self._attributes[item]
@@ -56,7 +59,7 @@ class CredentialInterface(object):
 
     def delete(self):
         """Deletes attributes from the keychain regardless of whether of not they exist."""
-        for attribute in self._attributes:
+        for attribute in self._attribute_list:
             try:
                 keyring.delete_password(self._url, attribute)
             except keyring.errors.PasswordDeleteError:
@@ -64,7 +67,7 @@ class CredentialInterface(object):
 
     def set_interactive(self):
         """Sets attributes interactively."""
-        for attribute in self._attributes.keys():
+        for attribute in self._attribute_list:
             item = click.prompt('Enter {} {} for {}'.format(self._name, attribute, self._url),
                                 type=str, hide_input=(attribute in self._secret_attributes))
             if item is not None:
@@ -77,14 +80,14 @@ class CredentialInterface(object):
 
     def load(self):
         """Loads attributes from the keychain and returns True if all were found."""
-        for attribute in self._attributes.keys():
+        for attribute in self._attribute_list:
             self._attributes[attribute] = keyring.get_password(self._url, attribute)
         return None not in self._attributes.values()
 
     def save(self):
         """Saves attributes to the keychain."""
-        for name, value in self._attributes.items():
-            keyring.set_password(self._url, name, value)
+        for name in self._attribute_list:
+            keyring.set_password(self._url, name, self._attributes[name])
 
     def validate(self):
         """Returns True if all attributes have values and the validator_callback returns True (if on exists)."""

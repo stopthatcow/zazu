@@ -36,8 +36,8 @@ def test_credential_interface(mocker):
     interface['password'] = 'password2'
     assert interface['password'] == 'password2'
     interface.delete()
-    assert keyring.delete_password.call_args_list[0][0] == ('http://url', 'username')
-    assert keyring.delete_password.call_args_list[1][0] == ('http://url', 'password')
+    deleted_call_args = {item[0] for item in keyring.delete_password.call_args_list}
+    assert deleted_call_args == {('http://url', 'username'), ('http://url', 'password')}
 
     interface = zazu.keychain.CredentialInterface('component', 'http://url', ['username'], ['password'], lambda x: False)
     assert not interface.validate()
@@ -100,8 +100,8 @@ def test_keychain_set_unset(mocker):
     assert result.exit_code != 0
     result = runner.invoke(zazu.cli.cli, ['keychain', '--unset', 'http://url'])
     assert result.exit_code == 0
-    assert keyring.delete_password.call_args_list[0][0] == ('http://url', 'username')
-    assert keyring.delete_password.call_args_list[1][0] == ('http://url', 'password')
+    deleted_call_args = {item[0] for item in keyring.delete_password.call_args_list}
+    assert deleted_call_args == {('http://url', 'username'), ('http://url', 'password')}
     result = runner.invoke(zazu.cli.cli, ['keychain', '--set', 'http://url'])
     assert result.exit_code == 0
     assert click.prompt.call_args_list[0][0] == ('Enter component username for http://url',)
