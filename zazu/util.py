@@ -15,7 +15,7 @@ zazu.imports.lazy_import(locals(), [
     'contextlib',
     'dict_recursive_update',
     'fnmatch',
-    'inquirer',
+    'PyInquirer',
     'multiprocessing',
     'os',
     'subprocess',
@@ -165,11 +165,14 @@ def pick(choices, message):
         return None
     if len(choices) > 1:
         click.clear()
-        questions = [
-            inquirer.List(' ', message=message, choices=choices),
-        ]
-        response = inquirer.prompt(questions)
-        if response is None:
+        questions = {
+            'type': 'list',
+            'name': ' ',
+            'message': message,
+            'choices': choices
+        }
+        response = PyInquirer.prompt(questions)
+        if ' ' not in response:
             raise KeyboardInterrupt
         return response[' ']
     return choices[0]

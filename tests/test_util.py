@@ -6,7 +6,7 @@ except (ImportError, AttributeError):
     pass
 import click
 import functools
-import inquirer
+import PyInquirer
 import os
 import pytest
 import subprocess
@@ -132,13 +132,13 @@ def test_pick_single():
 
 def test_pick(monkeypatch):
     choices = ['one', 'two']
-    monkeypatch.setattr(inquirer, 'prompt', lambda x: {' ': choices[0]})
+    monkeypatch.setattr(PyInquirer, 'prompt', lambda x: {' ': choices[0]})
     assert zazu.util.pick(choices, 'foo') == choices[0]
 
 
 def test_pick_interupted(monkeypatch):
     choices = ['one', 'two']
-    monkeypatch.setattr(inquirer, 'prompt', lambda x: None)
+    monkeypatch.setattr(PyInquirer, 'prompt', lambda x: {})
     with pytest.raises(KeyboardInterrupt):
         zazu.util.pick(choices, 'foo')
 
