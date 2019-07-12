@@ -103,8 +103,8 @@ def style(config, verbose, check, cached):
     config.check_repo()
     violation_count = 0
     stylers = config.stylers()
-    fixed_ok_tags = [click.style('FIXED', fg='red', bold=True), click.style(' OK  ', fg='green', bold=True)]
-    tags = zazu.util.FAIL_OK if check else fixed_ok_tags
+    FAIL_TEXT = click.style('FAIL ' if check else 'FIXED', fg='red', bold=True)
+    PASS_TEXT = click.style(' OK  ', fg='green', bold=True)
     with zazu.util.cd(config.repo_root):
         if stylers:
             if cached:
@@ -140,9 +140,8 @@ def style(config, verbose, check, cached):
             checked_files = zazu.util.dispatch(work)
             for f, stylers, violation in checked_files:
                 if verbose:
-                    click.echo(zazu.util.format_checklist_item(not violation,
-                                                               text='({}) {}'.format(', '.join([s.name() for s in stylers]), f),
-                                                               tag_formats=tags))
+                    click.echo(zazu.util.format_checklist_item(FAIL_TEXT if violation else PASS_TEXT,
+                                                               text='({}) {}'.format(', '.join([s.name() for s in stylers]), f)))
                     violation_count += violation
             if verbose:
                 file_count = len(all_files)

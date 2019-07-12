@@ -116,22 +116,22 @@ def async_do(call, *args, **kwargs):
     return future
 
 
-FAIL_OK = [click.style('FAIL', fg='red', bold=True), click.style(' OK ', fg='green', bold=True)]
+RED_FAIL = click.style('FAIL', fg='red', bold=True)
+GREEN_OK = click.style(' OK ', fg='green', bold=True)
 
 
-def format_checklist_item(tag, text, tag_formats=FAIL_OK):
+def format_checklist_item(tag, text):
     """Format a list item based on an enumerated set of tags.
 
     Args:
-        tag (int): index into the tag_formats list.
+        tag (str): index into the tag_formats list.
         text (str): the checklist text to display.
-        tag_formats (list of str): the possible states of the checklist.
 
     Returns (str):
         the checklist string.
 
     """
-    return '[{}] {}'.format(tag_formats[tag], text)
+    return '[{}] {}'.format(tag, text)
 
 
 def prompt(text, default=None, expected_type=str):
