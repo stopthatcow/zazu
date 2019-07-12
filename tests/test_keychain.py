@@ -80,6 +80,8 @@ def test_keychain_bad_options(mocker):
     assert result.exit_code != 0
     result = runner.invoke(zazu.cli.cli, ['keychain', '--list', 'foo'])
     assert result.exit_code != 0
+    result = runner.invoke(zazu.cli.cli, ['keychain', 'foo'])
+    assert result.exit_code != 0
     result = runner.invoke(zazu.cli.cli, ['keychain', '--list', '--unset'])
     assert result.exit_code != 0
     result = runner.invoke(zazu.cli.cli, ['keychain', '--unset'])

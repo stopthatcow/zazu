@@ -107,7 +107,7 @@ def complete_entry(ctx, args, incomplete):
 @click.command()
 @zazu.config.pass_config
 @click.pass_context
-@click.option('-l', '--list', is_flag=True, help='list known keychain entries and whether they are present')
+@click.option('-l', '--list', is_flag=True, help='list expected entries, whether they are set, and if they are valid')
 @click.option('--set', is_flag=True, help='set or update an entry in the keychain')
 @click.option('--unset', is_flag=True, help='remove an entry from the keychain')
 @click.argument('entry_name', required=False, type=str, autocompletion=complete_entry)
@@ -118,10 +118,13 @@ def keychain(ctx, config, list, set, unset, entry_name):
         ctx.exit(-1)
     if (set + unset + list) > 1:
         raise click.UsageError('--add, --unset, --list are mutually exclusive')
-    if (entry_name is None) and (set or unset):
+    if entry_name is None and (set or unset):
         raise click.UsageError('ENTRY_NAME is required')
-    if (entry_name is not None) and list:
-        raise click.UsageError('ENTRY_NAME is not allowed with --list')
+    if entry_name is not None:
+        if list:
+            raise click.UsageError('ENTRY_NAME is not allowed with --list')
+        if not (set or unset):
+            raise click.UsageError('ENTRY_NAME requires --set or --unset')
 
     credentials = config.credentials()
 
