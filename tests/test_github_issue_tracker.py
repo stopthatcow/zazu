@@ -118,6 +118,15 @@ def test_from_config_from_origin(repo_with_github_as_origin):
         assert [] == uut.issue_components()
 
 
+def test_credentials(mocker, git_repo):
+    with zazu.util.cd(git_repo.working_tree_dir):
+        mocker.patch('zazu.github_helper.token_credential_interface')
+        uut = zazu.plugins.github_issue_tracker.IssueTracker.from_config({'owner': 'stopthatcow',
+                                                                          'repo': 'zazu'})
+        uut.credentials()
+        zazu.github_helper.token_credential_interface.assert_called_once()
+
+
 def test_github_validate_id_format(tracker_mock):
     uut = tracker_mock
     uut.validate_id_format('10')

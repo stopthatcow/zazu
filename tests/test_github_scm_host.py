@@ -58,6 +58,15 @@ def test_from_config(git_repo):
         assert uut.type() == 'github'
 
 
+def test_credentials(mocker, git_repo):
+    with zazu.util.cd(git_repo.working_tree_dir):
+        mocker.patch('zazu.github_helper.token_credential_interface')
+        uut = zazu.plugins.github_scm_host.ScmHost.from_config({'user': 'stopthatcow',
+                                                                'type': 'github'})
+        uut.credentials()
+        zazu.github_helper.token_credential_interface.assert_called_once()
+
+
 def test_github_scm_host_repo_adaptor():
     uut = zazu.plugins.github_scm_host.GitHubScmRepoAdaptor(mock_repo)
     assert uut.name == 'zazu'

@@ -71,6 +71,27 @@ def repo_with_jira(git_repo):
     return git_repo
 
 
+@pytest.fixture()
+def repo_with_jira_and_github_code_review(git_repo):
+    root = git_repo.working_tree_dir
+    jira_config = {
+        'issue_tracker': {
+            'type': 'jira',
+            'url': 'https://zazu.atlassian.net/',
+            'project': 'TEST',
+            'component': 'Zazu'
+        },
+        'code_reviewer': {
+            'type': 'github',
+            'owner': 'stopthatcow',
+            'repo': 'zazu'
+        }
+    }
+    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
+        yaml.dump(jira_config, file)
+    return git_repo
+
+
 def test_invalid_issue_tracker(repo_with_invalid_issue_tracker):
     cfg = zazu.config.Config(repo_with_invalid_issue_tracker.working_tree_dir)
     with pytest.raises(click.ClickException):
@@ -310,3 +331,16 @@ def test_complete_param(mocker, temp_user_config):
     mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
     assert zazu.config.complete_param(None, [], '') == ['scm_host.gh.type', 'scm_host.gh.user']
     assert zazu.config.complete_param(None, ['--add'], '') == []
+
+
+def test_credentials(mocker, git_repo, empty_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=empty_user_config)
+    with zazu.util.cd(git_repo.working_tree_dir):
+        assert not zazu.config.Config().credentials()
+
+
+def test_scm_credentials(mocker, repo_with_jira_and_github_code_review, temp_user_config):
+    mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
+    with zazu.util.cd(repo_with_jira_and_github_code_review.working_tree_dir):
+        assert 'https://api.github.com' in zazu.config.Config().credentials()
+        assert 'https://zazu.atlassian.net' in zazu.config.Config().credentials()
