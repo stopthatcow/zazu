@@ -15,7 +15,7 @@ __copyright__ = 'Copyright 2016'
 
 ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
-JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
+JIRA_CREATED_BY_ZAZU = '----\nCreated by [Zazu|{}].'.format(ZAZU_REPO_URL)
 
 
 class IssueTracker(zazu.issue_tracker.IssueTracker):
@@ -103,7 +103,8 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
             if component is not None:
                 issue_dict['components'] = [{'name': component}]
             issue = self._jira().create_issue(issue_dict)
-            self._jira().assign_issue(issue, issue.fields.reporter.name)
+            # TODO(stopthatcow): Re-enable once assign_issue() works again due to GDPR changes.
+            # self._jira().assign_issue(issue, issue.fields.reporter.name)
             return JiraIssueAdaptor(issue, self)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
