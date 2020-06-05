@@ -5,10 +5,6 @@ import imp
 import importlib
 import sys
 from types import ModuleType
-try:
-    reload = importlib.reload
-except AttributeError:
-    pass
 
 
 class _ImportLockContext:
@@ -53,7 +49,7 @@ def _ensure_loaded(module):
             # This may invoke _ensure_loaded() if parent_module is an unloaded _LazyModule.
             setattr(parent_module, remainder, module)
         if ModuleType.__getattribute__(module, '_LAZY_LOAD_PENDING'):
-            reload(module)
+            importlib.reload(module)
             ModuleType.__setattr__(module, '_LAZY_LOAD_PENDING', False)
 
 
