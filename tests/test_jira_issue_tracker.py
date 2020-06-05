@@ -112,7 +112,7 @@ def test_jira_issue_tracker_create_issue(mocker, mocked_jira_issue_tracker):
     jira_mock.create_issue.call_count == 1
     # TODO(stopthatcow): Re-enable once assign_issue() works again due to GDPR changes.
     # jira_mock.assign_issue.call_count == 1
-    jira_mock.assign_issue.assert_called_once_with(mock_issue, 'reporter')
+    # jira_mock.assign_issue.assert_called_once_with(mock_issue, 'reporter')
 
 
 def test_jira_assign_issue(mocker, mocked_jira_issue_tracker):
@@ -120,8 +120,8 @@ def test_jira_assign_issue(mocker, mocked_jira_issue_tracker):
     mocked_jira_issue_tracker._jira_handle.assign_issue = mocker.Mock()
     # TODO(stopthatcow): Re-enable once assign_issue() works again due to GDPR changes.
     # issue = zazu.plugins.jira_issue_tracker.JiraIssueAdaptor(mock_issue, mocked_jira_issue_tracker)
-    mocked_jira_issue_tracker.assign_issue(issue, mocked_jira_issue_tracker.user())
-    mocked_jira_issue_tracker._jira_handle.assign_issue.assert_called_once_with(mock_issue, 'me')
+    # mocked_jira_issue_tracker.assign_issue(issue, mocked_jira_issue_tracker.user())
+    # mocked_jira_issue_tracker._jira_handle.assign_issue.assert_called_once_with(mock_issue, 'me')
 
 
 def test_jira_list_issues(mocker, mocked_jira_issue_tracker):
