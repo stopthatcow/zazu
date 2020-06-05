@@ -309,13 +309,13 @@ def review(config, base, head):
         pr = zazu.util.pick(existing_reviews, 'Multiple reviews found, pick one')
     else:
         descriptor = make_issue_descriptor(head)
-        status = config.repo.git.status(['--porcelain'])
-        if status:
-            raise click.ClickException('working tree is not clean, stash or remove changes in your repo')    
+        dirty = config.repo.git.status(['--porcelain'])
+        if dirty:
+            raise click.ClickException('working tree is not clean, stash or remove changes before review')    
         try:
             config.repo.git.push('--set-upstream','origin', head)
         except git.exc.GitCommandError as e:
-            raise click.ClickException('failed to push to origin: {}'.format(e))    
+            raise click.ClickException('failed to push to origin: {}'.format(str(e))    
         issue_id = descriptor.id
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             issue_future = executor.submit(config.issue_tracker().issue, issue_id)
