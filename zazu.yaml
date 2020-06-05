@@ -5,7 +5,7 @@ issue_tracker:
     owner: stopthatcow
     repo: zazu
 
-#issue_tracker:
+# issue_tracker:
 #    type: jira
 #    url: https://zazucli.atlassian.net/
 #    project: ZZ

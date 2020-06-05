@@ -13,15 +13,14 @@ zazu.imports.lazy_import(locals(), [
 __author__ = 'Nicholas Wiles'
 __copyright__ = 'Copyright 2016'
 
-ZAZU_IMAGE_URL = 'http://vignette1.wikia.nocookie.net/disney/images/c/ca/Zazu01cf.png'
 ZAZU_REPO_URL = 'https://github.com/stopthatcow/zazu'
-JIRA_CREATED_BY_ZAZU = '----\n!{}|width=20! Created by [Zazu|{}]'.format(ZAZU_IMAGE_URL, ZAZU_REPO_URL)
+JIRA_CREATED_BY_ZAZU = '----\nCreated by [Zazu]({})'.format(ZAZU_REPO_URL)
 
 
 def jira_from_credentials(credentials):
     try:
         return jira.JIRA(credentials.url(),
-                         basic_auth=(credentials['username'], credentials['password']),
+                         basic_auth=(credentials['username'], credentials['token']),
                          options={'check_update': False}, max_retries=0)
     except jira.JIRAError as e:
         if e.status_code != 401:
@@ -59,7 +58,7 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
                     credentials.set_interactive()
                 self._jira_handle = jira_from_credentials(credentials)
                 if self._jira_handle is None:
-                    click.echo('{} rejected password for user {}!'.format(self._base_url, credentials['username']))
+                    click.echo('{} rejected API token for user {}!'.format(self._base_url, credentials['username']))
                     use_saved = False
                 elif not use_saved:
                     credentials.offer_to_save()
@@ -81,7 +80,7 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
         normalized_id = self.validate_id_format(id)
         try:
             ret = self._jira().issue(normalized_id)
-            # Only show description up to the separator
+            # Only show description up to the separator.
             if ret.fields.description is None:
                 ret.fields.description = ''
             ret.fields.description = ret.fields.description.split('\n\n----', 1)[0]
@@ -110,7 +109,8 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
             if component is not None:
                 issue_dict['components'] = [{'name': component}]
             issue = self._jira().create_issue(issue_dict)
-            self._jira().assign_issue(issue, issue.fields.reporter.name)
+            # TODO(stopthatcow): Re-enable once assign_issue() works again due to GDPR changes.
+            # self._jira().assign_issue(issue, str(issue.fields.reporter))
             return JiraIssueAdaptor(issue, self)
         except jira.exceptions.JIRAError as e:
             raise zazu.issue_tracker.IssueTrackerError(str(e))
@@ -164,7 +164,7 @@ class IssueTracker(zazu.issue_tracker.IssueTracker):
         return zazu.keychain.CredentialInterface('jira',
                                                  self._base_url,
                                                  attribute_list=['username'],
-                                                 secret_attribute_list=['password'],
+                                                 secret_attribute_list=['token'],
                                                  validator_callback=jira_from_credentials)
 
     @staticmethod

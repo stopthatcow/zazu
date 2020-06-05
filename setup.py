@@ -59,7 +59,7 @@ setuptools.setup(
     package_data={'zazu': ['githooks/*', 'version.txt']},
     install_requires=['click>=7.0',                    # BSD
                       'PyGithub>=1.36.0',              # LGPL 3
-                      'jira>=1.0.11',                  # BSD
+                      'jira>=2.0.0',                   # BSD
                       'GitPython>=2.1.8',              # BSD
                       'dict-recursive-update>=1.0.1',  # MIT
                       'ruamel.yaml>0.15',              # MIT

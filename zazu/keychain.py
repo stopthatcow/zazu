@@ -58,7 +58,7 @@ class CredentialInterface(object):
         self._attributes[item] = value
 
     def delete(self):
-        """Deletes attributes from the keychain regardless of whether of not they exist."""
+        """Deletes attributes from the keychain regardless of whether or not they exist."""
         for attribute in self._attribute_list:
             try:
                 keyring.delete_password(self._url, attribute)
@@ -86,8 +86,8 @@ class CredentialInterface(object):
 
     def save(self):
         """Saves attributes to the keychain."""
-        for name in self._attribute_list:
-            keyring.set_password(self._url, name, self._attributes[name])
+        for attribute in self._attribute_list:
+            keyring.set_password(self._url, attribute, self._attributes[attribute])
 
     def validate(self):
         """Returns True if all attributes have values and the validator_callback returns True (if on exists)."""

@@ -255,11 +255,11 @@ def test_config_bad_options(mocker, temp_user_config):
     runner = click.testing.CliRunner()
     result = runner.invoke(zazu.cli.cli, ['config'])
     assert result.exit_code != 0
-    result = runner.invoke(zazu.cli.cli, ['config', '--add'])
+    result = runner.invoke(zazu.cli.cli, ['config', '--set'])
     assert result.exit_code != 0
-    result = runner.invoke(zazu.cli.cli, ['config', '--add', 'foo'])
+    result = runner.invoke(zazu.cli.cli, ['config', '--set', 'foo'])
     assert result.exit_code != 0
-    result = runner.invoke(zazu.cli.cli, ['config', '--add', '--unset'])
+    result = runner.invoke(zazu.cli.cli, ['config', '--set', '--unset'])
     assert result.exit_code != 0
     result = runner.invoke(zazu.cli.cli, ['config', '--unset'])
     assert result.exit_code != 0
@@ -291,7 +291,7 @@ def test_config_add_unset(mocker, temp_user_config):
     assert result.exit_code != 0
     result = runner.invoke(zazu.cli.cli, ['config', 'scm_host.gh.user'])
     assert result.exit_code != 0
-    result = runner.invoke(zazu.cli.cli, ['config', '--add', 'scm_host.gh.user', 'user'])
+    result = runner.invoke(zazu.cli.cli, ['config', '--set', 'scm_host.gh.user', 'user'])
     assert result.exit_code == 0
     result = runner.invoke(zazu.cli.cli, ['config', 'scm_host.gh.user'])
     assert result.exit_code == 0
@@ -330,7 +330,8 @@ def test_alt_branch_names(git_repo):
 def test_complete_param(mocker, temp_user_config):
     mocker.patch('zazu.config.user_config_filepath', return_value=temp_user_config)
     assert zazu.config.complete_param(None, [], '') == ['scm_host.gh.type', 'scm_host.gh.user']
-    assert zazu.config.complete_param(None, ['--add'], '') == []
+    assert zazu.config.complete_param(None, ['--set'], '') == ['scm_host.gh.type', 'scm_host.gh.user']
+    assert zazu.config.complete_param(None, ['--unset'], '') == ['scm_host.gh.type', 'scm_host.gh.user']
 
 
 def test_credentials(mocker, git_repo, empty_user_config):

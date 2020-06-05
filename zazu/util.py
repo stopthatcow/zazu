@@ -282,16 +282,17 @@ def dict_get_nested(d, keys, alt_ret):
           item matching the chain of keys in d.
 
     """
-    item = d.get(keys[0], alt_ret)
-    for k in keys[1:]:
-        item = item.get(k, alt_ret)
-    return item
+    if not keys:
+        return alt_ret
+
+    if len(keys) == 1:
+        return d.get(keys[0], alt_ret)
+
+    return dict_get_nested(d[keys[0]], keys[1:], alt_ret)
 
 
 def dict_del_nested(d, keys):
-    """Delete a nested dictionary entry given a list of keys.
-
-    Equivalent to del d[keys[0]][keys[1]]...etc.
+    """Recursively deletes a nested dictionary entry given a list of keys.
 
     Args:
         d (dict): nested dictionary to search.
@@ -301,11 +302,17 @@ def dict_del_nested(d, keys):
         KeyError: if the key couldn't be found in d.
 
     """
-    item = d
-    if keys:
-        for k in keys[:-1]:
-            item = item[k]
-        del item[keys[-1]]
+    if not keys:
+        return
+
+    if len(keys) == 1:
+        del d[keys[0]]
+        return
+
+    dict_del_nested(d[keys[0]], keys[1:])
+    # Remove parent if child is now empty.
+    if not d[keys[0]]:
+        del d[keys[0]]
 
 
 def dict_update_nested(d, update):

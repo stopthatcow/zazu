@@ -384,7 +384,7 @@ def maybe_write_default_user_config(path):
     """Write a default user config file if it doesn't exist."""
     DEFAULT_USER_CONFIG = """# User configuration file for zazu.
     
-#SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
+# SCM hosts are cloud hosting services for repos. Currently GitHub is supported.
 scm_host:
    default:                          # This is the default SCM host.
        type: github                  # Type of this SCM host.
@@ -398,8 +398,6 @@ scm_host:
 
 def complete_param(ctx, args, incomplete):
     """Completion function that returns parameter names."""
-    if '--add' in args:
-        return []  # Don't offer completions when adding new params.
     config_file = ConfigFile(user_config_filepath())
     config_dict = config_file.dict
     flattened = zazu.util.flatten_dict(config_dict)
@@ -410,21 +408,21 @@ def complete_param(ctx, args, incomplete):
 @click.pass_context
 @click.option('-l', '--list', is_flag=True, help='list config')
 @click.option('--show-origin', is_flag=True, help='show origin of each config variable, (implies --list)')
-@click.option('--add', is_flag=True, help='add a new variable')
-@click.option('--unset', is_flag=True, help='remove a variable')
+@click.option('--set', is_flag=True, help='set an existing variable')
+@click.option('--unset', is_flag=True, help='remove an existing variable')
 @click.argument('param_name', required=False, type=str, autocompletion=complete_param)
 @click.argument('param_value', required=False, type=str)
-def config(ctx, list, add, unset, show_origin, param_name, param_value):
+def config(ctx, list, set, unset, show_origin, param_name, param_value):
     """Manage zazu user configuration."""
-    if not any([list, add, show_origin, param_name, param_value]):
+    if not any([list, set, show_origin, param_name, param_value]):
         print(ctx.get_help())
         ctx.exit(-1)
-    if (add + unset + list) > 1:
-        raise click.UsageError('--add, --unset, --list, --edit are mutually exclusive')
-    if (add or unset) and param_name is None:
-        raise click.UsageError('--add and --unset requires a param name')
-    if add and param_value is None:
-        raise click.UsageError('--add requires a param value')
+    if (set + unset + list) > 1:
+        raise click.UsageError('--set, --unset, --list, --edit are mutually exclusive')
+    if (set or unset) and param_name is None:
+        raise click.UsageError('--set and --unset requires a param name')
+    if set and param_value is None:
+        raise click.UsageError('--set requires a param value')
     if (list or show_origin) and param_name is not None:
         raise click.UsageError('--list and --show-origin can\'t be used with a param name')
 
@@ -456,12 +454,11 @@ def config(ctx, list, add, unset, show_origin, param_name, param_value):
                 return
         else:
             # Write the new parameter value.
-            if not add and zazu.util.dict_get_nested(config_dict, param_name_keys, None) is None:
-                raise click.ClickException('Param {} is unknown, use --add to add it'.format(param_name))
+            if not set and zazu.util.dict_get_nested(config_dict, param_name_keys, None) is None:
+                raise click.ClickException('Param {} is unknown, use --set to add it'.format(param_name))
             new_param_dict = zazu.util.unflatten_dict({param_name: param_value})
             zazu.util.dict_update_nested(config_dict, new_param_dict)
             write_config = True
 
     if write_config:
-        # Update config file.
-        config_file.write()
+        config_file.write()  # Update config file.

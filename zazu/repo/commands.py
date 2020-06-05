@@ -83,11 +83,16 @@ def clone(config, repository, destination, nohooks, nosubmodules):
         click.echo('Repository successfully cloned')
 
         if not nohooks:
-            click.echo('Installing Git Hooks')
-            zazu.git_helper.install_git_hooks(repo.working_dir)
+            # Enable hooks if this repo has a zazu config file.
+            try:
+                config.project_config()
+                click.echo('Installing Git Hooks')
+                zazu.git_helper.install_git_hooks(repo.working_dir)
+            except click.ClickException:
+                pass
 
         if not nosubmodules:
-            click.echo('Updating all submodules')
+            click.echo('Updating submodules')
             repo.submodule_update(init=True, recursive=True)
 
     except git.GitCommandError as err:
@@ -182,7 +187,7 @@ def parse_describe(repo_root):
     try:
         sha = 'g{}{}'.format(repo.git.rev_parse('HEAD')[:7], '-dirty' if repo.git.status(['--porcelain']) else '')
         branch_name = repo.git.rev_parse(['--abbrev-ref', 'HEAD']).strip()
-        # Get the list of tags that point to HEAD
+        # Get the list of tags that point to HEAD.
         tag_result = repo.git.tag(['--points-at', 'HEAD'])
         tags = [t for t in tag_result.strip().split('\n') if t]
     except git.GitCommandError as e:
@@ -225,7 +230,7 @@ def pep440_from_semver(semver):
     local_version = '.'.join(semver.build)
     local_version = local_version.replace('-', '.')
     version_str = '{}.{}.{}{}'.format(semver.major, semver.minor, semver.patch, segment)
-    # Include the local version if we are not a true release
+    # Include the local version if we are not a true release.
     if local_version and semver.prerelease:
         version_str = '{}+{}'.format(version_str, local_version)
     return version_str
