@@ -91,3 +91,6 @@ ENV/
 # Rope project settings
 .ropeproject
 version.txt
+
+# vscode project settings
+.vscode/
