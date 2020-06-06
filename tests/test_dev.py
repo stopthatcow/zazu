@@ -242,7 +242,7 @@ def test_ticket_from_active_branch(mocker, git_repo):
         webbrowser.open_new.assert_called_once_with('url')
 
 
-def test_review(mocker, git_repo):
+def test_review(mocker, git_repo_with_local_origin):
     mocker.patch('webbrowser.open_new')
     mocked_tracker = mocker.Mock()
     mocked_tracker.issue = mocker.Mock(side_effect=zazu.issue_tracker.IssueTrackerError)
@@ -252,7 +252,7 @@ def test_review(mocker, git_repo):
     mocker.patch('zazu.config.Config.issue_tracker', return_value=mocked_tracker)
     mocker.patch('zazu.config.Config.code_reviewer', return_value=mocked_reviewer)
     mocker.patch('zazu.util.prompt', side_effect=['title', 'summary'])
-    with zazu.util.cd(git_repo.working_tree_dir):
+    with zazu.util.cd(git_repo_with_local_origin.working_tree_dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
         assert not result.exception
