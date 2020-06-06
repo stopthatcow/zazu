@@ -23,7 +23,6 @@ class ScmHost(zazu.scm_host.ScmHost):
 
         """
         self._github_handle = None
-        self._user = user
         self._url = url
 
     def connect(self):
@@ -38,7 +37,7 @@ class ScmHost(zazu.scm_host.ScmHost):
     def repos(self):
         """List repos available to this user."""
         try:
-            for r in self._github().get_user(self._user).get_repos():
+            for r in self._github().get_user().get_repos():
                 yield GitHubScmRepoAdaptor(r)
         except github.GithubException as e:
             raise zazu.scm_host.ScmHostError(str(e))
