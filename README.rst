@@ -26,7 +26,9 @@ Complete documentation is available at `zazu.readthedocs.io <http://zazu.readthe
 
 Zazu is a CLI development workflow management tool that works with git, github, and JIRA.
 
-Features at a glance:
+Features at a glance
+--------------------
+
 - Branch creation from new or existing tickets.
 - Issue creation to associate branch with issue.
 - Code review creation to associate review with issue.
