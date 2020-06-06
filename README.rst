@@ -35,7 +35,7 @@ Features at a glance
 - Code style enforcement/fix on commit (via git hook).
 - Inserts branch name into every commit (via git hook).
 - Open code review and issue webpages from terminal.
-- `git-flow <https://nvie.com/posts/a-successful-git-branching-model/>`__ branching model.
+- Configurable `git-flow <https://nvie.com/posts/a-successful-git-branching-model/>`__ branching model.
 - Rich tab-completion on Linux and OS X.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
