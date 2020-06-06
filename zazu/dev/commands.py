@@ -313,6 +313,7 @@ def review(config, base, head):
         if dirty:
             raise click.ClickException('working tree is not clean, stash or remove changes before review')    
         try:
+            click.echo('Pushing to origin...')
             config.repo.git.push('--set-upstream','origin', head)
         except git.exc.GitCommandError as e:
             raise click.ClickException('failed to push to origin: {}'.format(str(e)))    
