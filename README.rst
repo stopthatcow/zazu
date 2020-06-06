@@ -75,9 +75,6 @@ From PyPi
 
     pip install zazu
 
-If you get an error about a package called "six" use the following
-command instead: ``pip install --upgrade --ignore-installed zazu``
-
 From Source
 ~~~~~~~~~~~
 Zazu is fastest when installed in wheel form.
