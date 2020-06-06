@@ -24,8 +24,17 @@ Getting Started
 
 Complete documentation is available at `zazu.readthedocs.io <http://zazu.readthedocs.io>`__.
 
-Zazu is a CLI development workflow management tool that combines
-elements of git flow with issue tracking and code review.
+Zazu is a CLI development workflow management tool that works with git, github, and JIRA.
+
+Features at a glance:
+- Branch creation from new or existing tickets.
+- Issue creation to associate branch with issue.
+- Code review creation to associate review with issue.
+- Code style enforcement/fix on commit.
+- Insert branch name into every commit.
+- Open code review and issue webpages from terminal.
+- `git-flow <https://nvie.com/posts/a-successful-git-branching-model/>`__ branching model.
+- Rich tab-completion on Linux and OS X.
 
 .. image:: https://g.gravizo.com/svg?digraph%20G%20{
     "Zazu" -> "Issue Tracker"
@@ -42,7 +51,7 @@ elements of git flow with issue tracking and code review.
     "Code Style" -> "..."}
     :align: center
 
-Zazu is implemented in Python and is a
+Zazu is implemented in Python 3 and is a
 `Click <http://click.pocoo.org/5/>`__ based CLI. If you're wondering why
 Click, this is a `well answered <http://click.pocoo.org/5/why/>`__
 question.
