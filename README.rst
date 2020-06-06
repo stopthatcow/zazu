@@ -32,8 +32,8 @@ Features at a glance
 - Branch creation from new or existing tickets.
 - Issue creation to associate branch with issue.
 - Code review creation to associate review with issue.
-- Code style enforcement/fix on commit.
-- Insert branch name into every commit.
+- Code style enforcement/fix on commit (via git hook).
+- Inserts branch name into every commit (via git hook).
 - Open code review and issue webpages from terminal.
 - `git-flow <https://nvie.com/posts/a-successful-git-branching-model/>`__ branching model.
 - Rich tab-completion on Linux and OS X.
