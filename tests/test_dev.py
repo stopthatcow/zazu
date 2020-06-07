@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import click
 import click.testing
+import git
 import tests.conftest as conftest
 import pathlib
 import pytest
@@ -257,6 +258,23 @@ def test_review(mocker, git_repo_with_local_origin):
         result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
         assert not result.exception
         assert result.exit_code == 0
+
+
+def test_review_push_fails(mocker, git_repo):
+    mocker.patch('webbrowser.open_new')
+    mocked_tracker = mocker.Mock()
+    mocked_tracker.issue = mocker.Mock(side_effect=zazu.issue_tracker.IssueTrackerError)
+    mocked_reviewer = mocker.Mock()
+    mocked_reviewer.review = mocker.Mock(return_value=[])
+    mocked_reviewer.create_review = mocker.Mock()
+    mocker.patch('zazu.config.Config.issue_tracker', return_value=mocked_tracker)
+    mocker.patch('zazu.config.Config.code_reviewer', return_value=mocked_reviewer)
+    mocker.patch('zazu.util.prompt', side_effect=['title', 'summary'])
+    with zazu.util.cd(git_repo.working_tree_dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
+        assert result.exception
+        assert result.exit_code == 1
 
 
 def test_review_dirty_working_tree(mocker, git_repo_with_local_origin, tmp_dir):
