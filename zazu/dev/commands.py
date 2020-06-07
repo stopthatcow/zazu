@@ -304,6 +304,11 @@ def review(config, base, head):
     """Create or display pull request."""
     code_reviewer = config.code_reviewer()
     head = config.repo.active_branch.name if head is None else head
+    if base is not None:
+        try:
+            config.repo.git.show_branch('remotes/origin/{}'.format(base))
+        except git.exc.GitCommandError as e:
+                raise click.ClickException('failed to find remote branch: {}'.format(str(base)))
     existing_reviews = code_reviewer.review(status='open', head=head, base=base)
     if existing_reviews:
         pr = zazu.util.pick(existing_reviews, 'Multiple reviews found, pick one')
