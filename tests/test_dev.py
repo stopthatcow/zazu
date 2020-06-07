@@ -270,6 +270,7 @@ def test_review_push_fails(mocker, git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
+        assert not mocked_reviewer.called
         assert result.exception
         assert result.exit_code == 1
 
@@ -286,7 +287,6 @@ def test_review_dirty_working_tree(mocker, git_repo_with_local_origin, tmp_dir):
     mocker.patch('zazu.util.prompt', side_effect=['title', 'summary'])
     pathlib.Path(tmp_dir).joinpath('un-tracked_file.txt').touch()
     with zazu.util.cd(git_repo_with_local_origin.working_tree_dir):
-        git_repo_with_local_origin
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
         assert result.exception
