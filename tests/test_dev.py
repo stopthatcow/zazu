@@ -277,8 +277,10 @@ def test_review_dirty_working_tree(mocker, git_repo_with_local_origin, tmp_dir):
     mocked_reviewer = mocker.Mock()
     mocked_reviewer.review = mocker.Mock(return_value=[])
     mocked_reviewer.create_review = mocker.Mock()
-    with open('un-tracked_file.txt', 'w') as f: pass
-    with zazu.util.cd(git_repo_with_local_origin.working_tree_dir):
+    mocker.patch('zazu.config.Config.code_reviewer', return_value=mocked_reviewer)
+    with zazu.util.cd(tmp_dir):
+        with open('un-tracked_file.txt', 'w'):
+            pass
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
         assert not mocked_reviewer.called
