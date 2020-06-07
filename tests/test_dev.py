@@ -87,6 +87,7 @@ def test_make_ticket(mocker):
                                                             description='description',
                                                             component='component')
 
+
 def test_check_if_branch_is_protected():
     protected_branches = ['develop', 'master']
     for b in protected_branches:
