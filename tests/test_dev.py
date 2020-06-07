@@ -259,6 +259,18 @@ def test_review(mocker, git_repo):
         assert result.exit_code == 0
 
 
+def test_review_no_base(mocker, git_repo):
+    mocked_reviewer = mocker.Mock()
+    mocked_reviewer.review = mocker.Mock(return_value=[])
+    mocked_reviewer.create_review = mocker.Mock()
+    mocker.patch('zazu.config.Config.code_reviewer', return_value=mocked_reviewer)
+    with zazu.util.cd(git_repo.working_tree_dir):
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['dev', 'review', '--base', 'does-not-exist'])
+        assert result.exception
+        assert result.exit_code == 1
+
+
 def test_review_existing(mocker, git_repo):
     mocker.patch('webbrowser.open_new')
     mocked_tracker = mocker.Mock()
