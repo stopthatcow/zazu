@@ -32,7 +32,7 @@ def test_github_scm_host_get_repos(mocker, scm_host_mock):
     mocker.patch('zazu.github_helper.make_gh', return_value=github_mock)
     scm_host_mock.connect()
     repos = list(scm_host_mock.repos())
-    github_mock.get_user.assert_called_once_with('stopthatcow')
+    github_mock.get_user.assert_called_once_with()
     user_mock.get_repos.assert_called_once()
     assert len(repos) == 1
     assert repos[0].name == 'zazu'
@@ -54,7 +54,6 @@ def test_from_config(git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
         uut = zazu.plugins.github_scm_host.ScmHost.from_config({'user': 'stopthatcow',
                                                                 'type': 'github'})
-        assert uut._user == 'stopthatcow'
         assert uut.type() == 'github'
 
 
