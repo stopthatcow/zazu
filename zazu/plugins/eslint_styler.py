@@ -44,12 +44,12 @@ class Styler(zazu.styler.Styler):
                 # Stop searching for eslint above current working directory
                 # An invalid filepath should break-out here
                 break
-            elif os.path.realpath(dirname) == os.path.normpath('/'):
-                # Stop searching when dirname and maybe_eslint are same
-                # This should be the filesystem root
-                break
 
-            dirname = os.path.normpath(os.path.join(dirname, '..'))
+            new_dirname = os.path.realpath(os.path.join(dirname, '..'))
+            if dirname == new_dirname:
+                # Stop searching when dirname hits the system root
+                break
+            dirname = new_dirname
 
         if loop_count >= 100:
             raise click.ClickException('Unable to find eslint.js')

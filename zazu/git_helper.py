@@ -18,11 +18,10 @@ __copyright__ = 'Copyright 2016'
 def get_repo_root(starting_dir):
     """Get the root directory of the git repo."""
     try:
-        g = git.Git(starting_dir)
-        ret = g.rev_parse('--show-toplevel')
-    except git.exc.GitCommandError:
-        ret = None
-    return ret
+        repo = git.Repo(starting_dir, search_parent_directories=True)
+        return repo.working_tree_dir
+    except git.exc.InvalidGitRepositoryError:
+        return None
 
 
 def get_hooks_path(repo_base):
