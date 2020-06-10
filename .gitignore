@@ -92,5 +92,5 @@ ENV/
 .ropeproject
 version.txt
 
-# vscode project settings
+# Visual Studio Code project settings
 .vscode/
