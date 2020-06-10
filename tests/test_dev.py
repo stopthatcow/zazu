@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
 import click.testing
-import git
 import tests.conftest as conftest
 import pytest
 import webbrowser
