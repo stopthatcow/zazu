@@ -267,7 +267,7 @@ def test_review_push_fails(mocker, git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
-        assert not mocked_reviewer.called
+        mocked_reviewer.create_review.assert_not_called()
         assert result.exception
         assert result.exit_code == 1
 
@@ -282,7 +282,7 @@ def test_review_dirty_working_tree(mocker, git_repo_with_local_origin, tmp_dir):
             pass
         runner = click.testing.CliRunner()
         result = runner.invoke(zazu.cli.cli, ['dev', 'review'])
-        assert not mocked_reviewer.called
+        mocked_reviewer.create_review.assert_not_called()
         assert result.exception
         assert result.exit_code == 1
 
