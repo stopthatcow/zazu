@@ -206,7 +206,7 @@ def start(config, name, no_verify, head, rename_flag, type):
             no_verify = True  # Making the ticket implicitly verifies it.
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
-        click.echo('Created ticket "{}"'.format(name))
+        click.echo('Created ticket "{}": {}'.format(name, config.issue_tracker.browse_url(name)))
     issue_descriptor = make_issue_descriptor(name)
     # Sync with the background fetch process before touching the git repo.
     if not (head or rename_flag):
