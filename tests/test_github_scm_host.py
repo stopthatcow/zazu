@@ -42,7 +42,7 @@ def test_github_scm_host_get_repos_error(mocker, scm_host_mock):
     github_mock = mocker.Mock('github.Github', autospec=True)
     user_mock = mocker.Mock('github.NamedUser.NamedUser', autospec=True)
     github_mock.get_user = mocker.Mock('github.Github.get_user', autospec=True, return_value=user_mock)
-    user_mock.get_repos = mocker.Mock('github.NamedUser.NamedUser.get_repos', autospec=True, side_effect=github.GithubException(404, {}))
+    user_mock.get_repos = mocker.Mock('github.NamedUser.NamedUser.get_repos', autospec=True, side_effect=github.GithubException(404, {}, []))
     mocker.patch('zazu.github_helper.make_gh', return_value=github_mock)
     scm_host_mock.connect()
     with pytest.raises(zazu.scm_host.ScmHostError) as e:

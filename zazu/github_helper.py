@@ -21,34 +21,8 @@ GITHUB_API_URL = 'https://api.github.com'
 
 def make_gh_token(api_url=None):
     """Make new GitHub token."""
-    if api_url is None:
-        api_url = GITHUB_API_URL
-    add_auth = {
-        'scopes': [
-            'repo'
-        ],
-        'note': 'zazu for {}@{}'.format(getpass.getuser(), socket.gethostname())
-    }
-    token = None
-    while token is None:
-        user, password = zazu.credential_helper.get_user_pass_credentials(api_url, offer_to_save=False)
-        r = requests.post('{}/authorizations'.format(api_url), json=add_auth, auth=(user, password))
-        if r.status_code == 401:
-            if 'Must specify two-factor authentication OTP code.' in r.json()['message']:
-                headers = {'X-GitHub-OTP': zazu.util.prompt('GitHub two-factor code (6 digits)', expected_type=str)}
-                r = requests.post('{}/authorizations'.format(api_url), headers=headers, json=add_auth, auth=(user, password))
-            else:
-                click.echo('Invalid username or password!')
-                continue
-        if r.status_code == 201:
-            token = r.json()['token']
-        elif r.status_code == 422:
-            click.echo('You already have a GitHub token for zazu in GitHub but it is not saved in the keychain! '
-                       'Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
-            token = zazu.util.prompt('Enter new token manually')
-        else:
-            raise Exception('Error authenticating with GitHub, status:{} content:{}'.format(r.status_code, r.json()))
-    return token
+    click.echo('Go to https://github.com/settings/tokens to generate a new one with "repo" scope')
+    return zazu.util.prompt('Enter new token')
 
 
 def make_gh(api_url=None):

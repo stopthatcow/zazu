@@ -32,7 +32,7 @@ def test_make_gh_with_no_credentials(mocker):
 def test_make_gh_with_bad_token(mocker):
     def side_effect(base_url, login_or_token):
         if login_or_token == 'token':
-            raise github.BadCredentialsException('status', 'data')
+            raise github.BadCredentialsException('status', 'data', [])
         return login_or_token
     mocker.patch('keyring.get_password', return_value='token')
     mocker.patch('keyring.set_password')
@@ -71,60 +71,6 @@ def mock_post(mocker, uri, mock):
 def handle_post(*args, **kwargs):
     entry = request_mocks[('POST', args[0])]
     return entry(*args, **kwargs)
-
-
-def test_make_gh_token_otp(mocker):
-    def require_otp(uri, headers={}, auth=(), json={}):
-        assert ('user', 'password') == auth
-        if 'X-GitHub-OTP' not in headers:
-            return MockResponce(json={'message': 'Must specify two-factor authentication OTP code.'}, status_code=401)
-        else:
-            assert headers['X-GitHub-OTP'] == 'token'
-            return MockResponce(json={'token': 'token'}, status_code=201)
-
-    mocker.patch('zazu.util.prompt', side_effect=['user', 'token'], autospec=True)
-    mocker.patch('click.prompt', return_value='password', autospec=True)
-    mocker.patch('keyring.set_password')
-
-    with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=require_otp)) as post_auth:
-        assert 'token' == zazu.github_helper.make_gh_token()
-        post_auth.call_count == 2
-
-
-def test_make_gh_token_otp_exists(mocker):
-    def token_exists(uri, headers={}, auth=(), json={}):
-        assert ('user', 'password') == auth
-        return MockResponce(json={}, status_code=422)
-    mocker.patch('zazu.util.prompt', side_effect=['user', 'token'], autospec=True)
-    mocker.patch('click.prompt', return_value='password', autospec=True)
-
-    with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=token_exists)) as post_auth:
-        assert 'token' == zazu.github_helper.make_gh_token()
-        post_auth.call_count == 1
-
-
-def test_make_gh_token_otp_unknown_error(mocker):
-    mocker.patch('zazu.util.prompt', return_value='user', autospec=True)
-    mocker.patch('click.prompt', return_value='password', autospec=True)
-    with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(return_value=MockResponce(json={}, status_code=400))) as post_auth:
-        with pytest.raises(Exception):
-            zazu.github_helper.make_gh_token()
-            post_auth.call_count == 1
-
-
-def test_make_gh_token_try_again(mocker):
-    def normal_auth(uri, headers={}, auth=(), json={}):
-        if ('user', 'password') == auth:
-            return MockResponce(json={'token': 'token'}, status_code=201)
-        return MockResponce(json={'message': ''}, status_code=401)
-
-    mocker.patch('zazu.util.prompt', side_effect=['bad_user', 'user'], autospec=True)
-    mocker.patch('click.prompt', side_effect=['bad_password', 'password'], autospec=True)
-    mocker.patch('keyring.set_password')
-    with mock_post(mocker, 'https://api.github.com/authorizations', mocker.Mock(wraps=normal_auth)) as post_auth:
-        zazu.github_helper.make_gh_token()
-        post_auth.call_count == 2
-
 
 def test_parse_github_url():
     owner = 'stopthatcow'
