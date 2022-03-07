@@ -46,14 +46,14 @@ def test_github_issue_tracker_issue(mocker, mocked_github_issue_tracker):
 
 
 def test_github_issue_tracker_issue_error(mocker, mocked_github_issue_tracker):
-    mocked_github_issue_tracker._github.get_issue = mocker.Mock(side_effect=github.GithubException(404, {}))
+    mocked_github_issue_tracker._github.get_issue = mocker.Mock(side_effect=github.GithubException(404, {}, []))
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
         mocked_github_issue_tracker.issue('1')
     assert '404' in str(e.value)
 
 
 def test_github_issue_tracker_create_issue_error(mocker, mocked_github_issue_tracker):
-    mocked_github_issue_tracker._github.create_issue = mocker.Mock(side_effect=github.GithubException(404, {}))
+    mocked_github_issue_tracker._github.create_issue = mocker.Mock(side_effect=github.GithubException(404, {}, []))
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
         mocked_github_issue_tracker.create_issue('', '', '', '', '')
     assert '404' in str(e.value)
@@ -72,7 +72,7 @@ def test_github_issue_tracker_list_issues(mocker, mocked_github_issue_tracker):
 
 
 def test_github_issue_tracker_list_issues_error(mocker, mocked_github_issue_tracker):
-    mocked_github_issue_tracker._github.get_issues = mocker.Mock(side_effect=github.GithubException(404, {}))
+    mocked_github_issue_tracker._github.get_issues = mocker.Mock(side_effect=github.GithubException(404, {}, []))
     with pytest.raises(zazu.issue_tracker.IssueTrackerError) as e:
         mocked_github_issue_tracker.issues()
     assert '404' in str(e.value)

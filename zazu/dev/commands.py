@@ -147,7 +147,7 @@ def complete_git_branch(ctx, args, incomplete):
 def complete_issue(ctx, args, incomplete):
     """Completion function that returns ids for open issues."""
     issues = zazu.config.Config().issue_tracker().issues()
-    return sorted([(i, i.name) for i in issues if str(i).startswith(incomplete) or incomplete.lower() in i.name.lower()])
+    return [(str(i), i.name) for i in sorted(issues) if str(i).startswith(incomplete) or incomplete.lower() in i.name.lower()]
 
 
 def complete_feature(ctx, args, incomplete):
@@ -206,7 +206,7 @@ def start(config, name, no_verify, head, rename_flag, type):
             no_verify = True  # Making the ticket implicitly verifies it.
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
-        click.echo('Created ticket "{}": {}'.format(name, config.issue_tracker.browse_url(name)))
+        click.echo('Created ticket "{}": {}'.format(name, config.issue_tracker().browse_url(name)))
     issue_descriptor = make_issue_descriptor(name)
     # Sync with the background fetch process before touching the git repo.
     if not (head or rename_flag):
