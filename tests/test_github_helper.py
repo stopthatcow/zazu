@@ -32,7 +32,7 @@ def test_make_gh_with_no_credentials(mocker):
 def test_make_gh_with_bad_token(mocker):
     def side_effect(base_url, login_or_token):
         if login_or_token == 'token':
-            raise github.BadCredentialsException('status', 'data', '')
+            raise github.BadCredentialsException('status', 'data', [])
         return login_or_token
     mocker.patch('keyring.get_password', return_value='token')
     mocker.patch('keyring.set_password')
