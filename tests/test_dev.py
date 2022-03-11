@@ -369,8 +369,8 @@ def test_complete_issue_and_complete_feature(mocker):
     mocked_tracker.issues = mocker.Mock(return_value=[mocked_issue])
     mocked_config.issue_tracker = mocker.Mock(return_value=mocked_tracker)
     mocker.patch('zazu.config.Config', return_value=mocked_config)
-    assert zazu.dev.commands.complete_issue(None, [], 'Z') == [(mocked_issue, 'name')]
-    assert zazu.dev.commands.complete_issue(None, [], 'Na') == [(mocked_issue, 'name')]
-    assert zazu.dev.commands.complete_issue(None, [], '') == [(mocked_issue, 'name')]
+    assert zazu.dev.commands.complete_issue(None, [], 'Z') == [(str(mocked_issue), 'name')]
+    assert zazu.dev.commands.complete_issue(None, [], 'Na') == [(str(mocked_issue), 'name')]
+    assert zazu.dev.commands.complete_issue(None, [], '') == [(str(mocked_issue), 'name')]
     assert zazu.dev.commands.complete_issue(None, [], 'foo') == []
     assert zazu.dev.commands.complete_feature(None, [], 'Z') == [('feature/ZZ-1', 'name')]

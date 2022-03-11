@@ -14,7 +14,7 @@ zazu.imports.lazy_import(locals(), [
     'concurrent.futures',
     'contextlib',
     'dict_recursive_update',
-    'fnmatch',
+    'pathlib',
     'PyInquirer',
     'multiprocessing',
     'os',
@@ -196,14 +196,17 @@ def scantree(base_path, include_patterns, exclude_patterns, exclude_hidden=False
     for dirName, subdirList, fileList in os.walk(base_path):
         for i in builtins.range(len(subdirList) - 1, -1, -1):
             sub = os.path.relpath(os.path.join(dirName, subdirList[i]), base_path)
-            if sub in exclude_dirs or (exclude_hidden and sub[0] == '.'):
+            sub_path = pathlib.PurePath(sub)
+            if (exclude_hidden and sub[0] == '.') or any(sub_path.match(e) for e in exclude_patterns):
                 del subdirList[i]
         for f in fileList:
-            if (not exclude_hidden) or (f[0] != '.'):
-                file = os.path.relpath(os.path.join(dirName, f), base_path)
-                if any(fnmatch.fnmatch(file, i) for i in include_patterns):
-                    if all(not fnmatch.fnmatch(file, e) for e in exclude_patterns):
-                        files.append(file)
+            if exclude_hidden and f[0] == '.':
+                 continue
+            file = os.path.relpath(os.path.join(dirName, f), base_path)
+            file_path = pathlib.PurePath(file)
+            if any(file_path.match(i) for i in include_patterns):
+                if all(not file_path.match(e) for e in exclude_patterns):
+                    files.append(file)
     return files
 
 

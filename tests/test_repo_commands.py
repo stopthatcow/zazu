@@ -67,7 +67,8 @@ def test_cleanup_remote(git_repo_with_local_origin, mocker):
     dir = git_repo.working_tree_dir
     with zazu.util.cd(dir):
         with open('zazu.yaml', 'a') as file:
-            yaml.dump({'issue_tracker': {'type': 'github',
+            yml=yaml.YAML(typ='unsafe', pure=True)
+            yml.dump({'issue_tracker': {'type': 'github',
                                          'owner': 'foo',
                                          'repo': 'bar'}}, file)
         git_repo.git.checkout('HEAD', b='develop')

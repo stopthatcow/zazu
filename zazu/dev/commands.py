@@ -156,7 +156,7 @@ def complete_feature(ctx, args, incomplete):
 
 
 @dev.command()
-@click.argument('name', autocompletion=complete_feature)
+@click.argument('name', shell_complete=complete_feature)
 @zazu.config.pass_config
 def rename(config, name):
     """Rename the current branch, locally and remotely."""
@@ -183,7 +183,7 @@ def branch_is_current(repo, branch):
 
 
 @dev.command()
-@click.argument('name', required=False, autocompletion=complete_issue)
+@click.argument('name', required=False, shell_complete=complete_issue)
 @click.option('--no-verify', is_flag=True, help='Skip verification that ticket exists')
 @click.option('--head', is_flag=True, help='Branch off of the current head rather than develop')
 @click.option('rename_flag', '--rename', is_flag=True, help='Rename the current branch rather than making a new one')
@@ -264,7 +264,7 @@ def wrap_text(text, width=90, indent=''):
 
 
 @dev.command()
-@click.argument('name', required=False, autocompletion=complete_issue)
+@click.argument('name', required=False, shell_complete=complete_issue)
 @zazu.config.pass_config
 def status(config, name):
     """Get status of a issue."""
@@ -298,7 +298,7 @@ def status(config, name):
 
 @dev.command()
 @zazu.config.pass_config
-@click.option('--base', help='The base branch to target', autocompletion=complete_git_branch)
+@click.option('--base', help='The base branch to target', shell_complete=complete_git_branch)
 @click.option('--head', help='The head branch (defaults to current branch and origin organization)')
 def review(config, base, head):
     """Create or display pull request."""
@@ -335,7 +335,7 @@ def review(config, base, head):
 
 @dev.command()
 @zazu.config.pass_config
-@click.argument('ticket', required=False, autocompletion=complete_issue)
+@click.argument('ticket', required=False, shell_complete=complete_issue)
 def ticket(config, ticket):
     """Open the ticket for the current feature or the one supplied in the ticket argument."""
     issue_id = make_issue_descriptor(config.repo.active_branch.name).id if not ticket else ticket

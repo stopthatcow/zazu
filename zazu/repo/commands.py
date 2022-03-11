@@ -49,7 +49,7 @@ def complete_repo(ctx, args, incomplete):
 
 
 @repo.command()
-@click.argument('repository', autocompletion=complete_repo)
+@click.argument('repository', shell_complete=complete_repo)
 @click.argument('destination', required=False)
 @click.option('--nohooks', is_flag=True, help='does not install git hooks in the cloned repo')
 @click.option('--nosubmodules', is_flag=True, help='does not update submodules')
