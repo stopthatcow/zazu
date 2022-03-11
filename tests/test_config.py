@@ -18,7 +18,8 @@ def temp_user_config(tmp_dir):
     config = {'scm_host': {'gh': {'type': 'github', 'user': 'user'}}}
     path = os.path.join(tmp_dir, '.zazuconfig.yaml')
     with open(path, 'w') as file:
-        yaml.dump(config, file)
+        yml=yaml.YAML(typ='unsafe', pure=True)
+        yml.dump(config, file)
     return path
 
 
@@ -38,7 +39,8 @@ def repo_with_invalid_issue_tracker(git_repo):
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(config, file)
+        yml=yaml.YAML(typ='unsafe', pure=True)
+        yml.dump(config, file)
     return git_repo
 
 
@@ -51,7 +53,8 @@ def repo_with_unknown_issue_tracker(git_repo):
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(config, file)
+        yml=yaml.YAML(typ='unsafe', pure=True)
+        yml.dump(config, file)
     return git_repo
 
 
@@ -67,7 +70,8 @@ def repo_with_jira(git_repo):
         }
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(jira_config, file)
+        yml=yaml.YAML(typ='unsafe', pure=True)
+        yml.dump(jira_config, file)
     return git_repo
 
 
@@ -300,7 +304,8 @@ def test_alt_branch_names(git_repo):
                 'branches': {'develop': 'alt_develop',
                              'master': 'alt_master'}
             }
-            yaml.dump(config, file)
+            yml=yaml.YAML(typ='unsafe', pure=True)
+            yml.dump(config, file)
         uut = zazu.config.Config('')
         assert uut.develop_branch_name() == 'alt_develop'
         assert uut.master_branch_name() == 'alt_master'

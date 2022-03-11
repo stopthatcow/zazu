@@ -6,6 +6,11 @@ import pytest
 import ruamel.yaml as yaml
 
 
+def write_config_file(root, config):
+    with open(os.path.join(root, 'zazu.yaml'), 'w') as file:
+        yml=yaml.YAML(typ='unsafe', pure=True)
+        yml.dump(config, file)
+
 @pytest.fixture
 def tmp_dir():
     return tempfile.mkdtemp()
@@ -49,16 +54,14 @@ def repo_with_style(git_repo):
             }
         ]
     }
-    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(style_config, file)
+    write_config_file(root, style_config)
     return git_repo
 
 
 @pytest.fixture()
 def repo_with_empty_zazu_file(git_repo):
     root = git_repo.working_tree_dir
-    with open(os.path.join(root, 'zazu.yaml'), 'a'):
-        pass
+    write_config_file(root, "")
     return git_repo
 
 
@@ -68,8 +71,7 @@ def repo_with_missing_style(git_repo):
     config = {
         'components': [{'name': 'zazu'}]
     }
-    with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(config, file)
+    write_config_file(root, config)
     return git_repo
 
 

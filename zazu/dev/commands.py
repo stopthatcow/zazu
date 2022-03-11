@@ -264,7 +264,7 @@ def wrap_text(text, width=90, indent=''):
 
 
 @dev.command()
-@click.argument('name', required=False, autocompletion=complete_issue)
+@click.argument('name', required=False, shell_complete=complete_issue)
 @zazu.config.pass_config
 def status(config, name):
     """Get status of a issue."""

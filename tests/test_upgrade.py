@@ -18,7 +18,8 @@ def config_with_required_zazu(git_repo):
         'zazu': '1.2.3'
     }
     with open(os.path.join(root, 'zazu.yaml'), 'a') as file:
-        yaml.dump(zazu_version_config, file)
+        yml=yaml.YAML(typ='unsafe', pure=True)
+        yml.dump(zazu_version_config, file)
     return git_repo
 
 
