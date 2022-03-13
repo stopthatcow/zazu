@@ -335,8 +335,8 @@ class Config(object):
         return 'master'
 
     def protected_branches(self):
-        """Return set of protected branches that can't be deleted."""
-        return {self.develop_branch_name(), self.master_branch_name()}
+        """Return set of protected branches that can't be deleted / renamed."""
+        return {self.develop_branch_name(), self.master_branch_name(), 'HEAD'}
 
     def zazu_version_required(self):
         """Return the version of zazu requested by the config file."""

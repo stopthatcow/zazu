@@ -106,23 +106,22 @@ def dev(config):
     config.check_repo()
 
 
-def check_if_branch_is_protected(branch_name):
+def check_if_branch_is_protected(config, branch_name):
     """Throw if branch_name is protected from being renamed."""
-    protected_branches = ['develop', 'master']
-    if branch_name in protected_branches:
+    if branch_name in config.protected_branches():
         raise click.ClickException('branch "{}" is protected'.format(branch_name))
 
 
-def check_if_active_branch_can_be_renamed(repo):
+def check_if_active_branch_can_be_renamed(config, repo):
     """Throw if the current head is detached or if the active branch is protected."""
     if repo.head.is_detached:
         raise click.ClickException('the current HEAD is detached')
-    check_if_branch_is_protected(repo.active_branch.name)
+    check_if_branch_is_protected(config, repo.active_branch.name)
 
 
-def rename_branch(repo, old_branch, new_branch):
+def rename_branch(config, repo, old_branch, new_branch):
     """Rename old_branch in repo to new_branch, locally and remotely."""
-    check_if_branch_is_protected(old_branch)
+    check_if_branch_is_protected(config, old_branch)
     remote_branch_exists = repo.heads[old_branch].tracking_branch() is not None
     if remote_branch_exists:
         # Pull first to avoid orphaning remote commits when we delete the remote branch
@@ -161,8 +160,8 @@ def complete_feature(ctx, args, incomplete):
 def rename(config, name):
     """Rename the current branch, locally and remotely."""
     repo = config.repo
-    check_if_active_branch_can_be_renamed(repo)
-    rename_branch(repo, repo.active_branch.name, name)
+    check_if_active_branch_can_be_renamed(config, repo)
+    rename_branch(config, repo, repo.active_branch.name, name)
 
 
 def find_branch_with_id(repo, id):
@@ -194,7 +193,7 @@ def start(config, name, no_verify, head, rename_flag, type):
     """Start a new feature, much like git-flow but with more sugar."""
     repo = config.repo
     if rename_flag:
-        check_if_active_branch_can_be_renamed(repo)
+        check_if_active_branch_can_be_renamed(config, repo)
 
     # Fetch in the background.
     develop_branch_name = config.develop_branch_name()
@@ -202,11 +201,12 @@ def start(config, name, no_verify, head, rename_flag, type):
         develop_is_current_future = zazu.util.async_do(branch_is_current, repo, develop_branch_name)
     if name is None:
         try:
-            name = str(make_ticket(config.issue_tracker()))
+            ticket = make_ticket(config.issue_tracker())
+            name = str(ticket)
             no_verify = True  # Making the ticket implicitly verifies it.
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
-        click.echo('Created ticket "{}": {}'.format(name, config.issue_tracker().browse_url(name)))
+        click.echo('Created ticket "{}": {}'.format(name, ticket.browse_url))
     issue_descriptor = make_issue_descriptor(name)
     # Sync with the background fetch process before touching the git repo.
     if not (head or rename_flag):
@@ -237,7 +237,7 @@ def start(config, name, no_verify, head, rename_flag, type):
     except git.exc.GitCommandError:
         if rename_flag:
             click.echo('Renaming current branch to "{}"...'.format(branch_name))
-            rename_branch(repo, repo.active_branch.name, branch_name)
+            rename_branch(config, repo, repo.active_branch.name, branch_name)
         else:
             click.echo('Creating new branch named "{}"...'.format(branch_name))
             repo.git.checkout('HEAD', b=branch_name)

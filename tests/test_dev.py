@@ -86,14 +86,6 @@ def test_make_ticket(mocker):
                                                             component='component')
 
 
-def test_check_if_branch_is_protected():
-    protected_branches = ['develop', 'master']
-    for b in protected_branches:
-        with pytest.raises(click.ClickException) as e:
-            zazu.dev.commands.check_if_branch_is_protected(b)
-        assert str(e.value) == 'branch "{}" is protected'.format(b)
-
-
 def test_rename(git_repo):
     with zazu.util.cd(git_repo.working_tree_dir):
         assert 'foo' not in git_repo.heads
@@ -134,6 +126,15 @@ def test_rename_detached_head(git_repo):
         assert result.exception
         assert result.exit_code != 0
 
+def test_rename_develop(git_repo):
+    with zazu.util.cd(git_repo.working_tree_dir):
+        git_repo.git.checkout('HEAD', b="develop")
+        runner = click.testing.CliRunner()
+        result = runner.invoke(zazu.cli.cli, ['dev', 'rename', 'bar'])
+        assert 'branch "develop" is protected' in result.output
+        assert result.exception
+        assert result.exit_code != 0
+        assert 'develop' in git_repo.heads
 
 def test_branch_is_current(git_repo_with_out_of_date_local_origin):
     assert not zazu.dev.commands.branch_is_current(git_repo_with_out_of_date_local_origin, 'develop')
@@ -181,7 +182,10 @@ def test_start(git_repo_with_out_of_date_local_origin, mocker):
 
 
 def test_start_make_ticket(git_repo_with_local_origin, mocker):
-    mocker.patch('zazu.dev.commands.make_ticket', return_value='foo-1_description')
+    mocked_ticket = mocker.Mock()
+    mocked_ticket.__str__ = mocker.Mock(return_value="foo-1_description")
+    mocked_ticket.browse_url = "http://test"
+    mocker.patch('zazu.dev.commands.make_ticket', return_value=mocked_ticket)
     mocker.patch('zazu.config.Config.issue_tracker')
     mocker.patch('zazu.dev.commands.verify_ticket_exists')
     git_repo = git_repo_with_local_origin
