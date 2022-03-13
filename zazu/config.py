@@ -383,7 +383,7 @@ def complete_param(ctx, args, incomplete):
 @click.option('--show-origin', is_flag=True, help='show origin of each config variable, (implies --list)')
 @click.option('--add', is_flag=True, help='add a new variable')
 @click.option('--unset', is_flag=True, help='remove a variable')
-@click.argument('param_name', required=False, type=str, autocompletion=complete_param)
+@click.argument('param_name', required=False, type=str, shell_complete=complete_param)
 @click.argument('param_value', required=False, type=str)
 def config(ctx, list, add, unset, show_origin, param_name, param_value):
     """Manage zazu user configuration."""
