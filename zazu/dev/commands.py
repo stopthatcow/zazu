@@ -202,11 +202,12 @@ def start(config, name, no_verify, head, rename_flag, type):
         develop_is_current_future = zazu.util.async_do(branch_is_current, repo, develop_branch_name)
     if name is None:
         try:
-            name = str(make_ticket(config.issue_tracker()))
+            ticket = make_ticket(config.issue_tracker())
+            name = str(ticket)
             no_verify = True  # Making the ticket implicitly verifies it.
         except zazu.issue_tracker.IssueTrackerError as e:
             raise click.ClickException(str(e))
-        click.echo('Created ticket "{}": {}'.format(name, config.issue_tracker().browse_url(name)))
+        click.echo('Created ticket "{}": {}'.format(name, ticket.browse_url))
     issue_descriptor = make_issue_descriptor(name)
     # Sync with the background fetch process before touching the git repo.
     if not (head or rename_flag):
